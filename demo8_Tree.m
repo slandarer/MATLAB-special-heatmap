@@ -29,7 +29,7 @@ orderL=SDendrogram(Data,'Orientation','left','Parent',axTreeL);
 
 % 绘制顶部树状图(Draw the top dendrogram)
 axTreeT=axes('Parent',fig);
-axTreeT.Position=[P(1),P(2)+P(4),.62,P(4)/5];
+axTreeT.Position=[P(1),P(2)+P(4),P(3),P(4)/5];
 orderT=SDendrogram(Data,'Orientation','top','Parent',axTreeT);
 
 % 交换数据顺序(Exchange data order)

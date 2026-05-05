@@ -3,11 +3,6 @@
 #### 介绍
 Zhaoxu Liu / slandarer (2023). special heatmap (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), MATLAB Central File Exchange. 检索来源 2023/3/1.
 
-#### 免登录网盘链接
-
-链接：https://pan.baidu.com/s/13t5w0aVzCWebNwaFfWSlnw?pwd=slan \
-提取码：slan 
-
 ### 1 基础使用(Basic use)
 #### 1.1 非负矩阵(Draw positive heat map)
 
@@ -398,6 +393,45 @@ SHM_m1.setText();
 ```
 ![输入图片说明](gallery/Type_tri2_1.png)
 ![输入图片说明](gallery/Type_tri2_2.png)
+### 7.2 合并两个三角热图且使用不同colormap(Merge two triangle heat maps with two colormaps)
+```matlab
+% 合并两个三角热图且使用不同colormap(Merge two triangle heat maps with two colormaps)
+
+% 随便捏造了点数据(Made up some data casually)
+X1=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X2=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+% 求相关系数矩阵(Get the correlation matrix)
+Data1=corr(X1);
+Data2=corr(X2);
+
+
+figure()
+% 绘制第一个热图并冻结配色
+% Draw the first heatmap and freeze colors.
+SHM_m1=SHeatmap(Data1,'Format','triul');
+SHM_m1=SHM_m1.draw();
+SHM_m1=SHM_m1.setType('tril');
+SHM_m1.freezeColors() 
+
+SHM_m2=SHeatmap(Data2,'Format','trilr');
+SHM_m2=SHM_m2.draw();
+SHM_m2=SHM_m2.setType('tril');
+colormap(cool(32));
+SHM_m2.Colorbar.Position(1) = SHM_m2.Colorbar.Position(1) + .1;
+
+
+% 为两个 colorbar 添加标签
+% Draw label for colorbars
+LB1 = SHM_m1.Colorbar.Label;
+LB1.String = 'prop 1';
+LB1.FontSize = 18;
+LB1.Position = [-1.5, 0, 0];
+LB2 = SHM_m2.Colorbar.Label;
+LB2.String = 'prop 2';
+LB2.FontSize = 18;
+LB2.Position = [-1.5, 0, 0];
+```
+![输入图片说明](gallery/Type_tri2_colormap2.png)
 
 ### 8 带树状图热图(Heatmap with dendrogram) 
 ```matlab
@@ -630,3 +664,29 @@ SHM12.setTextFormat(@(x)sprintf('%0.1f',x))
 % exportgraphics(gca,['gallery\Text_Format_','0.1e','.png'])
 ```
 ![输入图片说明](gallery/Text_Format_0.1f.png)
+
+#### 12.2 显示显著性(Displaying significance)
+```matlab
+% 显示显著性(Displaying significance)
+
+% 随便捏造了点数据(Made up some data casually)
+X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+% 求相关系数矩阵(Get the correlation matrix)
+[Data, pval]=corr(X);
+
+% 图窗创建(create figure)
+fig=figure('Position',[100,100,870,720]);
+
+% 绘制有文本热图(Draw heat map with texts)
+SHM12=SHeatmap(Data,'Format','sq');
+SHM12=SHM12.draw();
+SHM12.setText();
+SHM12.setType('tril0');
+
+% 显示显著性(Displaying significance)
+SHM12.showStars(pval, 'Levels', [0.05, 0.01, 0.001])
+
+SHM12.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
+```
+![输入图片说明](gallery/Significance1.png)
+![输入图片说明](gallery/Significance2.png)

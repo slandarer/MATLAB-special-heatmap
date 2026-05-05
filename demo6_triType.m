@@ -45,14 +45,14 @@ ax.XLim(2)=ax.XLim(2)+1;
 
 
 %% 展示所有样式的上三角化(show upper triangle of all formats)
-Format={'sq','pie','circ','oval','hex','asq','acirc'};
+Format={'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc'};
 for i=1:length(Format)
     figure()
     SHM_s4=SHeatmap(Data,'Format',Format{i});
     SHM_s4=SHM_s4.draw();
     % 设置格式(set Type)
     SHM_s4.setType('triu');
-    % exportgraphics(gca,['gallery\Type_triu',Format{i},'.png'])
+    exportgraphics(gca,['gallery\Type_triu',Format{i},'.png'])
 end
 
 %% 设置标签字体(Set Font)
@@ -63,7 +63,7 @@ SHM_s5.setType('triu');
 % 设置标签颜色(Set Font Color)
 SHM_s5.setRowLabel('Color',[.8,0,0])
 SHM_s5.setColLabel('Color',[0,0,.8]) 
-exportgraphics(gca,'gallery\Type_Font.png')
+% exportgraphics(gca,'gallery\Type_Font.png')
 
 
 

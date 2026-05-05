@@ -18,8 +18,8 @@ SHM_m2.setType('triu0');
 SHM_m2.setRowLabel('Visible','off')
 SHM_m2.setColLabel('Visible','on') % 显示隐藏的Var-1标签(Show the hidden Var-1 label)
 
-clim([-1.2,1.2])
-colormap(slanCM(141))
+% clim([-1.2,1.2])
+% colormap(slanCM(141))
 
 SHM_m1.setText();
 % exportgraphics(gca,'gallery\Type_tri2_1.png')
