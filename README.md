@@ -1,5 +1,10 @@
 # MATLAB Special Heatmap
 
+![](gallery/Type_triubcirc.png)
+![](gallery/Type_triudonut.png)
+![](gallery/Type_tri2_2.png)
+![](gallery/Type_tri2_colormap2.png)
+
 #### 介绍
 Zhaoxu Liu / slandarer (2023). special heatmap (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), MATLAB Central File Exchange. 检索来源 2023/3/1.
 
