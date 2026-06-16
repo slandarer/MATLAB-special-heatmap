@@ -1,4 +1,4 @@
-% 多层分组(Multilayer grouping)
+%% Multilayer grouping
 
 Data=rand(3,16);
 
@@ -7,7 +7,7 @@ Class2=[1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4];
 ClassName1={'AAAAA','BBBBB','CCCCC','DDDDD'};
 ClassName2={'A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'};
 
-% 设置颜色(Set Color)
+% Set Color (设置颜色)
 CList1=[0.7020    0.8863    0.8039
     0.9559    0.8142    0.6907
     0.8451    0.8275    0.8510
@@ -17,7 +17,7 @@ CList2=[0.4588    0.4196    0.6941
     0.7373    0.7412    0.8627
     0.8549    0.8549    0.9216];
 
-% 图窗及坐标区域创建(create figure and axes)
+% create figure and axes (图窗及坐标区域创建)
 fig=figure('Position',[100,100,1000,320]);
 axMain=axes('Parent',fig);
 axMain.Position=[.05,0,.9,.78];
@@ -33,7 +33,7 @@ axMain.DataAspectRatioMode='auto';
 % Draw Block
 axBlockT=axes('Parent',fig);
 axBlockT.Position=[P(1),P(2)+P(4)*1.05,P(3),P(4)/5];
-[X1,Y1]=SClusterBlock(Class1,'Orientation','top','Parent',axBlockT,'MinLim',1,'ColorList',CList1);
+[X1,Y1]=SClusterBlock(Class1,'Orientation','top','Parent',axBlockT,'BasePos',1,'ColorList',CList1);
 [X2,Y2]=SClusterBlock(Class2,'Orientation','top','Parent',axBlockT,'ColorList',CList2);
 
 % text

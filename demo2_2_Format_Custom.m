@@ -1,3 +1,5 @@
+%% Custom shape and auto-size custom shape
+
 % The shape need to be in range in X:[-.5,.5], Y:[-.5,.5]; 
 % The 'SData' need to be set.
 
@@ -12,10 +14,10 @@ figure()
 Data=rand(15,15)-.5;
 SHM1=SHeatmap(Data,'Format','cust','SData',SData);
 SHM1=SHM1.draw();
-exportgraphics(gca,'gallery\Format_cust.png')
+% exportgraphics(gca,'gallery\Format_cust.png')
 
 % auto-size custom shape
 figure()
 SHM2=SHeatmap(Data,'Format','acust','SData',SData);
 SHM2=SHM2.draw();
-exportgraphics(gca,'gallery\Format_acust.png')
+% exportgraphics(gca,'gallery\Format_acust.png')

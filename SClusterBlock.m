@@ -1,60 +1,81 @@
-function [X,Y]=SClusterBlock(Class,varargin)
-% Zhaoxu Liu / slandarer (2023). special heatmap 
-% (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), 
-% MATLAB Central File Exchange. 检索来源 2023/3/1.
-obj.arginList={'Orientation','MinLim','Parent','ColorList','BlockProp'};
-obj.Orientation='top';
-obj.MinLim=0;
-obj.Parent=gca;
-obj.BlockProp={'LineWidth',.8};
-obj.ColorList=...
-    [0.5529    0.8275    0.7804
-    1.0000    1.0000    0.7020
-    0.7451    0.7294    0.8549
-    0.9843    0.5020    0.4471
-    0.5020    0.6941    0.8275
-    0.9922    0.7059    0.3843
-    0.7020    0.8706    0.4118
-    0.9882    0.8039    0.8980
-    0.8510    0.8510    0.8510
-    0.7373    0.5020    0.7412
-    0.8000    0.9216    0.7725
-    1.0000    0.9294    0.4353];
-obj.ColorList=[obj.ColorList;rand(max(Class),3)./5+.5];
-% 获取其他数据
-for i=1:2:(length(varargin)-1)
-    tid=ismember(obj.arginList,varargin{i});
+function [X, Y] = SClusterBlock(Class, varargin)
+% SClusterBlock - Draw colored blocks for cluster/group visualization
+%   [X,Y] = SClusterBlock(Class) draws colored blocks for each group in Class
+%   along the top orientation (default) and returns center positions X,Y.
+%
+% Parameters:
+%   'Orientation'   - 'top' (default) or 'left'
+%   'BasePos'       - base position for block placement (default: 0)
+%   'Parent'        - axes handle (default: gca)
+%   'ColorList'     - custom color matrix for groups
+%   'BlockProp'     - cell array of patch properties
+
+% =========================================================================
+% Zhaoxu Liu / slandarer (2023). special heatmap
+% (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap),
+% MATLAB Central File Exchange. Retrieved March 1, 2023.
+% =========================================================================
+
+% Parameter definition (参数定义)
+obj.arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', 'BlockProp'};
+obj.Orientation = 'top';
+obj.BasePos     = 0;
+obj.Parent      = gca;
+obj.BlockProp   = {'LineWidth', 0.8};
+obj.ColorList   = [0.55, 0.83, 0.78; 1.00, 1.00, 0.70; 0.75, 0.73, 0.85;
+    0.98, 0.50, 0.45; 0.50, 0.69, 0.83; 0.99, 0.71, 0.38;
+    0.70, 0.87, 0.41; 0.99, 0.80, 0.90; 0.85, 0.85, 0.85;
+    0.74, 0.50, 0.74; 0.80, 0.92, 0.77; 1.00, 0.93, 0.44];
+obj.ColorList = [obj.ColorList; rand(max(Class), 3) ./ 5 + 0.5];
+
+% Parse input arguments (解析输入参数)
+for i = 1:2:(length(varargin) - 1)
+    tid = ismember(obj.arginList, varargin{i});
     if any(tid)
-        obj.(obj.arginList{tid})=varargin{i+1};
+        obj.(obj.arginList{tid}) = varargin{i + 1};
     end
 end
-obj.Parent.XColor='none';
-obj.Parent.YColor='none';
-obj.Parent.XTick=[];
-obj.Parent.YTick=[];
-obj.Parent.NextPlot='add';
-Class=Class(:).';
-CCList=[0,find([diff(Class),1]~=0)];
-if isequal(obj.Orientation,'top')
-    X=zeros([1,length(CCList)-1]);
-    Y=ones([1,length(CCList)-1]).*(obj.MinLim+.5);
+
+% Configure axes (配置坐标轴)
+obj.Parent.XColor      = 'none';
+obj.Parent.YColor      = 'none';
+obj.Parent.XTick       = [];
+obj.Parent.YTick       = [];
+obj.Parent.NextPlot    = 'add';
+
+% Find group boundaries (查找分组边界)
+Class   = Class(:).';
+CCList  = [0, find([diff(Class), 1] ~= 0)];
+
+% Preallocate center coordinates (预分配中心坐标)
+if isequal(obj.Orientation, 'top')
+    X = zeros(1, length(CCList) - 1);
+    Y = ones(1, length(CCList) - 1) .* (obj.BasePos + 0.5);
 else
-    X=ones([1,length(CCList)-1]).*(obj.MinLim+.5);
-    Y=zeros([1,length(CCList)-1]);
+    X = ones(1, length(CCList) - 1) .* (obj.BasePos + 0.5);
+    Y = zeros(1, length(CCList) - 1);
 end
-for i=1:length(CCList)-1
-    CL=[CCList(i)+1,CCList(i+1)];
-    
-    if isequal(obj.Orientation,'top')
-        fill(obj.Parent,CL([1,2,2,1])+[-.5,.5,.5,-.5],[obj.MinLim,obj.MinLim,obj.MinLim+1,obj.MinLim+1],...
-            obj.ColorList(Class(CCList(i)+1),:),obj.BlockProp{:})
-        X(i)=(CL(1)+CL(2))/2;
+
+% Draw blocks (绘制方块)
+for i = 1:length(CCList) - 1
+    CL = [CCList(i) + 1, CCList(i + 1)];
+    colorIdx = Class(CCList(i) + 1);
+
+    if isequal(obj.Orientation, 'top')
+        fill(obj.Parent, ...
+            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
+            [obj.BasePos, obj.BasePos, obj.BasePos + 1, obj.BasePos + 1], ...
+            obj.ColorList(colorIdx, :), obj.BlockProp{:});
+        X(i) = (CL(1) + CL(2)) / 2;
     else
-        fill(obj.Parent,[obj.MinLim,obj.MinLim,obj.MinLim+1,obj.MinLim+1],CL([1,2,2,1])+[-.5,.5,.5,-.5],...
-            obj.ColorList(Class(CCList(i)+1),:),obj.BlockProp{:})
-        obj.Parent.YDir='reverse';
-        Y(i)=(CL(1)+CL(2))/2;
+        fill(obj.Parent, ...
+            [obj.BasePos, obj.BasePos, obj.BasePos + 1, obj.BasePos + 1], ...
+            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
+            obj.ColorList(colorIdx, :), obj.BlockProp{:});
+        obj.Parent.YDir = 'reverse';
+        Y(i) = (CL(1) + CL(2)) / 2;
     end
 end
-axis tight
+
+axis(obj.Parent, 'tight')
 end

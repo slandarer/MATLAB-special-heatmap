@@ -1,11 +1,11 @@
-% 修饰m行n列方块及文本(Decorative patch and text in row m and column n)
+%% Decorative patch and text in row m and column n
+% 修饰 m 行 n 列方块及文本
 figure()
 Data=rand(9,9);
-Data([4,5,13])=nan;
-% 绘制方块形状热图
+Data([4,5,13]) = nan;
 SHM=SHeatmap(Data,'Format','sq');
 SHM=SHM.draw();
-% 显示文本(Show Text)
+% Show Text (显示文本)
 SHM.setText(); 
 for i=1:size(Data,1)
     for j=1:size(Data,2)

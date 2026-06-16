@@ -1,4 +1,5 @@
-% Colormap
+%% Colormap
+
 %% 调整clim(Adjust clim)
 % 使用 clim() 或者 caxis() 调整颜色映射范围
 % Use function clim() or caxis() to set the CLim
@@ -33,16 +34,16 @@ colormap(bone)
 % MATLAB Central File Exchange. 检索来源 2023/3/15.
 
 % 单向colormap或离散colormap
-for i=[20,21,61,177]
+for i = 20 %[20,21,61,177]
     figure()
     Data=rand(14,14);
     SHM_slan=SHeatmap(Data,'Format','sq');
     SHM_slan.draw();
     colormap(slanCM(i))
-    exportgraphics(gca,['gallery\Colormap_slanCM_',num2str(i),'.png'])
+    % exportgraphics(gca,['gallery\Colormap_slanCM_',num2str(i),'.png'])
 end
 % 双向colormap(Diverging colormap)
-for i=[141,136,134]
+for i = 141%[141,136,134]
     figure()
     Data=rand(14,14)-.5;
     SHM_slan=SHeatmap(Data,'Format','sq');
@@ -50,5 +51,5 @@ for i=[141,136,134]
     clim([-.7,.7])
     colormap(slanCM(i))
     SHM_slan.setText();
-    exportgraphics(gca,['gallery\Colormap_slanCM_',num2str(i),'.png'])
+    % exportgraphics(gca,['gallery\Colormap_slanCM_',num2str(i),'.png'])
 end

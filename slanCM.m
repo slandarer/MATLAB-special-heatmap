@@ -1,17 +1,21 @@
-function colorList=slanCM(type,num)
-% type : type of colorbar
-% num  : number of colors
-% =========================================================================
-% Basic usage
-% -------------------------------------------------------------------------
-% contourf(peaks, 30)
-% colorbar
-% 
-% colormap(slanCM('romao'))  % Use romao colormap 
-% 
-% colormap(slanCM(134))      % Use romao(No. 134) colormap 
-% 
-% colormap(slanCM(134, 20))  % Use romao colormap with 20 colors
+function colorList = slanCM(type, num)
+% slanCM - Get predefined colormap by name or ID
+%   colorList = slanCM(type) returns a colormap with default number of colors (256)
+%   colorList = slanCM(type, num) returns a colormap with specified number of colors
+%
+% Input:
+%   type - colormap identifier (string name or numeric ID)
+%   num  - number of colors (default: 256)
+%
+% Example:
+%   contourf(peaks, 30)
+%   colorbar
+%
+%   colormap(slanCM('romao'))      % Use 'romao' colormap by name
+%   colormap(slanCM(134))          % Use colormap No. 134 by ID
+%   colormap(slanCM(134, 20))      % Use colormap No. 134 with 20 colors
+
+
 % =========================================================================
 % # Citations & Acknowledgements
 %   Colormap collection：This package includes colormaps from several sources:
@@ -96,29 +100,32 @@ function colorList=slanCM(type,num)
 % [8] Davis, M. (2023). palettable: Color Palettes for Python [Computer software]. 
 %       Retrieved from https://jiffyclub.github.io/palettable/
 
-if nargin<2
-    num=256;
+if nargin < 2
+    num = 256;
 end
-if nargin<1
-    type='';
+if nargin < 1
+    type = '';
 end
 
-slanCM_Data=load('slanCM_Data.mat');
-CList_Data=[slanCM_Data.slandarerCM(:).Colors];
-% disp(slanCM_Data.author);
+slanCM_Data = load('slanCM_Data.mat');
+CList_Data = [slanCM_Data.slandarerCM(:).Colors];
 
 if isnumeric(type)
-    Cmap=CList_Data{type};
+    Cmap = CList_Data{type};
 else
-    Cpos=strcmpi(type,slanCM_Data.fullNames);
-    Cmap=CList_Data{Cpos};
+    Cpos = strcmpi(type, slanCM_Data.fullNames);
+    Cmap = CList_Data{Cpos};
 end
 
-Ci=1:256;Cq=linspace(1,256,num);
-colorList=[interp1(Ci,Cmap(:,1),Cq,'linear')',...
-           interp1(Ci,Cmap(:,2),Cq,'linear')',...
-           interp1(Ci,Cmap(:,3),Cq,'linear')'];
+Ci = 1:256; Cq = linspace(1, 256, num);
+colorList = [interp1(Ci, Cmap(:, 1), Cq, 'linear')',...
+             interp1(Ci, Cmap(:, 2), Cq, 'linear')',...
+             interp1(Ci, Cmap(:, 3), Cq, 'linear')'];
+end
+
+
+% =========================================================================
 % Zhaoxu Liu / slandarer (2023). 200 colormaps 
 % (https://www.mathworks.com/matlabcentral/fileexchange/120088-200-colormap), 
 % MATLAB Central File Exchange. 检索来源 2023/3/15.
-end
+% =========================================================================

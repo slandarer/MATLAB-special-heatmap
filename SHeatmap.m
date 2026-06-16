@@ -1,5 +1,5 @@
 classdef SHeatmap < handle
-% Copyright (c) 2023-2025, Zhaoxu Liu / slandarer
+% Copyright (c) 2023-2026, Zhaoxu Liu / slandarer
 % =========================================================================
 % Format
 % -------------------------------------------------------------------------
@@ -8,45 +8,42 @@ classdef SHeatmap < handle
 %   SHM = SHeatmap(Data,'Format','sq');
 %   SHM = SHM1.draw();
 % -------------------------------------------------------------------------
-% 'sq'          : square (default)          : 方形(默认)
-% 'pie'         : pie chart                 : 饼图
-% 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
-% 'circ'        : circle                    : 圆形
-% 'bcirc'       : circle with box           : 有边框的圆形
-% 'oval'        : oval                      : 椭圆形
-% 'hex'         : hexagon                   ：六边形
-% 'star'        : star                      : 五角星
-% 'trill'(tril) : lower left triangle       : 下三角
-% 'triur'(triu) : upper right triangle      : 上三角
-% 'trilr'       : lower right triangle      : 右下三角
-% 'triul'       : upper left triangle       : 左上三角
-% 'asq'         : auto-size square          ：自带调整大小的方形
-% 'acirc'       : auto-size circular        ：自带调整大小的圆形
+%   'sq'          : square (default)          : 方形(默认)
+%   'pie'         : pie chart                 : 饼图
+%   'donut'       ：donut chart               : 环形饼图(甜甜圈图)
+%   'circ'        : circle                    : 圆形
+%   'bcirc'       : circle with box           : 有边框的圆形
+%   'oval'        : oval                      : 椭圆形
+%   'hex'         : hexagon                   ：六边形
+%   'star'        : star                      : 五角星
+%   'trill'(tril) : lower left triangle       : 下三角
+%   'triur'(triu) : upper right triangle      : 上三角
+%   'trilr'       : lower right triangle      : 右下三角
+%   'triul'       : upper left triangle       : 左上三角
+%   'asq'         : auto-size square          ：自带调整大小的方形
+%   'acirc'       : auto-size circular        ：自带调整大小的圆形
 % -------------------------------------------------------------------------
 % see demo2_2_Format_Custom.m for detail
-% 'cust'        : custom shape              : 自定义形状
-% 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
+%   'cust'        : custom shape              : 自定义形状
+%   'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
 % =========================================================================
-% TriType
+% Type
 % -------------------------------------------------------------------------
 % try:
 %   X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1,6), ...
-%                   (linspace(.5,-.7,20)').*ones(1,5), ...
-%                   (linspace(.9,-.2,20)').*ones(1,4)];
+%                       (linspace(.5,-.7,20)').*ones(1,5), ...
+%                       (linspace(.9,-.2,20)').*ones(1,4)];
 %   Data = corr(X);
 %   SHM = SHeatmap(Data, 'Type','sq');
 %   SHM = SHM.draw();
 %   SHM.setType('triu');
 % -------------------------------------------------------------------------
-% 'triu'   : upper triangle                  : 上三角部分
-% 'tril'   : lower triangle                  : 下三角部分
-% 'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
-% 'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
-% =========================================================================
-% Update(2025-12-01):
-% + 更多形状(More shapes)
-% + 使用不同colormap(Draw heat maps with two colormaps)
-% + 显示显著性(Displaying significance)
+%   'triu'   : upper triangle                  : 上三角部分
+%   'tril'   : lower triangle                  : 下三角部分
+%   'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
+%   'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
+
+
 % =========================================================================
 % @author : slandarer
 % 公众号  : slandarer随笔 
@@ -54,11 +51,23 @@ classdef SHeatmap < handle
 % Zhaoxu Liu / slandarer (2025). special heatmap 
 % (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), 
 % MATLAB Central File Exchange. 检索来源 2025/12/1.
-% -------------------------------------------------------------------------
+% =========================================================================
+
+
+% =========================================================================
+% Update(2025-12-01):
+% + 更多形状 (More shapes)
+% + 使用不同 colormap (Draw heat maps with two colormaps)
+% + 显示显著性 (Displaying significance)
+
 
     properties
-        ax,arginList={'Format','Parent','SData'}
-        Format='sq'  
+        ax, 
+        Parent = [];
+        arginList = {'Parent', 'Format', 'SData', 'Type'}
+        Data
+
+        Format = 'sq'  
         % 'sq'          : square (default)          : 方形(默认)
         % 'pie'         : pie chart                 : 饼图
         % 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
@@ -73,448 +82,673 @@ classdef SHeatmap < handle
         % 'triul'       : upper left triangle       : 左上三角
         % 'asq'         : auto-size square          ：自带调整大小的方形
         % 'acirc'       : auto-size circular        ：自带调整大小的圆形
-        Data
-        dfColor1=[0.9686    0.9882    0.9412;    0.9454    0.9791    0.9199;    0.9221    0.9700    0.8987;    0.8988    0.9609    0.8774;
-                  0.8759    0.9519    0.8560;    0.8557    0.9438    0.8338;    0.8354    0.9357    0.8115;    0.8152    0.9276    0.7892;
-                  0.7909    0.9180    0.7685;    0.7545    0.9039    0.7523;    0.7180    0.8897    0.7361;    0.6816    0.8755    0.7199;
-                  0.6417    0.8602    0.7155;    0.5962    0.8430    0.7307;    0.5507    0.8258    0.7459;    0.5051    0.8086    0.7610;
-                  0.4596    0.7873    0.7762;    0.4140    0.7620    0.7914;    0.3685    0.7367    0.8066;    0.3230    0.7114    0.8218;
-                  0.2837    0.6773    0.8142;    0.2483    0.6378    0.7929;    0.2129    0.5984    0.7717;    0.1775    0.5589    0.7504;
-                  0.1421    0.5217    0.7314;    0.1066    0.4853    0.7132;    0.0712    0.4488    0.6950;    0.0358    0.4124    0.6768;
-                  0.0314    0.3724    0.6364;    0.0314    0.3319    0.5929;    0.0314    0.2915    0.5494;    0.0314    0.2510    0.5059]
-        dfColor2=[0.6196    0.0039    0.2588;    0.6892    0.0811    0.2753;    0.7588    0.1583    0.2917;    0.8283    0.2354    0.3082;
-                  0.8706    0.2966    0.2961;    0.9098    0.3561    0.2810;    0.9490    0.4156    0.2658;    0.9660    0.4932    0.2931;
-                  0.9774    0.5755    0.3311;    0.9887    0.6577    0.3690;    0.9930    0.7266    0.4176;    0.9943    0.7899    0.4707;
-                  0.9956    0.8531    0.5238;    0.9968    0.9020    0.5846;    0.9981    0.9412    0.6503;    0.9994    0.9804    0.7161;
-                  0.9842    0.9937    0.7244;    0.9526    0.9810    0.6750;    0.9209    0.9684    0.6257;    0.8721    0.9486    0.6022;
-                  0.7975    0.9183    0.6173;    0.7228    0.8879    0.6325;    0.6444    0.8564    0.6435;    0.5571    0.8223    0.6448;
-                  0.4698    0.7881    0.6460;    0.3868    0.7461    0.6531;    0.3211    0.6727    0.6835;    0.2553    0.5994    0.7139;
-                  0.2016    0.5261    0.7378;    0.2573    0.4540    0.7036;    0.3130    0.3819    0.6694;    0.3686    0.3098    0.6353]
-        Colormap;maxV;Parent=[];SData=[];Colorbar
-        patchHdl;boxHdl;pieHdl;textHdl
-        % 修改为上下三角
-        Type='full';VarName;RLabelHdl;CLabelHdl
+        % 'cust'        : custom shape              : 自定义形状
+        % 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
+        SData = [.45, .21, .22, .09, .00, -.09, -.22, -.21, -.45, -.21, -.22, -.09, -.00,  .09,  0.22,  .21,   .45
+                 .00, .09, .22, .21, .45,  .21,  .22,  .09,  .00, -.09, -.22, -.21, -.45, -.21, -0.22, -.09, -.00];
+        Type = 'full';
+        % 'triu'   : upper triangle                  : 上三角部分
+        % 'tril'   : lower triangle                  : 下三角部分
+        % 'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
+        % 'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
+
+        Colormap;       % Colormap (颜色映射表)
+        Colorbar;       % Colorbar (颜色条)
+        textHdl;        % Text (data value) handle (文本句柄)
+        boxHdl;         % Outline handle (边框句柄)
+        patchHdl;       % Patch handle (填充图形句柄)
+        pieHdl;         % Pie chart handle (饼图句柄)
+
+        VarName;        % Data variable name (变量名称)
+        rowLabelHdl;    % Row label handle (行标签句柄)
+        colLabelHdl;    % Column label handle (列标签句柄)
     end
+
+    properties (Hidden)
+        maxV
+        defaultCmp1 = [.97, .99, .94; .95, .98, .92; .92, .97, .90;
+                       .90, .96, .88; .88, .95, .86; .86, .94, .83; 
+                       .84, .94, .81; .82, .93, .79; .79, .92, .77; 
+                       .75, .90, .75; .72, .89, .74; .68, .88, .72; 
+                       .64, .86, .72; .60, .84, .73; .55, .83, .75;
+                       .51, .81, .76; .46, .79, .78; .41, .76, .79; 
+                       .37, .74, .81; .32, .71, .82; .28, .68, .81; 
+                       .25, .64, .79; .21, .60, .77; .18, .56, .75; 
+                       .14, .52, .73; .11, .49, .71; .07, .45, .69; 
+                       .04, .41, .68; .03, .37, .64; .03, .33, .59;
+                       .03, .29, .55; .03, .25, .51];
+        defaultCmp2 = [.62, .00, .26; .69, .08, .28; .76, .16, .29;
+                       .83, .24, .31; .87, .30, .30; .91, .36, .28;
+                       .95, .42, .27; .97, .49, .29; .98, .58, .33;
+                       .99, .66, .37; .99, .73, .42; .99, .79, .47;
+                       1.0, .85, .52; 1.0, .90, .58; 1.0, .94, .65;
+                       1.0, .98, .72; .98, .99, .72; .95, .98, .68;
+                       .92, .97, .63; .87, .95, .60; .80, .92, .62;
+                       .72, .89, .63; .64, .86, .64; .56, .82, .64;
+                       .47, .79, .65; .39, .75, .65; .32, .67, .68;
+                       .26, .60, .71; .20, .53, .74; .26, .45, .70;
+                       .31, .38, .67; .37, .31, .64];
+    end
+
     methods
-        function obj=SHeatmap(varargin)
-            if isa(varargin{1},'matlab.graphics.axis.Axes')
-                obj.ax=varargin{1};varargin(1)=[];
-            else  
+
+% =========================================================================
+% Constructor: Create SHeatmap object (构造函数)
+% =========================================================================
+        function obj = SHeatmap(varargin)
+            % Parse axes handle if provided (解析坐标区句柄)
+            if isa(varargin{1}, 'matlab.graphics.axis.Axes')
+                obj.ax = varargin{1};
+                varargin(1) = [];
+            else
+                % No axes provided
             end
-            obj.Data=varargin{1};varargin(1)=[];
-            obj.maxV=max(max(abs(obj.Data)));
-            % 获取其他数据
-            for i=1:2:(length(varargin)-1)
-                tid=ismember(obj.arginList,varargin{i});
+
+            % Store data (存储数据)
+            obj.Data = varargin{1};
+            varargin(1) = [];
+            obj.maxV = max(max(abs(obj.Data)));
+
+            % Parse optional arguments (解析可选参数)
+            for i = 1:2:(length(varargin) - 1)
+                tid = ismember(lower(obj.arginList), lower(varargin{i}));
                 if any(tid)
-                    obj.(obj.arginList{tid})=varargin{i+1};
+                    obj.(obj.arginList{tid}) = varargin{i + 1};
                 end
             end
-            % 设置配色
-            if any(any(obj.Data<0))
-                obj.Colormap=obj.dfColor2;
-                % tX=linspace(0,1,size(obj.Colormap,1));
-                % tXi=linspace(0,1,256);
-                % tR=interp1(tX,obj.Colormap(:,1),tXi);
-                % tG=interp1(tX,obj.Colormap(:,2),tXi);
-                % tB=interp1(tX,obj.Colormap(:,3),tXi);
-                % obj.Colormap=[tR(:),tG(:),tB(:)];
+
+            % Choose colormap based on data sign (根据数据正负选择配色)
+            if any(any(obj.Data < 0))
+                obj.Colormap = obj.defaultCmp2;
             else
-                obj.Colormap=obj.dfColor1(end:-1:1,:);
+                obj.Colormap = obj.defaultCmp1(end:-1:1, :);
             end
         end
-        function obj=draw(obj)
+
+% =========================================================================
+% Draw: Render the SHeatmap (渲染热图)
+% =========================================================================
+        function obj = draw(obj)
+            % Draw the heatmap (绘制热图)
+            % Set axes handle (设置坐标轴句柄)
             if isempty(obj.Parent)
-                obj.ax=gca;
+                obj.ax = gca;
             else
-                obj.ax=obj.Parent;
+                obj.ax = obj.Parent;
             end
-            obj.ax.NextPlot='add';
-            obj.ax.Box='on';
-            obj.ax.FontName='Times New Roman';
-            obj.ax.FontSize=12;
-            obj.ax.LineWidth=.8;
-            obj.ax.XLim=[.5,size(obj.Data,2)+.5];
-            obj.ax.YLim=[.5,size(obj.Data,1)+.5];
-            obj.ax.YDir='reverse';
-            obj.ax.TickDir='out';
-            obj.ax.TickLength=[0.002,0.002];
-            obj.ax.DataAspectRatio=[1,1,1];
-            obj.ax.YTick=1:size(obj.Data,1);
-            obj.ax.XTick=1:size(obj.Data,2);
-            colormap(obj.ax,obj.Colormap)
+
+            % Configure axes properties (配置坐标轴属性)
+            obj.ax.NextPlot       = 'add';
+            obj.ax.Box            = 'on';
+            obj.ax.FontName       = 'Times New Roman';
+            obj.ax.FontSize       = 12;
+            obj.ax.LineWidth      = 0.8;
+            obj.ax.XLim           = [0.5, size(obj.Data, 2) + 0.5];
+            obj.ax.YLim           = [0.5, size(obj.Data, 1) + 0.5];
+            obj.ax.YDir           = 'reverse';
+            obj.ax.TickDir        = 'out';
+            obj.ax.TickLength     = [0.002, 0.002];
+            obj.ax.DataAspectRatio = [1, 1, 1];
+            obj.ax.YTick          = 1:size(obj.Data, 1);
+            obj.ax.XTick          = 1:size(obj.Data, 2);
+
+            % Apply colormap and colorbar (应用颜色映射和颜色条)
+            colormap(obj.ax, obj.Colormap);
             obj.Colorbar = colorbar(obj.ax);
 
-            if any(any(obj.Data<0))
-                try caxis(obj.ax,obj.maxV.*[-1,1]),catch,end
-                try clim(obj.ax,obj.maxV.*[-1,1]),catch,end
+            % Set color axis limits (设置颜色轴范围)
+            if any(any(obj.Data < 0))
+                try caxis(obj.ax, obj.maxV .* [-1, 1]), catch, end
+                try clim(obj.ax,  obj.maxV .* [-1, 1]), catch, end
             else
-                try caxis(obj.ax,obj.maxV.*[0,1]),catch,end
-                try clim(obj.ax,obj.maxV.*[0,1]),catch,end
+                try caxis(obj.ax, obj.maxV .* [0, 1]),  catch, end
+                try clim(obj.ax,  obj.maxV .* [0, 1]),  catch, end
             end
 
-            % 调整初始界面大小
-            
-            fig=obj.ax.Parent;
-            if strcmp(get(fig,'Type'),'figure')
-                fig.Color=[1,1,1];
-                if max(fig.Position(3:4))<600&&strcmp(fig.Units,'pixels')
-                    fig.Position(3:4)=[1.6,1.8].*fig.Position(3:4);
-                    fig.Position(1:2)=fig.Position(1:2)./4;
+            % Adjust figure size if needed (调整初始界面大小)
+            fig = obj.ax.Parent;
+            if strcmp(get(fig, 'Type'), 'figure')
+                fig.Color = [1, 1, 1];
+                if max(fig.Position(3:4)) < 600 && strcmp(fig.Units, 'pixels')
+                    fig.Position(3:4) = [1.6, 1.8] .* fig.Position(3:4);
+                    fig.Position(1:2) = fig.Position(1:2) ./ 4;
                 end
             end
 
-            bX1=repmat([.5,size(obj.Data,2)+.5,nan],[size(obj.Data,1)+1,1])';
-            bY1=repmat((.5:1:(size(obj.Data,1)+.5))',[1,3])';
-            bX2=repmat((.5:1:(size(obj.Data,2)+.5))',[1,3])';
-            bY2=repmat([.5,size(obj.Data,1)+.5,nan],[size(obj.Data,2)+1,1])';
-            obj.boxHdl=plot(obj.ax,[bX1(:);bX2(:)],[bY1(:);bY2(:)],'LineWidth',.8,'Color',[1,1,1].*.85);
-            if isequal(obj.Format,'sq')
-                set(obj.boxHdl,'Color',[1,1,1,0])
+            % Draw grid lines (绘制网格线)
+            bX1 = repmat([0.5, size(obj.Data, 2) + 0.5, nan], [size(obj.Data, 1) + 1, 1])';
+            bY1 = repmat((0.5:1:(size(obj.Data, 1) + 0.5))', [1, 3])';
+            bX2 = repmat((0.5:1:(size(obj.Data, 2) + 0.5))', [1, 3])';
+            bY2 = repmat([0.5, size(obj.Data, 1) + 0.5, nan], [size(obj.Data, 2) + 1, 1])';
+            obj.boxHdl = plot(obj.ax, [bX1(:); bX2(:)], [bY1(:); bY2(:)], ...
+                'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
+            if isequal(obj.Format, 'sq')
+                set(obj.boxHdl, 'Color', [1, 1, 1, 0]);
             end
 
-            % disp(char([64 97 117 116 104 111 114 32 58 32,...
-            %      115 108 97 110 100 97 114 101 114]))
-            baseT=linspace(0,2*pi,200);
-            hexT=linspace(0,2*pi,7);
-            starT=linspace(0,2*pi,11)+pi/10;
-            thetaMat=[1,-1;1,1].*sqrt(2)./2;
+            % Define base shape coordinates (定义基本形状坐标)
+            baseT   = linspace(0, 2*pi, 150);
+            hexT    = linspace(0, 2*pi, 7);
+            starT   = linspace(0, 2*pi, 11) + pi/10;
+            thetaMat = [1, -1; 1, 1] .* sqrt(2) ./ 2;
 
-            for row=1:size(obj.Data,1)
-                for col=1:size(obj.Data,2)    
-                    if isnan(obj.Data(row,col))
-                        obj.patchHdl(row,col)=fill(obj.ax,[-.5,.5,.5,-.5].*.98+col,[-.5,-.5,.5,.5].*.98+row,[.8,.8,.8],'EdgeColor','none');
-                        obj.pieHdl(row,col)=fill(obj.ax,[0,0,0,0],[0,0,0,0],[0,0,0]);
-                        obj.textHdl(row,col)=text(obj.ax,col,row,'×','FontName','Times New Roman','HorizontalAlignment','center','FontSize',20);
+            % Preallocate graphics handles (预分配图形句柄)
+            obj.patchHdl = gobjects(size(obj.Data, 1), size(obj.Data, 2));
+            obj.pieHdl   = gobjects(size(obj.Data, 1), size(obj.Data, 2));
+            obj.textHdl  = gobjects(size(obj.Data, 1), size(obj.Data, 2));
+
+            % Loop over each cell (遍历每个单元格)
+            for row = 1:size(obj.Data, 1)
+                for col = 1:size(obj.Data, 2)
+                    if isnan(obj.Data(row, col))
+                        % Handle NaN values (处理NaN值)
+                        obj.patchHdl(row, col) = fill(obj.ax, ...
+                            [-0.5, 0.5, 0.5, -0.5] .* 0.98 + col, ...
+                            [-0.5, -0.5, 0.5, 0.5] .* 0.98 + row, ...
+                            [0.8, 0.8, 0.8], 'EdgeColor', 'none');
+                        obj.pieHdl(row, col)   = fill(obj.ax, [0,0,0,0], [0,0,0,0], [0,0,0]);
+                        obj.textHdl(row, col)  = text(obj.ax, col, row, '×', ...
+                            'FontName', 'Times New Roman', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 20);
                     else
-                        tRatio=abs(obj.Data(row,col))./obj.maxV;
+                        tRatio = abs(obj.Data(row, col)) ./ obj.maxV;
+
+                        % Draw based on format (根据格式绘制)
                         switch obj.Format
                             case 'sq'
-                                obj.patchHdl(row,col)=fill(obj.ax,[-.5,.5,.5,-.5].*.98+col,[-.5,-.5,.5,.5].*.98+row,...
-                                    obj.Data(row,col),'EdgeColor','none');
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [-0.5, 0.5, 0.5, -0.5] .* 0.98 + col, ...
+                                    [-0.5, -0.5, 0.5, 0.5] .* 0.98 + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none');
                             case 'asq'
-                                obj.patchHdl(row,col)=fill(obj.ax,[-.5,.5,.5,-.5].*.98.*tRatio+col,[-.5,-.5,.5,.5].*.98.*tRatio+row,...
-                                    obj.Data(row,col),'EdgeColor','none');
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [-0.5, 0.5, 0.5, -0.5] .* 0.98 .* tRatio + col, ...
+                                    [-0.5, -0.5, 0.5, 0.5] .* 0.98 .* tRatio + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none');
                             case 'pie'
-                                baseCircX=cos(baseT).*.92.*.5;
-                                baseCircY=sin(baseT).*.92.*.5;
-                                obj.pieHdl(row,col)=fill(obj.ax,baseCircX+col,baseCircY+row,...
-                                    [1,1,1],'EdgeColor',[1,1,1].*.3,'LineWidth',.8);
-                                baseTheta=linspace(pi/2,pi/2+obj.Data(row,col)./obj.maxV.*2.*pi,200);
-                                basePieX=[0,cos(baseTheta).*.92.*.5];
-                                basePieY=[0,sin(baseTheta).*.92.*.5];
-                                obj.patchHdl(row,col)=fill(obj.ax,basePieX+col,-basePieY+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
+                                baseCircX = cos(baseT) .* 0.92 .* 0.5;
+                                baseCircY = sin(baseT) .* 0.92 .* 0.5;
+                                obj.pieHdl(row, col) = fill(obj.ax, baseCircX + col, baseCircY + row, ...
+                                    [1,1,1], 'EdgeColor', [1,1,1].*0.3, 'LineWidth', 0.8);
+                                baseTheta = linspace(pi/2, pi/2 + obj.Data(row, col)./obj.maxV .* 2.*pi, 200);
+                                basePieX  = [0, cos(baseTheta) .* 0.92 .* 0.5];
+                                basePieY  = [0, sin(baseTheta) .* 0.92 .* 0.5];
+                                obj.patchHdl(row, col) = fill(obj.ax, basePieX + col, -basePieY + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
                             case 'circ'
-                                baseCircX=cos(baseT).*.92.*.5;
-                                baseCircY=sin(baseT).*.92.*.5;
-                                obj.patchHdl(row,col)=fill(obj.ax,baseCircX+col,baseCircY+row,...
-                                    obj.Data(row,col),'EdgeColor','none','lineWidth',.8);
+                                baseCircX = cos(baseT) .* 0.92 .* 0.5;
+                                baseCircY = sin(baseT) .* 0.92 .* 0.5;
+                                obj.patchHdl(row, col) = fill(obj.ax, baseCircX + col, baseCircY + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none', 'lineWidth', 0.8);
                             case 'acirc'
-                                baseCircX=cos(baseT).*.92.*.5;
-                                baseCircY=sin(baseT).*.92.*.5;
-                                obj.patchHdl(row,col)=fill(obj.ax,baseCircX.*tRatio+col,baseCircY.*tRatio+row,...
-                                    obj.Data(row,col),'EdgeColor','none','lineWidth',.8);
+                                baseCircX = cos(baseT) .* 0.92 .* 0.5;
+                                baseCircY = sin(baseT) .* 0.92 .* 0.5;
+                                obj.patchHdl(row, col) = fill(obj.ax, baseCircX .* tRatio + col, baseCircY .* tRatio + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none', 'lineWidth', 0.8);
                             case 'oval'
-                                tValue=obj.Data(row,col)./obj.maxV;
-                                baseA=1+(tValue<=0).*tValue;
-                                baseB=1-(tValue>=0).*tValue;
-                                baseOvalX=cos(baseT).*.98.*.5.*baseA;
-                                baseOvalY=sin(baseT).*.98.*.5.*baseB;
-                                baseOvalXY=thetaMat*[baseOvalX;baseOvalY];
-                                obj.patchHdl(row,col)=fill(obj.ax,baseOvalXY(1,:)+col,-baseOvalXY(2,:)+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
+                                tValue = obj.Data(row, col) ./ obj.maxV;
+                                baseA = 1 + (tValue <= 0) .* tValue;
+                                baseB = 1 - (tValue >= 0) .* tValue;
+                                baseOvalX = cos(baseT) .* 0.98 .* 0.5 .* baseA;
+                                baseOvalY = sin(baseT) .* 0.98 .* 0.5 .* baseB;
+                                baseOvalXY = thetaMat * [baseOvalX; baseOvalY];
+                                obj.patchHdl(row, col) = fill(obj.ax, baseOvalXY(1,:) + col, -baseOvalXY(2,:) + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
                             case 'hex'
-                                obj.patchHdl(row,col)=fill(obj.ax,cos(hexT).*.5.*.98.*tRatio+col,sin(hexT).*.5.*.98.*tRatio+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
-                            % 2025-12-01 更新
-                            case 'star'
-                                tValue=obj.Data(row,col)./obj.maxV;
-                                baseStarX=cos(starT).*.92.*.5.*tValue;
-                                baseStarY=sin(starT).*.92.*.5.*tValue;
-                                baseStarX(1:2:end) = baseStarX(1:2:end).*.5;
-                                baseStarY(1:2:end) = baseStarY(1:2:end).*.5;
-                                obj.patchHdl(row,col)=fill(obj.ax,baseStarX+col,baseStarY+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
-                            case {'tril','trill'}
-                                obj.patchHdl(row,col)=fill(obj.ax,[-.5,.5,-.5]+col,[.5,.5,-.5]+row,...
-                                    obj.Data(row,col),'EdgeColor','none','lineWidth',.8);
-                            case {'triu','triur'}
-                                obj.patchHdl(row,col)=fill(obj.ax,[-.5,.5,.5]+col,[-.5,.5,-.5]+row,...
-                                    obj.Data(row,col),'EdgeColor','none','lineWidth',.8);   
-                            case {'triul'}
-                                obj.patchHdl(row,col)=fill(obj.ax,[.5,-.5,-.5]+col,[-.5,-.5,.5]+row,...
-                                    obj.Data(row,col),'EdgeColor','none','lineWidth',.8);
-                            case {'trilr'}
-                                obj.patchHdl(row,col)=fill(obj.ax,[-.5,.5,.5]+col,[.5,.5,-.5]+row,...
-                                    obj.Data(row,col),'EdgeColor','none','lineWidth',.8);
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    cos(hexT) .* 0.5 .* 0.98 .* tRatio + col, ...
+                                    sin(hexT) .* 0.5 .* 0.98 .* tRatio + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
+                            case 'star'   % 2025-12-01 updated
+                                tValue = obj.Data(row, col) ./ obj.maxV;
+                                baseStarX = cos(starT) .* 0.92 .* 0.5 .* tValue;
+                                baseStarY = sin(starT) .* 0.92 .* 0.5 .* tValue;
+                                baseStarX(1:2:end) = baseStarX(1:2:end) .* 0.5;
+                                baseStarY(1:2:end) = baseStarY(1:2:end) .* 0.5;
+                                obj.patchHdl(row, col) = fill(obj.ax, baseStarX + col, baseStarY + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
+                            case {'tril', 'trill'}
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [-0.5, 0.5, -0.5] + col, [0.5, 0.5, -0.5] + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none', 'lineWidth', 0.8);
+                            case {'triu', 'triur'}
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [-0.5, 0.5, 0.5] + col, [-0.5, 0.5, -0.5] + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none', 'lineWidth', 0.8);
+                            case 'triul'
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [0.5, -0.5, -0.5] + col, [-0.5, -0.5, 0.5] + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none', 'lineWidth', 0.8);
+                            case 'trilr'
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [-0.5, 0.5, 0.5] + col, [0.5, 0.5, -0.5] + row, ...
+                                    obj.Data(row, col), 'EdgeColor', 'none', 'lineWidth', 0.8);
                             case 'donut'
-                                baseCircX=cos(baseT-pi/2).*.92.*.5;
-                                baseCircY=sin(baseT-pi/2).*.92.*.5;
-                                obj.pieHdl(row,col)=fill(obj.ax,[baseCircX,baseCircX(end:-1:1).*.5]+col,[baseCircY,baseCircY(end:-1:1).*.5]+row,...
-                                    [1,1,1],'EdgeColor',[1,1,1].*.3,'LineWidth',.8);
-                                baseTheta=linspace(pi/2,pi/2+obj.Data(row,col)./obj.maxV.*2.*pi,200);
-                                basePieX=cos(baseTheta).*.92.*.5;
-                                basePieY=sin(baseTheta).*.92.*.5;
-                                obj.patchHdl(row,col)=fill(obj.ax,[basePieX,basePieX(end:-1:1).*.5]+col,-[basePieY,basePieY(end:-1:1).*.5]+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
+                                baseCircX = cos(baseT - pi/2) .* 0.92 .* 0.5;
+                                baseCircY = sin(baseT - pi/2) .* 0.92 .* 0.5;
+                                obj.pieHdl(row, col) = fill(obj.ax, ...
+                                    [baseCircX, baseCircX(end:-1:1).*0.5] + col, ...
+                                    [baseCircY, baseCircY(end:-1:1).*0.5] + row, ...
+                                    [1,1,1], 'EdgeColor', [1,1,1].*0.3, 'LineWidth', 0.8);
+                                baseTheta = linspace(pi/2, pi/2 + obj.Data(row, col)./obj.maxV .* 2.*pi, 200);
+                                basePieX  = cos(baseTheta) .* 0.92 .* 0.5;
+                                basePieY  = sin(baseTheta) .* 0.92 .* 0.5;
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    [basePieX, basePieX(end:-1:1).*0.5] + col, ...
+                                    -[basePieY, basePieY(end:-1:1).*0.5] + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
                             case 'cust'
-                                obj.patchHdl(row,col)=fill(obj.ax,obj.SData(1,:)+col,-obj.SData(2,:)+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    obj.SData(1,:) + col, -obj.SData(2,:) + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
                             case 'acust'
-                                obj.patchHdl(row,col)=fill(obj.ax,obj.SData(1,:).*tRatio+col,-obj.SData(2,:).*tRatio+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
+                                obj.patchHdl(row, col) = fill(obj.ax, ...
+                                    obj.SData(1,:) .* tRatio + col, -obj.SData(2,:) .* tRatio + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
                             case 'bcirc'
-                                baseCircX=cos(baseT).*.92.*.5;
-                                baseCircY=sin(baseT).*.92.*.5;
-                                obj.pieHdl(row,col)=fill(obj.ax,baseCircX+col,baseCircY+row,...
-                                    [1,1,1],'EdgeColor',[1,1,1].*.3,'LineWidth',.8);
-                                obj.patchHdl(row,col)=fill(obj.ax,baseCircX.*tRatio+col,baseCircY.*tRatio+row,...
-                                    obj.Data(row,col),'EdgeColor',[1,1,1].*.3,'lineWidth',.8);
-
-
+                                baseCircX = cos(baseT) .* 0.92 .* 0.5;
+                                baseCircY = sin(baseT) .* 0.92 .* 0.5;
+                                obj.pieHdl(row, col) = fill(obj.ax, baseCircX + col, baseCircY + row, ...
+                                    [1,1,1], 'EdgeColor', [1,1,1].*0.3, 'LineWidth', 0.8);
+                                obj.patchHdl(row, col) = fill(obj.ax, baseCircX .* tRatio + col, baseCircY .* tRatio + row, ...
+                                    obj.Data(row, col), 'EdgeColor', [1,1,1].*0.3, 'lineWidth', 0.8);
                         end
-                        obj.textHdl(row,col)=text(obj.ax,col,row,sprintf('%.2f',obj.Data(row,col)),'FontName','Times New Roman','HorizontalAlignment','center','Visible','off');
+
+                        % Add numeric text (hidden) (添加数值文本，默认隐藏)
+                        obj.textHdl(row, col) = text(obj.ax, col, row, ...
+                            sprintf('%.2f', obj.Data(row, col)), ...
+                            'FontName','Times New Roman', ...
+                            'HorizontalAlignment','center', 'Visible','off');
                     end
                 end
             end
-            % -------------------------------------------------------------
-            for i=1:length(obj.Data)
-                obj.VarName{i}=['Var-',num2str(i)];
+
+            % Create default variable names (生成默认变量名)
+            obj.VarName{length(obj.Data)} = '';
+            for i = 1:length(obj.Data)
+                obj.VarName{i} = ['Var-', num2str(i)];
             end
-            for row=1:size(obj.Data,1)
-                obj.RLabelHdl(row)=text(obj.ax,.5-.25,row,...
-                    obj.VarName{row},'HorizontalAlignment','right',...
-                    'FontName','Cambria','FontSize',12,'Visible','off');
+
+            % Add row labels ('Visible', 'off') (添加行标签，默认隐藏)
+            obj.rowLabelHdl = gobjects(1, size(obj.Data, 1));
+            for row = 1:size(obj.Data, 1)
+                obj.rowLabelHdl(row) = text(obj.ax, 0.5 - 0.25, row, ...
+                    obj.VarName{row}, 'HorizontalAlignment','right', ...
+                    'FontName','Cambria', 'FontSize',12, 'Visible','off');
             end
-            for col=1:size(obj.Data,2)
-                obj.CLabelHdl(col)=text(obj.ax,col,.5-.25,...
-                    obj.VarName{col},'HorizontalAlignment','left',...
-                    'FontName','Cambria','FontSize',12,'Rotation',30,'Visible','off');
+
+            % Add column labels ('Visible', 'off') (添加列标签，默认隐藏)
+            obj.colLabelHdl = gobjects(1, size(obj.Data, 2));
+            for col = 1:size(obj.Data, 2)
+                obj.colLabelHdl(col) = text(obj.ax, col, 0.5 - 0.25, ...
+                    obj.VarName{col}, 'HorizontalAlignment','left', ...
+                    'FontName','Cambria', 'FontSize',12, 'Rotation',30, 'Visible','off');
+            end
+
+            % Apply 'Type' if not full
+            if ~strcmp(obj.Type, 'full')
+                obj.setType(obj.Type);
             end
         end
-        % 修饰文本
-        function setText(obj,varargin)
-            graymap=mean(get(obj.ax,'Colormap'),2);
-            climit=get(obj.ax,'CLim');
-            for row=1:size(obj.Data,1)
-                for col=1:size(obj.Data,2)     
-                    set(obj.textHdl(row,col),'Visible','on','Color',...
-                        [1,1,1].*(interp1(linspace(climit(1),climit(2),size(graymap,1)),graymap,obj.Data(row,col))<.5),varargin{:})
+
+% =========================================================================
+% Text decoration (修饰文本)
+% =========================================================================
+        function setText(obj, varargin)
+            % Show text labels with auto-contrast color and hide based on matrix type
+            % (显示文本标签，自动调整对比色，并根据矩阵类型隐藏部分标签)
+
+            % Get grayscale of current colormap (获取当前颜色映射的灰度值)
+            graymap = mean(get(obj.ax, 'Colormap'), 2);
+            climit  = get(obj.ax, 'CLim');
+        
+            % Loop over all cells (遍历所有单元格)
+            for row = 1:size(obj.Data, 1)
+                for col = 1:size(obj.Data, 2)
+                    % Determine text color (black if background bright, white if dark)
+                    % (根据背景亮度决定文字颜色：亮底黑字，暗底白字)
+                    bgBrightness = interp1(linspace(climit(1), climit(2), size(graymap, 1)), ...
+                        graymap, obj.Data(row, col));
+                    if bgBrightness < 0.5
+                        textColor = [1, 1, 1];   % white (白色)
+                    else
+                        textColor = [0, 0, 0];   % black (黑色)
+                    end
+                    set(obj.textHdl(row, col), 'Visible','on', 'Color',textColor, varargin{:});
                 end
             end
             switch obj.Type
-                case 'triu'
-                    for row=1:size(obj.Data,1)
-                        for col=1:(row-1)
-                            set(obj.textHdl(row,col),'Visible','off')
+                case 'triu'      % upper triangle (including diagonal) (上三角，含对角线)
+                    for row = 1:size(obj.Data, 1)
+                        for col = 1:(row - 1)
+                            set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case 'tril'
-                    for col=1:size(obj.Data,2)
-                        for row=1:(col-1)
-                            set(obj.textHdl(row,col),'Visible','off')
+                case 'tril'      % lower triangle (including diagonal) (下三角，含对角线)
+                    for col = 1:size(obj.Data, 2)
+                        for row = 1:(col - 1)
+                            set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case 'triu0'
-                    for row=1:size(obj.Data,1)
-                        for col=1:(row)
-                            set(obj.textHdl(row,col),'Visible','off')
+                case 'triu0'     % upper triangle without diagonal (扣除对角线，上三角不含对角线)
+                    for row = 1:size(obj.Data, 1)
+                        for col = 1:(row)
+                            set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case 'tril0'
-                    for col=1:size(obj.Data,2)
-                        for row=1:(col)
-                            set(obj.textHdl(row,col),'Visible','off')
+                case 'tril0'     % lower triangle without diagonal (扣除对角线，下三角不含对角线)
+                    for col = 1:size(obj.Data, 2)
+                        for row = 1:(col)
+                            set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
             end
         end
-        function setTextMN(obj,m,n,varargin)
-            set(obj.textHdl(m,n),varargin{:})
+        
+        function setTextMN(obj, m, n, varargin)
+            % Set properties of the text label at cell (m,n)
+            % (设置指定单元格 (m,n) 的文本属性)
+            set(obj.textHdl(m, n), varargin{:})
         end
+
+% =========================================================================
+% Set properties for patch handles (设置图形样式)
+% =========================================================================
         % 设置图形样式
         function setPatch(obj,varargin)
-            for row=1:size(obj.Data,1)
-                for col=1:size(obj.Data,2)   
-                    if ~isnan(obj.Data(row,col))
-                        set(obj.patchHdl(row,col),varargin{:})
-                        if isequal(obj.Format,'pie')||isequal(obj.Format,'donut')||isequal(obj.Format,'bcirc')
-                            set(obj.pieHdl(row,col),varargin{:})
+            % Apply properties to all patch objects (and pie backgrounds if applicable)
+            % (为所有填充图形设置属性，对饼图类型同时设置背景)
+            for row = 1:size(obj.Data, 1)
+                for col = 1:size(obj.Data, 2)
+                    if ~isnan(obj.Data(row, col))
+                        set(obj.patchHdl(row, col), varargin{:});
+                        % For pie/donut/bcirc formats, also set the pie background handle
+                        % (对于 pie/donut/bcirc 格式，同时设置饼图背景句柄)
+                        if isequal(obj.Format, 'pie') || ...
+                                isequal(obj.Format, 'donut') || ...
+                                isequal(obj.Format, 'bcirc')
+                            set(obj.pieHdl(row, col), varargin{:});
                         end
                     end
                 end
             end
         end
-        function setPatchMN(obj,m,n,varargin)
-            set(obj.patchHdl(m,n),varargin{:})
-            if isequal(obj.Format,'pie')||isequal(obj.Format,'donut')||isequal(obj.Format,'bcirc')
-                set(obj.pieHdl(m,n),varargin{:})
+        function setPatchMN(obj, m, n, varargin)
+            % Apply properties to the patch object at cell (m,n)
+            % (设置指定单元格 (m,n) 的填充图形属性)
+            set(obj.patchHdl(m, n), varargin{:});
+            if isequal(obj.Format, 'pie') || ...
+                    isequal(obj.Format, 'donut') || ...
+                    isequal(obj.Format, 'bcirc')
+                set(obj.pieHdl(m, n), varargin{:});
             end
         end
-        % 设置框样式
+
+% =========================================================================
+% Set properties for box handle (设置框样式)
+% =========================================================================
         function setBox(obj,varargin)
             set(obj.boxHdl,varargin{:})
         end
-        % 调整上下三角
-        function obj=setType(obj,Type)
-            if size(obj.Data,1)==size(obj.Data,2)
-            obj.Type=Type;
-            obj.ax.XColor='none';
-            obj.ax.YColor='none';
-            obj.ax.YAxisLocation='right';
-            % obj.ax.YTickLabel='slandarer';
-            bX1=repmat([.5,size(obj.Data,2)+.5,nan],[size(obj.Data,1)+1,1])';
-            bY1=repmat((.5:1:(size(obj.Data,1)+.5))',[1,3])';
-            bX2=repmat((.5:1:(size(obj.Data,2)+.5))',[1,3])';
-            bY2=repmat([.5,size(obj.Data,1)+.5,nan],[size(obj.Data,2)+1,1])';
-            for n=1:size(obj.Data,1)
-                set(obj.RLabelHdl(n),'Visible','on');
-                set(obj.CLabelHdl(n),'Visible','on');
-            end
-            switch obj.Type
-                case 'triu'
-                    for row=1:size(obj.Data,1)
-                        for col=1:(row-1)
-                            set(obj.patchHdl(row,col),'Visible','off')
-                            set(obj.textHdl(row,col),'Visible','off')
-                            if isequal(obj.Format,'pie')||isequal(obj.Format,'donut')||isequal(obj.Format,'bcirc')
-                                set(obj.pieHdl(row,col),'Visible','off')
+
+% =========================================================================
+% Set triangular type (设置三角样式)
+% =========================================================================
+        function obj = setType(obj, Type)
+            % Adjust display to show only triangular part of the matrix based on Type
+            % (根据类型调整显示，仅展示矩阵的三角部分)
+        
+            % Only apply if matrix is square (仅当矩阵为方阵时生效)
+            if size(obj.Data, 1) == size(obj.Data, 2)
+        
+                obj.Type = Type;
+                % Hide axes labels and adjust axis location (隐藏坐标轴标签，调整轴位置)
+                obj.ax.XColor = 'none';
+                obj.ax.YColor = 'none';
+                obj.ax.YAxisLocation = 'right';
+        
+                % Recompute grid line coordinates (重新计算网格线坐标)
+                bX1 = repmat([0.5, size(obj.Data, 2) + 0.5, nan], [size(obj.Data, 1) + 1, 1])';
+                bY1 = repmat((0.5:1:(size(obj.Data, 1) + 0.5))', [1, 3])';
+                bX2 = repmat((0.5:1:(size(obj.Data, 2) + 0.5))', [1, 3])';
+                bY2 = repmat([0.5, size(obj.Data, 1) + 0.5, nan], [size(obj.Data, 2) + 1, 1])';
+        
+                % Show all row and column labels initially (初始显示所有行/列标签)
+                for n = 1:size(obj.Data, 1)
+                    set(obj.rowLabelHdl(n), 'Visible', 'on');
+                    set(obj.colLabelHdl(n), 'Visible', 'on');
+                end
+        
+                % Apply specific triangular type (应用特定三角类型)
+                %   'triu'   : upper triangle (including diagonal) : 上三角部分 (含对角线)
+                %   'tril'   : lower triangle (including diagonal) : 下三角部分 (含对角线)
+                %   'triu0'  : upper triangle without diagonal     : 扣除对角线上三角部分 (不含对角线)
+                %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
+                switch obj.Type
+                    case 'triu'   % upper triangle (including diagonal) (上三角含对角线)
+                        % Hide lower-left patches/texts (隐藏左下部分图形和文本)
+                        for row = 1:size(obj.Data, 1)
+                            for col = 1:(row - 1)
+                                set(obj.patchHdl(row, col), 'Visible', 'off');
+                                set(obj.textHdl(row, col),  'Visible', 'off');
+                                if isequal(obj.Format, 'pie') || ...
+                                        isequal(obj.Format, 'donut') || ...
+                                        isequal(obj.Format, 'bcirc')
+                                    set(obj.pieHdl(row, col), 'Visible', 'off');
+                                end
                             end
                         end
-                    end
-                    bX1(1,2:end)=bX1(1,2:end)+(0:size(obj.Data,1)-1);
-                    bY2(2,:)=[1.5:1:(size(obj.Data,1)+.5),(size(obj.Data,1)+.5)];
-                    set(obj.boxHdl,'XData',[bX1(:);bX2(:)],'YData',[bY1(:);bY2(:)])
-                    for n=1:size(obj.Data,1)
-                        set(obj.RLabelHdl(n),'Position',[.25-1+n,n,0]);
-                        set(obj.CLabelHdl(n),'Position',[n,.25,0]);
-                    end
-                case 'tril'
-                    for col=1:size(obj.Data,2)
-                        for row=1:(col-1)
-                            set(obj.patchHdl(row,col),'Visible','off')
-                            set(obj.textHdl(row,col),'Visible','off')
-                            if isequal(obj.Format,'pie')||isequal(obj.Format,'donut')||isequal(obj.Format,'bcirc')
-                                set(obj.pieHdl(row,col),'Visible','off')
+                        % Adjust grid lines to form upper triangular outline (调整网格线形成上三角轮廓)
+                        bX1(1, 2:end) = bX1(1, 2:end) + (0:size(obj.Data, 1)-1);
+                        bY2(2, :) = [1.5:1:(size(obj.Data, 1)+0.5), (size(obj.Data, 1)+0.5)];
+                        set(obj.boxHdl, 'XData', [bX1(:); bX2(:)], 'YData', [bY1(:); bY2(:)]);
+                        % Reposition row/column labels (重定位行/列标签)
+                        for n = 1:size(obj.Data, 1)
+                            set(obj.rowLabelHdl(n), 'Position', [0.25 - 1 + n, n, 0]);
+                            set(obj.colLabelHdl(n), 'Position', [n, 0.25, 0]);
+                        end
+        
+                    case 'tril'   % lower triangle (including diagonal) (下三角含对角线)
+                        % Hide upper-right patches/texts (隐藏右上部分图形和文本)
+                        for col = 1:size(obj.Data, 2)
+                            for row = 1:(col - 1)
+                                set(obj.patchHdl(row, col), 'Visible', 'off');
+                                set(obj.textHdl(row, col),  'Visible', 'off');
+                                if isequal(obj.Format, 'pie') || ...
+                                        isequal(obj.Format, 'donut') || ...
+                                        isequal(obj.Format, 'bcirc')
+                                    set(obj.pieHdl(row, col), 'Visible', 'off');
+                                end
                             end
                         end
-                    end
-                    bX1(2,1:end-1)=bX1(2,1:end-1)-(size(obj.Data,1)-1:-1:0);
-                    bY2(1,:)=[.5,.5:1:(size(obj.Data,1)-.5)];
-                    set(obj.boxHdl,'XData',[bX1(:);bX2(:)],'YData',[bY1(:);bY2(:)])
-                    for n=1:size(obj.Data,1)
-                        set(obj.RLabelHdl(n),'Position',[.25,n,0]);
-                        set(obj.CLabelHdl(n),'Position',[n,.25-1+n,0]);
-                    end
-                case 'triu0'
-                    for row=1:size(obj.Data,1)
-                        for col=1:(row)
-                            set(obj.patchHdl(row,col),'Visible','off')
-                            set(obj.textHdl(row,col),'Visible','off')
-                            if isequal(obj.Format,'pie')||isequal(obj.Format,'donut')||isequal(obj.Format,'bcirc')
-                                set(obj.pieHdl(row,col),'Visible','off')
+                        % Adjust grid lines to form lower triangular outline (调整网格线形成下三角轮廓)
+                        bX1(2, 1:end-1) = bX1(2, 1:end-1) - (size(obj.Data, 1)-1:-1:0);
+                        bY2(1, :) = [0.5, 0.5:1:(size(obj.Data, 1)-0.5)];
+                        set(obj.boxHdl, 'XData', [bX1(:); bX2(:)], 'YData', [bY1(:); bY2(:)]);
+                        % Reposition row/column labels (重定位行/列标签)
+                        for n = 1:size(obj.Data, 1)
+                            set(obj.rowLabelHdl(n), 'Position', [0.25, n, 0]);
+                            set(obj.colLabelHdl(n), 'Position', [n, 0.25 - 1 + n, 0]);
+                        end
+        
+                    case 'triu0'  % upper triangle without diagonal (扣除对角线，上三角不含对角线)
+                        % Hide diagonal and lower-left patches/texts (隐藏对角线及左下部分)
+                        for row = 1:size(obj.Data, 1)
+                            for col = 1:(row)
+                                set(obj.patchHdl(row, col), 'Visible', 'off');
+                                set(obj.textHdl(row, col),  'Visible', 'off');
+                                if isequal(obj.Format, 'pie') || ...
+                                        isequal(obj.Format, 'donut') || ...
+                                        isequal(obj.Format, 'bcirc')
+                                    set(obj.pieHdl(row, col), 'Visible', 'off');
+                                end
                             end
                         end
-                    end
-                    bX1(1,:)=bX1(1,:)+1;
-                    bX1(1,2:end)=bX1(1,2:end)+(0:size(obj.Data,1)-1);
-                    bY2(2,:)=[1.5:1:(size(obj.Data,1)+.5),(size(obj.Data,1)+.5)]-1;
-                    set(obj.boxHdl,'XData',[bX1(:);bX2(:)],'YData',[bY1(:);bY2(:)])
-                    for n=1:size(obj.Data,1)
-                        set(obj.RLabelHdl(n),'Position',[.25+n,n,0]);
-                        set(obj.CLabelHdl(n),'Position',[n,.25,0]);
-                    end
-                    set(obj.CLabelHdl(1),'Visible','off');
-                    set(obj.RLabelHdl(size(obj.Data,1)),'Visible','off');
-                case 'tril0'
-                    for col=1:size(obj.Data,2)
-                        for row=1:(col)
-                            set(obj.patchHdl(row,col),'Visible','off')
-                            set(obj.textHdl(row,col),'Visible','off')
-                            if isequal(obj.Format,'pie')||isequal(obj.Format,'donut')||isequal(obj.Format,'bcirc')
-                                set(obj.pieHdl(row,col),'Visible','off')
+                        % Adjust grid lines (调整网格线)
+                        bX1(1, :) = bX1(1, :) + 1;
+                        bX1(1, 2:end) = bX1(1, 2:end) + (0:size(obj.Data, 1)-1);
+                        bY2(2, :) = [1.5:1:(size(obj.Data, 1)+0.5), (size(obj.Data, 1)+0.5)] - 1;
+                        set(obj.boxHdl, 'XData', [bX1(:); bX2(:)], 'YData', [bY1(:); bY2(:)]);
+                        % Reposition labels and hide the first column and last row labels
+                        % (重定位标签，并隐藏第一列和最后一行的标签)
+                        for n = 1:size(obj.Data, 1)
+                            set(obj.rowLabelHdl(n), 'Position', [0.25 + n, n, 0]);
+                            set(obj.colLabelHdl(n), 'Position', [n, 0.25, 0]);
+                        end
+                        set(obj.colLabelHdl(1), 'Visible', 'off');
+                        set(obj.rowLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
+        
+                    case 'tril0'  % lower triangle without diagonal (扣除对角线，下三角不含对角线)
+                        % Hide diagonal and upper-right patches/texts (隐藏对角线及右上部分)
+                        for col = 1:size(obj.Data, 2)
+                            for row = 1:(col)
+                                set(obj.patchHdl(row, col), 'Visible', 'off');
+                                set(obj.textHdl(row, col),  'Visible', 'off');
+                                if isequal(obj.Format, 'pie') || ...
+                                        isequal(obj.Format, 'donut') || ...
+                                        isequal(obj.Format, 'bcirc')
+                                    set(obj.pieHdl(row, col), 'Visible', 'off');
+                                end
                             end
                         end
-                    end
-                    bX1(2,:)=bX1(2,:)-1;
-                    bX1(2,1:end-1)=bX1(2,1:end-1)-(size(obj.Data,1)-1:-1:0);
-                    bY2(1,:)=[.5,.5:1:(size(obj.Data,1)-.5)]+1;
-                    set(obj.boxHdl,'XData',[bX1(:);bX2(:)],'YData',[bY1(:);bY2(:)])
-                    for n=1:size(obj.Data,1)
-                        set(obj.RLabelHdl(n),'Position',[.25,n,0]);
-                        set(obj.CLabelHdl(n),'Position',[n,.25+n,0]);
-                    end
-                    set(obj.RLabelHdl(1),'Visible','off');
-                    set(obj.CLabelHdl(size(obj.Data,1)),'Visible','off');
-            end
-            end
-        end
-        % 设置变量标签
-        function setVarName(obj,VarName)
-            obj.VarName=VarName;VarNameLen=length(obj.VarName);
-            for n=1:size(obj.Data,1)
-                set(obj.RLabelHdl(n),'String',obj.VarName{mod(n-1,VarNameLen)+1})
-                set(obj.CLabelHdl(n),'String',obj.VarName{mod(n-1,VarNameLen)+1})
-            end
-        end
-        function setRowLabel(obj,varargin)
-            for n=1:size(obj.Data,1)
-                set(obj.RLabelHdl(n),varargin{:})
-            end
-        end
-        function setColLabel(obj,varargin)
-            for n=1:size(obj.Data,2)
-                set(obj.CLabelHdl(n),varargin{:})
-            end
-        end
-        % 2023-05-28 更新
-        function setTextFormat(obj,func)
-            for row=1:size(obj.Data,1)
-                for col=1:size(obj.Data,2)
-                    if ~isnan(obj.Data(row,col))
-                        tStr=func(obj.Data(row,col));
-                        set(obj.textHdl(row,col),'String',tStr)
-                    end
+                        % Adjust grid lines (调整网格线)
+                        bX1(2, :) = bX1(2, :) - 1;
+                        bX1(2, 1:end-1) = bX1(2, 1:end-1) - (size(obj.Data, 1)-1:-1:0);
+                        bY2(1, :) = [0.5, 0.5:1:(size(obj.Data, 1)-0.5)] + 1;
+                        set(obj.boxHdl, 'XData', [bX1(:); bX2(:)], 'YData', [bY1(:); bY2(:)]);
+                        % Reposition labels and hide the first row and last column labels
+                        % (重定位标签，并隐藏第一行和最后一列的标签)
+                        for n = 1:size(obj.Data, 1)
+                            set(obj.rowLabelHdl(n), 'Position', [0.25, n, 0]);
+                            set(obj.colLabelHdl(n), 'Position', [n, 0.25 + n, 0]);
+                        end
+                        set(obj.rowLabelHdl(1), 'Visible', 'off');
+                        set(obj.colLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
                 end
             end
-        end
-        % 2025-12-01 更新
-        function freezeColors(obj)
-            climit=get(obj.ax,'CLim');
-            cmap=get(obj.ax,'Colormap');
-            values=linspace(climit(1),climit(2),size(cmap,1)+1);
-            for row=1:size(obj.Data,1)
-                for col=1:size(obj.Data,2)
-                    tind=sum(obj.Data(row,col)>=values);
-                    tind(tind<=0)=1;
-                    tind(tind>size(cmap,1))=size(cmap,1);
-                    set(obj.patchHdl(row,col), 'FaceColor',cmap(tind,:))
-                end
-            end
-            obj.Colorbar.Colormap = cmap;
-            obj.Colorbar.Limits = climit;
-            obj.Colorbar.Position = obj.Colorbar.Position + [.03,0,0,0];
         end
 
+% =========================================================================
+% 设置变量标签 (Set variable labels)
+% =========================================================================
+        function setVarName(obj, VarName)
+            % Assign variable names to rows and columns (cyclically if fewer names than size)
+            % (为行和列分配变量名，若名称数量少于维度则循环使用)
+        
+            obj.VarName = VarName;
+            VarNameLen = length(obj.VarName);
+            for n = 1:size(obj.Data, 1)
+                % Apply names cyclically (循环应用名称)
+                idx = mod(n - 1, VarNameLen) + 1;
+                set(obj.rowLabelHdl(n), 'String', obj.VarName{idx});
+                set(obj.colLabelHdl(n), 'String', obj.VarName{idx});
+            end
+        end
+        
+        function setRowLabel(obj, varargin)
+            % Set properties for all row label text objects (设置所有行标签的属性)
+            for n = 1:size(obj.Data, 1)
+                set(obj.rowLabelHdl(n), varargin{:});
+            end
+        end
+        
+        function setColLabel(obj, varargin)
+            % Set properties for all column label text objects (设置所有列标签的属性)
+            for n = 1:size(obj.Data, 2)
+                set(obj.colLabelHdl(n), varargin{:});
+            end
+        end
+
+% =========================================================================
+% 自定义文本格式 (Custom text formatting)
+% =========================================================================
+% 2023-05-28 更新
+        function setTextFormat(obj, func)
+            % Apply a custom formatting function to all displayed text labels
+            % (对显示的所有文本标签应用自定义格式化函数)
+            %
+            %   func : function handle that takes a numeric value and returns a string
+            %          (函数句柄，接受数值并返回字符串)
+        
+            for row = 1:size(obj.Data, 1)
+                for col = 1:size(obj.Data, 2)
+                    if ~isnan(obj.Data(row, col))
+                        tStr = func(obj.Data(row, col));
+                        set(obj.textHdl(row, col), 'String', tStr);
+                    end
+                end
+            end
+        end
+
+% =========================================================================
+% Freeze colormap to data values (冻结颜色映射)
+% =========================================================================
+% 2025-12-01 更新
+        function freezeColors(obj)
+            % Permanently assign the current colormap colors to each patch based on its value,
+            % decoupling them from the colormap axis limits.
+            % (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围变化)
+        
+            climit = get(obj.ax, 'CLim');
+            cmap   = get(obj.ax, 'Colormap');
+            % Create bin edges for quantizing data values to colormap indices
+            % (创建分箱边界，将数据值量化到颜色映射索引)
+            values = linspace(climit(1), climit(2), size(cmap, 1) + 1);
+        
+            for row = 1:size(obj.Data, 1)
+                for col = 1:size(obj.Data, 2)
+                    % Find which color bin the value falls into (确定数值落在哪个颜色分箱)
+                    tind = sum(obj.Data(row, col) >= values);
+                    tind(tind <= 0) = 1;
+                    tind(tind > size(cmap, 1)) = size(cmap, 1);
+                    % Apply the fixed color (应用固定颜色)
+                    set(obj.patchHdl(row, col), 'FaceColor', cmap(tind, :));
+                end
+            end
+        
+            % Update colorbar to reflect the fixed colormap and limits
+            % (更新颜色条以反映固定的颜色映射和范围)
+            obj.Colorbar.Colormap = cmap;
+            obj.Colorbar.Limits   = climit;
+            % Slightly shift colorbar position to avoid overlap (微调颜色条位置避免重叠)
+            obj.Colorbar.Position = obj.Colorbar.Position + [0.03, 0, 0, 0];
+        end
+
+% =========================================================================
+% Display significance stars (显示显著性星标)
+% =========================================================================
         function showStars(obj, pval, varargin)
+            % Overlay significance stars on existing text labels based on p-values.
+            % (根据p值在现有文本标签上叠加显著性星标)
+            %
+            %   pval        : matrix of p-values corresponding to each data cell (p值矩阵)
+            %   'Levels'    : significance thresholds, default [0.05, 0.01, 0.001] (显著性阈值)
+            %   'CorrLabel' : 'on' to keep original text below stars, 'off' to replace (是否保留原文本)
+        
+            % Default options (默认选项)
             starobj.Levels = [0.05, 0.01, 0.001];
             starobj.CorrLabel = 'on';
             vararginList2 = {'Levels', 'CorrLabel'};
-            for i=1:2:(length(varargin)-1)
-                tid=ismember(vararginList2,varargin{i});
+        
+            % Parse optional input arguments (解析可选输入参数)
+            for i = 1:2:(length(varargin) - 1)
+                tid = ismember(lower(vararginList2), lower(varargin{i}));
                 if any(tid)
-                    starobj.(vararginList2{tid})=varargin{i+1};
+                    starobj.(vararginList2{tid}) = varargin{i + 1};
                 end
             end
-            for row=1:size(obj.Data,1)
-                for col=1:size(obj.Data,2)
-                    if ~isnan(obj.Data(row,col))
+            for row = 1:size(obj.Data, 1)
+                for col = 1:size(obj.Data, 2)
+                    if ~isnan(obj.Data(row, col))
                         if strcmp(starobj.CorrLabel, 'on')
-                            tStr=get(obj.textHdl(row,col),'String');
-                            set(obj.textHdl(row,col),'String',{obj.pval2stars(pval(row,col), starobj.Levels);tStr})
+                            % Keep original text and prepend stars in a cell array (保留原文本，星标在上)
+                            tStr = get(obj.textHdl(row, col), 'String');
+                            set(obj.textHdl(row, col), 'String', ...
+                                {obj.pval2stars(pval(row, col), starobj.Levels); tStr});
                         else
-                            set(obj.textHdl(row,col),'String',obj.pval2stars(pval(row,col), starobj.Levels))
+                            % Replace text with stars only (仅显示星标)
+                            set(obj.textHdl(row, col), 'String', ...
+                                obj.pval2stars(pval(row, col), starobj.Levels));
                         end
                     end
                 end
@@ -522,19 +756,37 @@ classdef SHeatmap < handle
         end
 
         function stars = pval2stars(~, pval, levels)
+            % pval2stars - Convert p-values to significance stars
+            %   stars = obj.pval2stars(pval) returns significance stars:
+            %       p < 0.05   -> '*'
+            %       p < 0.01   -> '**'
+            %       p < 0.001  -> '***'
+            %
+            %   stars = obj.pval2stars(pval, levels) custom significance thresholds
+            %       levels = [0.05, 0.01, 0.001] (default)
+            %
+            % Examples:
+            %   obj.pval2stars(0.03)   % returns '*'
+            %   obj.pval2stars(0.003)  % returns '***'
+
             if nargin < 2
                 levels = [0.05, 0.01, 0.001];
             end
-            stars = char(ones(1, sum(pval < levels)).*42);
+
+            % Generate asterisk string based on significance level
+            stars = repmat('*', 1, sum(pval < levels));
         end
     end
-% Copyright (c) 2023-2025, Zhaoxu Liu / slandarer
+end
+
+
 % =========================================================================
+% Copyright (c) 2023-2026, Zhaoxu Liu / slandarer
+% -------------------------------------------------------------------------
 % @author : slandarer
 % 公众号  : slandarer随笔 
 % -------------------------------------------------------------------------
-% Zhaoxu Liu / slandarer (2023). special heatmap 
+% Zhaoxu Liu / slandarer (2025). special heatmap 
 % (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), 
 % MATLAB Central File Exchange. 检索来源 2025/12/1.
-% -------------------------------------------------------------------------
-end
+% =========================================================================
