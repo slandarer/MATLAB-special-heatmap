@@ -1,12 +1,35 @@
 classdef SHeatmap < handle
-% Copyright (c) 2023-2026, Zhaoxu Liu / slandarer
+% SHeatmap Create and customize heatmaps with various cell shapes format
+% and triangular type
+%   SHM = SHeatmap(data); creates a heatmap from a numerical matrix with
+%   default square cells.
+%   从数值矩阵创建默认方形单元格热图。
+%
+%   SHM = SHeatmap(ax, ___); creates the heatmap in the specified axes.
+%   在指定坐标区创建热图。
+%
+%   SHM = SHeatmap(___, propName, propVal); specifies property name-value
+%   pairs when creating the object.
+%   创建对象时指定属性名-属性值对。
+%
+%   SHM.propName = propVal; sets properties before calling draw().
+%   在调用 draw() 前设置属性。
+%
+%   SHM = SHM.draw(); renders the heatmap.
+%   渲染热图。
+%
+% Basic usage:
+%   Data = rand(5, 15);
+%   SHM = SHeatmap(Data);
+%   SHM = SHM.draw();
+%
 % =========================================================================
 % Format
 % -------------------------------------------------------------------------
 % try:
-%   Data = rand(15,15);
-%   SHM = SHeatmap(Data,'Format','sq');
-%   SHM = SHM1.draw();
+%   Data = rand(15,15) - .5;
+%   SHM = SHeatmap(Data,'Format','donut');
+%   SHM = SHM.draw();
 % -------------------------------------------------------------------------
 %   'sq'          : square (default)          : 方形(默认)
 %   'pie'         : pie chart                 : 饼图
