@@ -1,6 +1,7 @@
 function colorList = slanCM(type, num)
 % slanCM - Get predefined colormap by name or ID
 %   colorList = slanCM(type) returns a colormap with default number of colors (256)
+%
 %   colorList = slanCM(type, num) returns a colormap with specified number of colors
 %
 % Input:
