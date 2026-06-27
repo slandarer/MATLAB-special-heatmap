@@ -89,22 +89,26 @@ ax.FontSize=14;
 ![输入图片说明](gallery/Basic_with_labels.png)
 
 ### 各类型热图绘制(Preparation of various Format of heat maps)
-+ sq    : square (default)     : 方形(默认)
-+ pie   : pie chart                : 饼图   
-+ circ  : circular                   : 圆形
-+ oval  : oval                       : 椭圆形
-+ hex   : hexagon                ：六边形
-+ asq   : auto-size square   ：自带调整大小的方形
-+ acirc : auto-size circular   ：自带调整大小的圆形
 
 ```matlab
-% sq    : square (default)   : 方形(默认)
-% pie   : pie chart          : 饼图   
-% circ  : circular           : 圆形
-% oval  : oval               : 椭圆形
-% hex   : hexagon            ：六边形
-% asq   : auto-size square   ：自带调整大小的方形
-% acirc : auto-size circular ：自带调整大小的圆形
+%   'sq'          : square (default)          : 方形(默认)
+%   'pie'         : pie chart                 : 饼图
+%   'donut'       ：donut chart               : 环形饼图(甜甜圈图)
+%   'circ'        : circle                    : 圆形
+%   'bcirc'       : circle with box           : 有边框的圆形
+%   'oval'        : oval                      : 椭圆形
+%   'hex'         : hexagon                   ：六边形
+%   'star'        : star                      : 五角星
+%   'trill'(tril) : lower left triangle       : 下三角
+%   'triur'(triu) : upper right triangle      : 上三角
+%   'trilr'       : lower right triangle      : 右下三角
+%   'triul'       : upper left triangle       : 左上三角
+%   'asq'         : auto-size square          ：自带调整大小的方形
+%   'acirc'       : auto-size circular        ：自带调整大小的圆形
+% -------------------------------------------------------------------------
+% see demo2_2_Format_Custom.m for detail
+%   'cust'        : custom shape              : 自定义形状
+%   'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
 
 Format={'sq','pie','circ','oval','hex','asq','acirc'};
 A=rand(12,12);
