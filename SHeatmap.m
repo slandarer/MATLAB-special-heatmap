@@ -397,7 +397,7 @@ classdef SHeatmap < handle
             for row = 1:size(obj.Data, 1)
                 obj.rowLabelHdl(row) = text(obj.ax, 0.5 - 0.25, row, ...
                     obj.VarName{row}, 'HorizontalAlignment','right', ...
-                    'FontName','Cambria', 'FontSize',12, 'Visible','off');
+                    'FontName','Times New Roman', 'FontSize',12, 'Visible','off');
             end
 
             % Add column labels ('Visible', 'off') (添加列标签，默认隐藏)
@@ -405,7 +405,7 @@ classdef SHeatmap < handle
             for col = 1:size(obj.Data, 2)
                 obj.colLabelHdl(col) = text(obj.ax, col, 0.5 - 0.25, ...
                     obj.VarName{col}, 'HorizontalAlignment','left', ...
-                    'FontName','Cambria', 'FontSize',12, 'Rotation',30, 'Visible','off');
+                    'FontName','Times New Roman', 'FontSize',12, 'Rotation',30, 'Visible','off');
             end
 
             % Apply 'Type' if not full
@@ -517,7 +517,7 @@ classdef SHeatmap < handle
 % =========================================================================
 % Set triangular type (设置三角样式)
 % =========================================================================
-        function obj = setType(obj, Type)
+        function setType(obj, Type)
             % Adjust display to show only triangular part of the matrix based on Type
             % (根据类型调整显示，仅展示矩阵的三角部分)
         
@@ -679,6 +679,54 @@ classdef SHeatmap < handle
             % Set properties for all column label text objects (设置所有列标签的属性)
             for n = 1:size(obj.Data, 2)
                 set(obj.colLabelHdl(n), varargin{:});
+            end
+        end
+
+        function setRowLabelLocation(obj, loc)
+            % 'left'/'right'/'diag
+            for n = 1:size(obj.Data, 1)
+                switch loc
+                    case 'left'
+                        set(obj.rowLabelHdl(n), 'Position', [0.25, n, 0], 'HorizontalAlignment', 'right')
+                    case 'right'
+                        set(obj.rowLabelHdl(n), 'Position', [size(obj.Data, 2) + 0.75, n, 0], 'HorizontalAlignment', 'left')
+                    case 'diag'
+                        switch obj.Type
+                            case 'tril'
+                                set(obj.rowLabelHdl(n), 'Position', [0.75 + n, n, 0], 'HorizontalAlignment', 'left')
+                            case 'tril0'
+                                set(obj.rowLabelHdl(n), 'Position', [0.75 - 1 + n, n, 0], 'HorizontalAlignment', 'left')
+                            case 'triu'
+                                set(obj.rowLabelHdl(n), 'Position', [0.25 - 1 + n, n, 0], 'HorizontalAlignment', 'right')
+                            case 'triu0'
+                                set(obj.rowLabelHdl(n), 'Position', [0.25 + n, n, 0], 'HorizontalAlignment', 'right')
+                        end
+                end
+            end
+
+
+        end
+
+        function setColLabelLocation(obj, loc)
+            % 'top'/'bottom'/'diag
+            for n = 1:size(obj.Data, 2)
+            switch loc
+                case 'top'
+                    set(obj.colLabelHdl(n), 'Position', [n, 0.25, 0], 'HorizontalAlignment', 'left')
+                case 'bottom'
+                    set(obj.colLabelHdl(n), 'Position', [n, size(obj.Data, 1) + 0.75, 0], 'HorizontalAlignment', 'right')
+                case 'diag'
+                    switch obj.Type
+                        case 'tril'
+                            set(obj.colLabelHdl(n), 'Position', [n, 0.25 - 1 + n, 0], 'HorizontalAlignment', 'left')
+                        case 'tril0'
+                            set(obj.colLabelHdl(n), 'Position', [n, 0.25 + n, 0], 'HorizontalAlignment', 'left')
+                        case 'triu'
+                            set(obj.colLabelHdl(n), 'Position', [n, n - .25 + 1, 0], 'HorizontalAlignment', 'right')
+                        case 'triu0'
+                            set(obj.colLabelHdl(n), 'Position', [n, n - .25, 0], 'HorizontalAlignment', 'right')
+                    end
+            end
             end
         end
 
