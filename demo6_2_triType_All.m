@@ -54,7 +54,7 @@ for i=1:length(Format)
     SHM_s4=SHM_s4.draw();
     % set Type (设置格式)
     SHM_s4.setType('triu');
-    % exportgraphics(gca,['gallery\Type_triu',Format{i},'.png'])
+    exportgraphics(gca,['gallery\Type_triu_',Format{i},'.png'])
 end
 
 %% Set Font (设置标签字体)

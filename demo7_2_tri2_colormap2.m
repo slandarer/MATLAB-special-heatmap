@@ -18,7 +18,7 @@ SHM_m1.freezeColors()
 
 SHM_m2=SHeatmap(Data2,'Format','trilr');
 SHM_m2=SHM_m2.draw();
-SHM_m2=SHM_m2.setType('tril');
+SHM_m2.setType('tril');
 colormap(cool(32));
 SHM_m2.Colorbar.Position(1) = SHM_m2.Colorbar.Position(1) + .1;
 

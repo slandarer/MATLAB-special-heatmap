@@ -10,6 +10,7 @@ function order = SDendrogram(Data, varargin)
 %
 %   order = SDendrogram(Data, 'Method', method) linkage method (default: 'average')
 
+
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap
 % (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap),

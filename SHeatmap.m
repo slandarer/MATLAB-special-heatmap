@@ -517,7 +517,7 @@ classdef SHeatmap < handle
 % =========================================================================
 % Set triangular type (设置三角样式)
 % =========================================================================
-        function setType(obj, Type)
+        function obj = setType(obj, Type)
             % Adjust display to show only triangular part of the matrix based on Type
             % (根据类型调整显示，仅展示矩阵的三角部分)
         

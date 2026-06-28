@@ -9,7 +9,7 @@ Data=corr(X);
 figure()
 SHM_m1=SHeatmap(Data,'Format','sq');
 SHM_m1=SHM_m1.draw();
-SHM_m1=SHM_m1.setType('tril');
+SHM_m1.setType('tril');
 SHM_m1.setColLabel('Visible','off')
 
 SHM_m2=SHeatmap(Data,'Format','hex');

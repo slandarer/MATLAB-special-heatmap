@@ -10,6 +10,7 @@ function [X, Y] = SClusterBlock(Class, varargin)
 %   'ColorList'     - custom color matrix for groups
 %   'BlockProp'     - cell array of patch properties
 
+
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap
 % (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap),

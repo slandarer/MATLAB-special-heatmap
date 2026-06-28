@@ -14,6 +14,12 @@ function [rho, pval, rperm] = mantel(dist1, dist2, varargin)
 %
 %   [rho, pval, rperm] = mantel(___) returns the permuted r values.
 
+% References
+% [1] Mantel N. The detection of disease clustering and a generalized regression approach. 
+%     Cancer Res. 1967 Feb;27(2):209-20. PMID: 6018555.
+% [2] Borcard, D. & Legendre, P. (2012) Is the Mantel correlogram powerful enough to be 
+%     useful in ecological analysis? A simulation study. Ecology 93: 1473-1481.
+% [3] Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English Edition. Elsevier.
 
 % Parse input arguments
 switch nargin

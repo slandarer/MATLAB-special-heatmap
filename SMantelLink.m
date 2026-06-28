@@ -1,48 +1,88 @@
 classdef SMantelLink < handle
+% SMantelLink Create Mantel test link visualization
+%   ML = SMantelLink(dataMat1, dataMat2) creates a Mantel link plot between
+%   two data matrices. Rows are samples, columns are variables.
+%   在两个数据矩阵之间创建Mantel链接图。行为样本，列为变量。
+%
+%   ML = SMantelLink(ax, ___) creates the plot in the specified axes.
+%   在指定坐标区创建绘图。
+%
+%   ML = SMantelLink(___, propName, propVal) specifies property name-value pairs.
+%   指定属性名-属性值对。
+%
+%   ML.propName = propVal; sets properties before calling draw().
+%   调用 draw() 前设置属性。
+%
+%   ML.draw(); renders the Mantel link plot.
+%   渲染 Mantel 链接图。
+
+
+% =========================================================================
+% @author : slandarer
+% 公众号  : slandarer随笔 
+% -------------------------------------------------------------------------
+% Zhaoxu Liu / slandarer (2025). special heatmap 
+% (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), 
+% MATLAB Central File Exchange. 检索来源 2025/12/1.
+% =========================================================================
+% References
+% [1] Mantel N. The detection of disease clustering and a generalized regression approach. 
+%     Cancer Res. 1967 Feb;27(2):209-20. PMID: 6018555.
+% [2] Borcard, D. & Legendre, P. (2012) Is the Mantel correlogram powerful enough to be 
+%     useful in ecological analysis? A simulation study. Ecology 93: 1473-1481.
+% [3] Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English Edition. Elsevier.
+% [4] Houyun Huang(2021). linkET: Everything is Linkable. R package version 0.0.3.
 
     properties
         ax, 
         Parent = [];
         arginList = {'Parent', 'Group', 'GroupName', 'Layout', ...
                      'RBreak', 'PBreak', 'Method', 'NumPerm'}
+
+        % Input data matrices: rows=samples, cols=variables (输入数据矩阵：行=样本，列=变量)
         dataMat1
         dataMat2
 
+        % Distance method: string or function handle (距离方法：字符串或函数句柄)
         Distance1 = 'euclidean';
         Distance2 = @(ZI, ZJ) sum(abs(ZI - ZJ), 2) ./ sum(ZI + ZJ, 2);
 
+        % Node colors (节点颜色)
         NodeColor1 = [150, 150, 150]./255
         NodeColor2 = [150, 150, 150]./255
 
-        Group
-        GroupName
-        Layout = 'triu'            % 'tril'/'triu'
-        LegendLocation = 'east'    % 'west'/'east'
+        Group                         % Group assignments for columns of dataMat2 (dataMat2列的分组)
+        GroupName                     % Group names (组名)                   
+        Layout = 'triu'               % 'tril'/'triu'
+        LegendLocation = 'east'       % 'west'/'east'
         LegendTitle = {"Mantel's p", "Mantel's r", "Pearson's r"}
         LegendPosition
 
-        PBreak = [-inf, .01, .05, inf];
-        PLabel
-        PColor = [217,95,2; 27,158,119; 224,224,224]./255;
-        PValue
-        PLevel
+        PBreak = [-inf, .01, .05, inf];                      % P-value breakpoints (P值断点)
+        PLabel                                               % P-value labels (P值标签)
+        PColor = [217,95,2; 27,158,119; 224,224,224]./255;   % P-value colors (P值颜色)
+        PValue                                               % P-value matrix (P值矩阵)
+        PLevel                                               % % P-value level indices (P值等级索引)
 
-        RBreak = [-inf, .2, .4, inf];
-        RLabel  
-        RWidth = [1, 4, 8]
-        RValue
-        RLevel
+        RBreak = [-inf, .2, .4, inf];                        % R-value breakpoints for line width mapping (R值线宽映射的断点)
+        RLabel                                               % R-value labels (R值标签)
+        RWidth = [1, 4, 8]                                   % R-value line widths (R值对应的线宽)
+        RValue                                               % R-value matrix (R值矩阵)
+        RLevel                                               % R-value level indices (R值等级索引)
 
-        CBreak = [-1, -.5, 0, .5, 1]
+        % Colorbar breakpoints (颜色条断点)
+        % Colorbar ticks
+        CBreak = [-1, -.5, 0, .5, 1]                           
 
-        Method = 'Pearson'
-        NumPerm = 999;
+        Method = 'Pearson'          % 'Pearson'/'Kendall'/'Spearman', correlation method                   
+        NumPerm = 999;              % Number of permutations (置换次数)
 
-        NodePositon1
+        % Node positions (节点位置)
+        NodePositon1             
         NodePositon2
 
         LinkBendMode = 'mirror'      % 'mirror'/'simple'
-        Curvature = 0.2;
+        Curvature = 0.2;             % Curvature strength (弯曲强度)
 
         node1Hdl
         node2Hdl
@@ -106,6 +146,7 @@ classdef SMantelLink < handle
                 obj.GroupName = compose('group-%d', 1:max(obj.Group));
             end
 
+            % Compute Mantel test for each variable-group pair (计算每对变量-组的 Mantel 检验)
             obj.PValue = zeros([size(obj.dataMat1, 2), max(obj.Group)]);
             obj.RValue = zeros([size(obj.dataMat1, 2), max(obj.Group)]);
             for i = 1:size(obj.dataMat1, 2)
@@ -114,12 +155,13 @@ classdef SMantelLink < handle
                     M2 = obj.dataMat2(:, obj.Group == j);
                     D1 = squareform(pdist(M1, obj.Distance1));
                     D2 = squareform(pdist(M2, obj.Distance2));
-                    [rho, pval] = mantel(D1, D2);
+                    [rho, pval] = mantel(D1, D2, obj.NumPerm, obj.Method);
                     obj.RValue(i, j) = rho;
                     obj.PValue(i, j) = pval;
                 end
             end
 
+            % Compute level indices (计算等级索引)
             obj.PLevel = zeros([size(obj.dataMat1, 2), max(obj.Group)]);
             obj.RLevel = zeros([size(obj.dataMat1, 2), max(obj.Group)]);
 
@@ -130,6 +172,7 @@ classdef SMantelLink < handle
                 obj.RLevel = obj.RLevel + (obj.RValue > obj.RBreak(i));
             end
 
+            % Set default node positions if not provided (若未提供节点位置则设置默认位置)
             if isempty(obj.NodePositon1)
                 obj.NodePositon1 = repmat((1: size(obj.dataMat1, 2)).', [1,2]);
             end
@@ -156,6 +199,7 @@ classdef SMantelLink < handle
                 end
             end
 
+            % Draw curved links (绘制弯曲链接)
             tCur = obj.Curvature;
             if strcmpi(obj.Layout, 'tril')
                 tCur = - tCur;
@@ -220,8 +264,9 @@ classdef SMantelLink < handle
                 end
             end
 
-            
             tPos = obj.LegendPosition;
+
+            % Legend: P-value color mapping (图例：P值颜色映射)
             obj.legendTitleHdl = text(obj.ax, tPos([1,1,1]), tPos(2) + [0, 1/3, 2/3].*tPos(4), ...
                 obj.LegendTitle, 'FontName','Times New Roman', 'FontSize',17, 'FontWeight','bold');
             obj.legendTickLabelHdl = gobjects(1, 0);
@@ -236,6 +281,7 @@ classdef SMantelLink < handle
                 tN = tN + 1;
             end
 
+            % Legend: R-value width mapping (图例：R值宽度映射)
             bY1 = tPos(2) + tPos(4)/3 + tPos(4)/30; 
             bL = 7*tPos(4)/30/(length(obj.RBreak) - 1);
             for i = 1:length(obj.PLabel)
@@ -245,6 +291,8 @@ classdef SMantelLink < handle
                     obj.RLabel{i}, 'FontName','Times New Roman', 'FontSize',12);
                 tN = tN + 1;
             end
+
+            % Legend: Colorbar for correlation values (图例：相关性颜色条)
             cl = obj.ax.CLim;
             tCbreak = obj.CBreak;
             tCbreak(tCbreak < cl(1)) = [];
@@ -274,7 +322,7 @@ classdef SMantelLink < handle
             end
 
 
-
+            % Set view and axis limits (设置视图和坐标轴范围)
             view(obj.ax, 2)
             axis(obj.ax, 'tight');
             switch obj.LegendLocation
