@@ -1,5 +1,6 @@
 %% Heatmap with Mantel test links
 
+rng(7)
 %% Load data (加载数据)
 load('lichenData.mat')                  % Load pre-saved data package (加载预存的数据包)
 Data1 = varechem.Variables;             % Environmental matrix (环境因子矩阵)
@@ -43,6 +44,10 @@ objML = SMantelLink(ax, Data1, Data2, 'Group',group);
 objML.GroupName = groupName;          % Set group names (设置组名)
 objML.LegendLocation = 'west';        % Place legend on the left (图例置于左侧)
 objML.Layout = 'triu';                % Links placed in upper triangle (链接采用上三角布局)
+
+% objML.Curvature = -1/3;
+% objML.LinkBendMode = 'simple';
+
 objML.draw()                          % Render the links (渲染链接图)
 
 

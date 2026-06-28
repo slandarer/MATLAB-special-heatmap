@@ -1,5 +1,6 @@
 %% Heatmap with Mantel test links - tril layout
 
+rng(7)
 %% Load data
 load('lichenData.mat')
 Data1 = varechem.Variables;
@@ -49,7 +50,6 @@ objML.NodeColor1 = [184,207,248]./255;
 objML.NodeColor2 = [184,207,248]./255;
 
 objML.draw()
-
 
 % Adjust legend and group label fonts (调整图例和组标签字体)
 set(objML.legendTitleHdl, 'FontName','Helvetica')
