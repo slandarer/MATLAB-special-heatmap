@@ -74,6 +74,7 @@ classdef SMantelLink < handle
         % Colorbar ticks
         CBreak = [-1, -.5, 0, .5, 1]                           
 
+        FastMantel = 'on'
         Method = 'Pearson'          % 'Pearson'/'Kendall'/'Spearman', correlation method                   
         NumPerm = 999;              % Number of permutations (置换次数)
 
@@ -155,7 +156,14 @@ classdef SMantelLink < handle
                     M2 = obj.dataMat2(:, obj.Group == j);
                     D1 = squareform(pdist(M1, obj.Distance1));
                     D2 = squareform(pdist(M2, obj.Distance2));
-                    [rho, pval] = mantel(D1, D2, obj.NumPerm, obj.Method);
+
+                    % [rho, pval] = mantel(D1, D2, obj.NumPerm, obj.Method);
+                    if size(obj.dataMat1, 1).^2*obj.NumPerm < 2e8 && strcmpi(obj.FastMantel, 'on')
+                        [rho, pval] = mantelFast(D1, D2, obj.NumPerm, obj.Method);
+                    else
+                        [rho, pval] = mantel(D1, D2, obj.NumPerm, obj.Method);
+                    end
+                    
                     obj.RValue(i, j) = rho;
                     obj.PValue(i, j) = pval;
                 end

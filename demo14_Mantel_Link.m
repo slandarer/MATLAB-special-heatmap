@@ -47,8 +47,10 @@ objML.Layout = 'triu';                % Links placed in upper triangle (链接�
 
 % objML.Curvature = -1/3;
 % objML.LinkBendMode = 'simple';
+% objML.NumPerm = 9999;
 
 objML.draw()                          % Render the links (渲染链接图)
+
 
 
 

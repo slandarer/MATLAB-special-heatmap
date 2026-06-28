@@ -1,18 +1,18 @@
-function [rho, pval, rperm] = mantel(dist1, dist2, varargin)
+function [rho, pval, rperm] = mantelFast(dist1, dist2, varargin)
 % MANTEL - Mantel test for matrix correlation
-%   rho = mantel(dist1, dist2) performs Mantel test with 999 permutations
+%   rho = mantelFast(dist1, dist2) performs Mantel test with 999 permutations
 %   using Pearson correlation.
 %
-%   rho = mantel(dist1, dist2, nperm) specifies number of permutations.
+%   rho = mantelFast(dist1, dist2, nperm) specifies number of permutations.
 %
-%   rho = mantel(dist1, dist2, method) specifies correlation method
+%   rho = mantelFast(dist1, dist2, method) specifies correlation method
 %         ('Pearson'(default)/'Kendall'/'Spearman').
 %
-%   rho = mantel(dist1, dist2, nperm, method) sets both.
+%   rho = mantelFast(dist1, dist2, nperm, method) sets both.
 %
-%   [rho, pval] = mantel(___) also returns the p-value (one-sided).
+%   [rho, pval] = mantelFast(___) also returns the p-value (one-sided).
 %
-%   [rho, pval, rperm] = mantel(___) returns the permuted r values.
+%   [rho, pval, rperm] = mantelFast(___) returns the permuted r values.
 
 % References
 % [1] Mantel N. The detection of disease clustering and a generalized regression approach. 
@@ -36,25 +36,20 @@ switch nargin
     otherwise
         error('Invalid number of input arguments.');
 end
-
 % Extract lower-triangular vectors
 N = size(dist1, 1);
 ind = tril(true(N), -1);
-V1 = dist1(ind);
-V2 = dist2(ind);
+V1 = dist1(ind); V2 = dist2(ind);
 
 % Observed correlation
 rho = corr(V1, V2, 'Type', method);
 
 % Permutation test
-rperm = zeros(nperm, 1);
-for i = 1:nperm
-    perm = randperm(N);
-    dist2_perm = dist2(perm, perm);
-    V2_perm = dist2_perm(ind);
-    rperm(i) = corr(V1, V2_perm, 'Type', method);
-end
+[~, perm] = sort(rand(N, nperm), 1);
+[indR, indC] = find(tril(true(N), -1));
+V2 = dist2(sub2ind([N, N], perm(indR, :), perm(indC, :)));
+rperm = corr(V1, V2, 'Type', method);
 
-% p-value (one-sided, positive correlation)
+% p-value with +1 correction
 pval = (sum(rperm >= rho) + 1) / (nperm + 1);
 end
