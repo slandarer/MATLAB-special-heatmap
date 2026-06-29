@@ -144,7 +144,7 @@ classdef SMantelLink < handle
             end
 
             if isempty(obj.GroupName)
-                obj.GroupName = compose('group-%d', 1:max(obj.Group));
+                obj.GroupName = compose('Group-%d', 1:max(obj.Group));
             end
 
             % Compute Mantel test for each variable-group pair (计算每对变量-组的 Mantel 检验)
