@@ -120,7 +120,7 @@ classdef SMantelLink < handle
             end
         end
 
-        function draw(obj)
+        function [varargout] = draw(obj)
             % Set axes handle (设置坐标轴句柄)
             if isempty(obj.Parent)
                 obj.ax = gca;
@@ -348,6 +348,10 @@ classdef SMantelLink < handle
                 coe1 = factorial(p) ./ factorial(0:p) ./ factorial(p:-1:0);
                 coe2 = ((t) .^ ((0:p)')) .* ((1 - t) .^ ((p:-1:0)'));
                 pnts = (pnts' * (coe1' .* coe2))';
+            end
+
+            if nargout == 1
+                varargout = {obj};
             end
         end
 
