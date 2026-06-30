@@ -120,7 +120,7 @@ classdef SMantelLink < handle
             end
         end
 
-        function [varargout] = draw(obj)
+        function varargout = draw(obj)
             % Set axes handle (设置坐标轴句柄)
             if isempty(obj.Parent)
                 obj.ax = gca;

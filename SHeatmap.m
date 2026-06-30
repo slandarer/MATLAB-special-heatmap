@@ -191,7 +191,7 @@ classdef SHeatmap < handle
 % =========================================================================
 % Draw: Render the SHeatmap (渲染热图)
 % =========================================================================
-        function [varargout] = draw(obj)
+        function varargout = draw(obj)
             % Draw the heatmap (绘制热图)
             % Set axes handle (设置坐标轴句柄)
             if isempty(obj.Parent)
