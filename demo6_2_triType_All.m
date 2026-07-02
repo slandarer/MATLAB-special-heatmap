@@ -17,7 +17,7 @@ Type={'triu','tril','triu0','tril0'};
 for i=1:length(Type)
     figure()
     SHM_s1=SHeatmap(Data,'Format','sq');
-    SHM_s1=SHM_s1.draw();
+    SHM_s1.draw();
     SHM_s1.setText();
     % set Type (设置格式)
     SHM_s1.setType(Type{i});
@@ -28,7 +28,7 @@ end
 %% Set variable labels' String (设置标签名称)
 figure()
 SHM_s2=SHeatmap(Data,'Format','sq');
-SHM_s2=SHM_s2.draw();
+SHM_s2.draw();
 SHM_s2.setType('tril');
 
 varName={'A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5'};
@@ -39,7 +39,7 @@ SHM_s2.setVarName(varName)
 %% Adjust the axis Limit to avoid occlusion (调整轴范围以避免遮挡)
 figure()
 SHM_s3=SHeatmap(Data,'Format','pie');
-SHM_s3=SHM_s3.draw();
+SHM_s3.draw();
 SHM_s3.setType('tril');
 SHM_s3.setVarName({'Slandarer'})
 ax=gca;
@@ -51,7 +51,7 @@ Format={'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','tri
 for i=1:length(Format)
     figure()
     SHM_s4=SHeatmap(Data,'Format',Format{i});
-    SHM_s4=SHM_s4.draw();
+    SHM_s4.draw();
     % set Type (设置格式)
     SHM_s4.setType('triu');
     exportgraphics(gca,['gallery\Type_triu_',Format{i},'.png'])
@@ -60,7 +60,7 @@ end
 %% Set Font (设置标签字体)
 figure()
 SHM_s5=SHeatmap(Data,'Format','circ');
-SHM_s5=SHM_s5.draw();
+SHM_s5.draw();
 SHM_s5.setType('triu');
 % Set Font Color (设置标签颜色)
 SHM_s5.setRowLabel('Color',[.8,0,0])

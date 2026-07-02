@@ -13,7 +13,7 @@ SHM_A=SHM_A.draw();
 
 % 绘制含负数热图(Draw heat map with negative number)
 figure();
-SHM_B=SHeatmap(B,'Format','donut');
+SHM_B=SHeatmap(B,'Format','txt');
 SHM_B=SHM_B.draw();
 
 
@@ -31,3 +31,4 @@ SHM_B=SHM_B.draw();
 % 'triul'       : upper left triangle       : 左上三角
 % 'asq'         : auto-size square          ：自带调整大小的方形
 % 'acirc'       : auto-size circular        ：自带调整大小的圆形
+% 'txt'(text)   : colored text              : 带颜色的文本

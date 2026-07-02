@@ -8,28 +8,28 @@ end
 figure()
 Data=rand(15,15);
 SHM1=SHeatmap(Data,'Format','sq');
-SHM1=SHM1.draw();
+SHM1.draw();
 % exportgraphics(gca,'gallery\Basic_positive.png')
 
 %% Contains negative numbers (绘制有负数热图)
 figure()
 Data=rand(15,15)-.5;
 SHM2=SHeatmap(Data,'Format','sq');
-SHM2=SHM2.draw();
+SHM2.draw();
 % exportgraphics(gca,'gallery\Basic_negative.png')
 
 %% Draw heat maps of different sizes (绘制不同大小热图)
 figure()
 Data=rand(25,30);
 SHM4=SHeatmap(Data,'Format','sq');
-SHM4=SHM4.draw();
+SHM4.draw();
 % exportgraphics(gca,'gallery\Basic_25_30.png')
 
 %% Adjust the colorbar Location (调整colorbar位置)
 figure()
 Data=rand(3,12);
 SHM5=SHeatmap(Data,'Format','sq');
-SHM5=SHM5.draw();
+SHM5.draw();
 CB=colorbar;
 CB.Location='southoutside';
 % exportgraphics(gca,'gallery\Basic_colorbar_location.png')
@@ -38,7 +38,7 @@ CB.Location='southoutside';
 figure()
 Data=rand(12,12)-.5;
 Data([4,5,13])=nan;
-SHM6=SHeatmap(Data,'Format','sq');
+SHeatmap(Data,'Format','sq');
 SHM6=SHM6.draw();
 % exportgraphics(gca,'gallery\Basic_with_NaN.png')
 
@@ -47,7 +47,7 @@ figure()
 Data=rand(12,12)-.5;
 Data([4,5,13])=nan;
 SHM7=SHeatmap(Data,'Format','sq');
-SHM7=SHM7.draw();
+SHM7.draw();
 SHM7.setText();
 % exportgraphics(gca,'gallery\Basic_with_text.png')
 
@@ -55,7 +55,7 @@ SHM7.setText();
 figure()
 Data=rand(12,12);
 SHM8=SHeatmap(Data,'Format','sq');
-SHM8=SHM8.draw(); 
+SHM8.draw(); 
 ax=gca;
 ax.XTickLabel={'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
 ax.YTickLabel={'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};

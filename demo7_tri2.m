@@ -22,4 +22,5 @@ SHM_m2.setColLabel('Visible','on') % Show the hidden Var-1 label (显示隐藏�
 % colormap(slanCM(141))
 
 SHM_m1.setText();
+% SHM_m2.setText();
 % exportgraphics(gca,'gallery\Type_tri2_1.png')

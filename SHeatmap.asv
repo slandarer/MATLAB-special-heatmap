@@ -623,9 +623,7 @@ classdef SHeatmap < handle
                         % Hide diagonal and lower-left patches/texts (隐藏对角线及左下部分)
                         for row = 1:size(obj.Data, 1)
                             for col = 1:(row)
-                                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
-                                    set(obj.patchHdl(row, col), 'Visible', 'off');
-                                end
+                                set(obj.patchHdl(row, col), 'Visible', 'off');
                                 set(obj.textHdl(row, col),  'Visible', 'off');
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
@@ -652,9 +650,7 @@ classdef SHeatmap < handle
                         % Hide diagonal and upper-right patches/texts (隐藏对角线及右上部分)
                         for col = 1:size(obj.Data, 2)
                             for row = 1:(col)
-                                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
-                                    set(obj.patchHdl(row, col), 'Visible', 'off');
-                                end
+                                set(obj.patchHdl(row, col), 'Visible', 'off');
                                 set(obj.textHdl(row, col),  'Visible', 'off');
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...

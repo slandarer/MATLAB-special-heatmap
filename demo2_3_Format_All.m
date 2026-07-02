@@ -18,22 +18,27 @@ end
 % 'triul'       : upper left triangle       : 左上三角
 % 'asq'         : auto-size square          ：自带调整大小的方形
 % 'acirc'       : auto-size circular        ：自带调整大小的圆形
+% 'txt'(text)   : colored text              : 带颜色的文本
 
-Format={'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc'};
+Format={'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc','txt'};
 A=rand(12,12);
 B=rand(12,12)-.5;
 
-for i=1:length(Format)
-    % Draw positive heat map (绘制纯正数热图)
-    figure();
-    SHM_A=SHeatmap(A,'Format',Format{i});
-    SHM_A=SHM_A.draw();
-    % exportgraphics(gca,['gallery\Format_',Format{i},'_A.png']) % 存储图片
 
-    % Draw heat map with negative number (绘制含负数热图)
+% % Draw positive heat map (绘制纯正数热图)
+% for i=1:length(Format)
+%     figure();
+%     SHM_A=SHeatmap(A,'Format',Format{i});
+%     SHM_A.draw();
+%     % exportgraphics(gca,['gallery\Format_',Format{i},'_A.png']) % 存储图片
+% end
+
+
+% Draw heat map with negative number (绘制含负数热图)
+for i=1:length(Format)
     figure();
     SHM_B=SHeatmap(B,'Format',Format{i});
-    SHM_B=SHM_B.draw();
+    SHM_B.draw();
     % exportgraphics(gca,['gallery\Format_',Format{i},'_B.png']) % 存储图片
 end
 % close all
