@@ -18,7 +18,7 @@ ___
 figure()
 Data=rand(15,15);
 SHM1=SHeatmap(Data,'Format','sq');
-SHM1=SHM1.draw();
+SHM1.draw();
 ```
 ![](gallery/Basic_positive.png)
 
@@ -27,7 +27,7 @@ SHM1=SHM1.draw();
 figure()
 Data=rand(15,15)-.5;
 SHM2=SHeatmap(Data,'Format','sq');
-SHM2=SHM2.draw();
+SHM2.draw();
 ```
 ![](gallery/Basic_negative.png)
 
@@ -35,8 +35,8 @@ SHM2=SHM2.draw();
 ```matlab
 figure()
 Data=rand(25,30);
-SHM4=SHeatmap(Data,'Format','sq');
-SHM4=SHM4.draw();
+SHM3=SHeatmap(Data,'Format','sq');
+SHM3.draw();
 ```
 ![](gallery/Basic_25_30.png)
 
@@ -44,8 +44,8 @@ SHM4=SHM4.draw();
 ```matlab
 figure()
 Data=rand(3,12);
-SHM5=SHeatmap(Data,'Format','sq');
-SHM5=SHM5.draw();
+SHM4=SHeatmap(Data,'Format','sq');
+SHM4.draw();
 CB=colorbar;
 CB.Location='southoutside';
 ```
@@ -56,8 +56,8 @@ CB.Location='southoutside';
 figure()
 Data=rand(12,12)-.5;
 Data([4,5,13])=nan;
-SHM6=SHeatmap(Data,'Format','sq');
-SHM6=SHM6.draw();
+SHM5=SHeatmap(Data,'Format','sq');
+SHM5.draw();
 ```
 ![](gallery/Basic_with_NaN.png)
 
@@ -68,24 +68,20 @@ Use the setText() method to display text: \
 figure()
 Data=rand(12,12)-.5;
 Data([4,5,13])=nan;
-SHM7=SHeatmap(Data,'Format','sq');
-SHM7=SHM7.draw();
-SHM7.setText();
+SHM6=SHeatmap(Data,'Format','sq');
+SHM6.draw();
+SHM6.setText();
 ```
 ![](gallery/Basic_with_text.png)
 
 #### 1.7 Draw heatmap with labels (绘制带标签热图)
-Change the x-axis and y-axis labels by setting XTickLabel and YTickLabel : \
-改 x-轴 y-轴标签就还是设置 XTickLabel 和 YTickLabel :
 ```matlab
 figure()
 Data=rand(12,12);
-SHM8=SHeatmap(Data,'Format','sq');
-SHM8=SHM8.draw(); 
-ax=gca;
-ax.XTickLabel={'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
-ax.YTickLabel={'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
-ax.FontSize=14;
+SHM7=SHeatmap(Data, 'Format','sq');
+SHM7.ColName={'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
+SHM7.RowName={'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
+SHM7.draw(); 
 ```
 ![](gallery/Basic_with_labels.png)
 ___

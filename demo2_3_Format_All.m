@@ -30,6 +30,8 @@ B=rand(12,12)-.5;
 %     figure();
 %     SHM_A=SHeatmap(A,'Format',Format{i});
 %     SHM_A.draw();
+%
+%     drawnow
 %     % exportgraphics(gca,['gallery\Format_',Format{i},'_A.png']) % 存储图片
 % end
 
@@ -39,6 +41,8 @@ for i=1:length(Format)
     figure();
     SHM_B=SHeatmap(B,'Format',Format{i});
     SHM_B.draw();
+
+    drawnow
     % exportgraphics(gca,['gallery\Format_',Format{i},'_B.png']) % 存储图片
 end
 % close all

@@ -434,8 +434,6 @@ classdef SHeatmap < handle
             % Apply 'Type' if not full
             if ~strcmp(obj.Type, 'full')
                 obj.setType(obj.Type);
-            else
-                drawnow
             end
 
             if tflag
@@ -704,7 +702,6 @@ classdef SHeatmap < handle
                         set(obj.colLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
                 end
             end
-            drawnow
         end
 
 % =========================================================================
