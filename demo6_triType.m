@@ -15,6 +15,10 @@ SHM_s1=SHM_s1.draw();
 SHM_s1.setType('triu');
 
 
+names = {'A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5'};
+SHM_s1.setVarName(names)
+
+
 % + 'triu'   : upper triangle                  : 上三角部分
 % + 'tril'   : lower triangle                  : 下三角部分
 % + 'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分

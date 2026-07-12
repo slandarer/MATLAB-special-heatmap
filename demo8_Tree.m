@@ -33,8 +33,7 @@ axTreeT.Position=[P(1),P(2)+P(4),P(3),P(4)/5];
 orderT=SDendrogram(Data,'Orientation','top','Parent',axTreeT);
 
 % Exchange data order (交换数据顺序)
-Data=Data(orderL,:);
-Data=Data(:,orderT);
+Data=Data(orderL, orderT);
 
 % Draw Heatmap (绘制热图)
 SHM_t1=SHeatmap(Data,'Format','sq','Parent',axMain);

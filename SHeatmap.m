@@ -88,7 +88,7 @@ classdef SHeatmap < handle
     properties
         ax, 
         Parent = [];
-        arginList = {'Parent', 'Format', 'SData', 'Type'}
+        arginList = {'Parent', 'Format', 'SData', 'Type', 'VarName', 'RowName', 'ColName'}
         Data
 
         Format = 'sq'  
@@ -118,13 +118,19 @@ classdef SHeatmap < handle
         % 'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
 
         Colormap;       % Colormap (颜色映射表)
-        Colorbar;       % Colorbar (颜色条)
+        Colorbar;       % Colorbar (颜色条) 
+
+        % For a square matrix (e.g., corr(X) or correlation matrix of a single dataset):
+        VarName;        % Variable names for the single dataset (变量名称)
+        % For a rectangular matrix (e.g., corr(X, Y) or cross-correlation between two datasets):
+        RowName;        % Names of variables in dataset X (行变量名称)
+        ColName;        % Names of variables in dataset Y (列变量名称)
+
+
         textHdl;        % Text (data value) handle (文本句柄)
         boxHdl;         % Outline handle (边框句柄)
         patchHdl;       % Patch handle (填充图形句柄)
         pieHdl;         % Pie chart handle (饼图句柄)
-
-        VarName;        % Data variable name (变量名称)
         rowLabelHdl;    % Row label handle (行标签句柄)
         colLabelHdl;    % Column label handle (列标签句柄)
     end
@@ -398,10 +404,15 @@ classdef SHeatmap < handle
                 obj.setText()
             end
 
-            % Create default variable names (生成默认变量名)
-            obj.VarName{length(obj.Data)} = '';
-            for i = 1:length(obj.Data)
-                obj.VarName{i} = ['Var-', num2str(i)];
+            if isempty(obj.VarName)
+                % Create default variable names (生成默认变量名)
+                obj.VarName{length(obj.Data)} = '';
+                for i = 1:length(obj.Data)
+                    obj.VarName{i} = ['Var-', num2str(i)];
+                end
+                tflag = false;
+            else
+                tflag = true;
             end
 
             % Add row labels ('Visible', 'off') (添加行标签，默认隐藏)
@@ -423,7 +434,22 @@ classdef SHeatmap < handle
             % Apply 'Type' if not full
             if ~strcmp(obj.Type, 'full')
                 obj.setType(obj.Type);
+            else
+                drawnow
             end
+
+            if tflag
+                obj.setVarName(obj.VarName);
+            end
+
+            if ~isempty(obj.RowName)
+                obj.setRowName(obj.RowName);
+            end
+            if ~isempty(obj.ColName)
+                obj.setColLabelLocation('bottom')
+                obj.setColName(obj.ColName);
+            end
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -678,6 +704,7 @@ classdef SHeatmap < handle
                         set(obj.colLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
                 end
             end
+            drawnow
         end
 
 % =========================================================================
@@ -685,15 +712,42 @@ classdef SHeatmap < handle
 % =========================================================================
         function setVarName(obj, VarName)
             % Assign variable names to rows and columns (cyclically if fewer names than size)
-            % (为行和列分配变量名，若名称数量少于维度则循环使用)
-        
+            % (为行和列分配变量名，若名称数量少于维度则循环使用)       
+            obj.ax.XColor = 'none';
+            obj.ax.YColor = 'none';
             obj.VarName = VarName;
             VarNameLen = length(obj.VarName);
             for n = 1:size(obj.Data, 1)
                 % Apply names cyclically (循环应用名称)
                 idx = mod(n - 1, VarNameLen) + 1;
-                set(obj.rowLabelHdl(n), 'String', obj.VarName{idx});
-                set(obj.colLabelHdl(n), 'String', obj.VarName{idx});
+                set(obj.rowLabelHdl(n), 'String', obj.VarName{idx}, 'Visible','on');
+                set(obj.colLabelHdl(n), 'String', obj.VarName{idx}, 'Visible','on');
+            end
+        end
+
+        function setRowName(obj, RowName)
+            % Assign variable names to rows (cyclically if fewer names than size)
+            % (为行分配变量名，若名称数量少于维度则循环使用)
+            obj.ax.YColor = 'none';
+            obj.RowName = RowName;
+            RowNameLen = length(obj.RowName);
+            for i = 1:size(obj.Data, 1)
+                % Apply names cyclically (循环应用名称)
+                idx = mod(i - 1, RowNameLen) + 1;
+                set(obj.rowLabelHdl(i), 'String', obj.RowName{idx}, 'Visible','on');
+            end
+        end
+
+        function setColName(obj, ColName)
+            % Assign variable names to cols (cyclically if fewer names than size)
+            % (为行分配变量名，若名称数量少于维度则循环使用)
+            obj.ax.XColor = 'none';
+            obj.ColName = ColName;
+            ColNameLen = length(obj.ColName);
+            for j = 1:size(obj.Data, 2)
+                % Apply names cyclically (循环应用名称)
+                idx = mod(j - 1, ColNameLen) + 1;
+                set(obj.colLabelHdl(j), 'String', obj.ColName{idx}, 'Visible','on');
             end
         end
         
@@ -732,8 +786,6 @@ classdef SHeatmap < handle
                         end
                 end
             end
-
-
         end
 
         function setColLabelLocation(obj, loc)
@@ -877,6 +929,13 @@ classdef SHeatmap < handle
             stars = repmat('*', 1, sum(pval < levels));
         end
     end
+% =========================================================================
+% Hidden methods >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+% =========================================================================
+    methods (Hidden)
+
+    end
+
 end
 
 
