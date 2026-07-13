@@ -8,7 +8,6 @@ X2 = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').
 Data1 = corr(X1);
 Data2 = corr(X2);
 
-
 figure()
 % Draw the first heatmap and freeze colors (绘制第一个热图并冻结配色)
 SHM_m1 = SHeatmap(Data1, 'Format','triul').draw().setType('tril');
@@ -17,7 +16,6 @@ SHM_m1.freezeColors()
 SHM_m2 = SHeatmap(Data2, 'Format','trilr').draw().setType('tril');
 colormap(cool(32));
 SHM_m2.Colorbar.Position(1) = SHM_m2.Colorbar.Position(1) + .1;
-
 
 % Draw label for colorbars (为两个 colorbar 添加标签)
 set(SHM_m1.Colorbar.Label, 'String', 'prop 1', 'FontSize', 18, 'Position',[-1.5, 0, 0]);

@@ -1,10 +1,10 @@
 %% Overall decoration
 
-% 整体修饰(Overall decoration)
+% Overall decoration (整体修饰)
 
-% + setBox   ：修饰边框
-% + setPatch ：修饰图形
-% + setText  ：修饰文本
+% + obj.setBox(___)   ：修饰边框
+% + obj.setPatch(___) ：修饰图形
+% + obj.setText(___)  ：修饰文本
 
 figure()
 Data = rand(10, 10);

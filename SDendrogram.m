@@ -1,4 +1,4 @@
-function order = SDendrogram(Data, varargin)
+function [order, obj] = SDendrogram(Data, varargin)
 % SDendrogram - Draw dendrogram and return leaf order
 %   order = SDendrogram(Data) draws top-oriented dendrogram with average linkage
 %
@@ -23,75 +23,69 @@ obj.Orientation = 'top';
 obj.Parent = gca;
 obj.DataLen = 0;
 obj.Method = 'average';
+obj.Height = 1;
+obj.BasePos = 0;
 
 % Parse input arguments (解析输入参数)
 for i = 1:2:(length(varargin) - 1)
-    tid = ismember(obj.arginList, varargin{i});
+    tid = ismember(lower(obj.arginList), lower(varargin{i}));
     if any(tid)
         obj.(obj.arginList{tid}) = varargin{i + 1};
     end
 end
+obj.Parent.XColor = 'none';
+obj.Parent.YColor = 'none';
+obj.Parent.XTick = [];
+obj.Parent.YTick = [];
+obj.Parent.YDir = 'reverse';
+obj.Parent.NextPlot = 'add';
 
-figure();
+fig = figure(); ax = axes('Parent',fig);
 
 % Compute linkage (计算链接矩阵)
 if isequal(obj.Orientation, 'top')
     tree = linkage(Data.', obj.Method);
 else
-    tree = linkage(Data, obj.Method);
+    tree = linkage(Data  , obj.Method);
 end
 
 % Draw dendrogram (绘制树状图)
-[treeHdl, ~, order] = dendrogram(tree, 0, 'Orientation', obj.Orientation);
-set(treeHdl, 'Color', [0, 0, 0], 'LineWidth', 0.8);
+[treeHdl, ~, order] = dendrogram(ax, tree, 0, 'Orientation', obj.Orientation);
 
-% Copy to target axes (复制到目标坐标区)
-tempFig = treeHdl(1).Parent.Parent;
-axTree = copyAxes(tempFig, 1, obj.Parent);
-axTree.XColor = 'none';
-axTree.YColor = 'none';
-axTree.XTick = [];
-axTree.YTick = [];
-axTree.NextPlot = 'add';
-delete(tempFig);
+minX = 0; maxX = 0; minY = 0; maxY = 0;
+for i = 1:length(treeHdl)
+    minX = min(minX, min(treeHdl(i).XData));
+    maxX = max(maxX, max(treeHdl(i).XData));
+    minY = min(minY, min(treeHdl(i).YData));
+    maxY = max(maxY, max(treeHdl(i).YData));
+end
 
+obj.TreeHdl = gobjects(1, length(treeHdl));
+for i = 1:length(treeHdl)
+    X = treeHdl(i).XData; 
+    Y = treeHdl(i).YData;
+    switch obj.Orientation
+        case 'top'
+            Y = (Y - minY)./(maxY - minY).*(- obj.Height) + obj.BasePos;
+        case 'left'
+            X = (X - minX)./(maxX - minX).*(- obj.Height) + obj.BasePos;
+    end
+    obj.TreeHdl(i) = plot(obj.Parent, X, Y, 'Color',[0,0,0], 'LineWidth',1);
+end
+delete(fig);
+
+axis(obj.Parent, 'tight');
 % Set axis limits (设置坐标轴范围)
 switch obj.Orientation
     case 'top'
         obj.DataLen = size(Data, 2);
-        axTree.XLim = [1, obj.DataLen] + [-0.5, 0.5];
+        tLim = [1, obj.DataLen] + [-0.5, 0.5];
+        obj.Parent.XLim(1) = min(obj.Parent.XLim(1), tLim(1));
+        obj.Parent.XLim(2) = max(obj.Parent.XLim(2), tLim(2));
     case 'left'
         obj.DataLen = size(Data, 1);
-        axTree.YDir = 'reverse';
-        axTree.YLim = [1, obj.DataLen] + [-0.5, 0.5];
+        tLim = [1, obj.DataLen] + [-0.5, 0.5];
+        obj.Parent.YLim(1) = min(obj.Parent.YLim(1), tLim(1));
+        obj.Parent.YLim(2) = max(obj.Parent.YLim(2), tLim(2));
 end
-
-% ---------------------------------------------------------------------
-    function axbag = copyAxes(fig, k, newAx)
-        % Copy axes object from source figure to target parent
-        % @author : slandarer
-        % 公众号  : slandarer随笔
-        % 知乎    : slandarer
-        %
-        % 此段代码解析详见公众号 slandarer随笔 文章：
-        %《MATLAB | 如何复制figure图窗任意axes的全部信息？》
-        % https://mp.weixin.qq.com/s/3i8C78pv6Ok1cmEZYPMyWg
-
-        classList = ismember(1:length(fig.Children), ...
-            find(cellfun(@(x) isa(x, 'matlab.graphics.axis.Axes'), ...
-            num2cell(fig.Children))));
-        isaaxes = find(classList);
-        oriAx = fig.Children(isaaxes(end - k + 1));
-
-        if isaaxes(end - k + 1) - 1 < 1 || ...
-                isa(fig.Children(isaaxes(end - k + 1) - 1), 'matlab.graphics.axis.Axes')
-            oriLgd = [];
-        else
-            oriLgd = fig.Children(isaaxes(end - k + 1) - 1);
-        end
-
-        axbag = copyobj([oriAx, oriLgd], newAx.Parent);
-        axbag(1).Position = newAx.Position;
-        delete(newAx);
-    end
 end

@@ -10,7 +10,6 @@ SHM.draw();
 % Show Text (显示文本)
 SHM.setText(); 
 
-
 for i = 1:size(Data,1)
     for j = 1:size(Data,2)
         if Data(i, j) >= .9

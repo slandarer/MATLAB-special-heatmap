@@ -24,7 +24,7 @@ A = rand(12, 12);
 B = rand(12, 12) - .5;
 
 
-% % Draw positive heat map (绘制纯正数热图)
+% % Draw positive heatmap (绘制纯正数热图)
 % for i = 1:length(Format)
 %     figure();
 %     SHeatmap(A, 'Format',Format{i}).draw();
@@ -34,7 +34,7 @@ B = rand(12, 12) - .5;
 % end
 
 
-% Draw heat map with negative number (绘制含负数热图)
+% Draw heatmap with negative number (绘制含负数热图)
 for i = 1:length(Format)
     figure();
     SHeatmap(B, 'Format',Format{i}).draw();

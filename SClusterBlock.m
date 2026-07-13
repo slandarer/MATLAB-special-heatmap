@@ -9,7 +9,7 @@ function [X, Y] = SClusterBlock(Class, varargin)
 %   'Parent'        - axes handle (default: gca)
 %   'ColorList'     - custom color matrix for groups
 %   'BlockProp'     - cell array of patch properties
-
+%   'Height'        - 
 
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap
@@ -18,9 +18,10 @@ function [X, Y] = SClusterBlock(Class, varargin)
 % =========================================================================
 
 % Parameter definition (参数定义)
-obj.arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', 'BlockProp'};
+obj.arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', 'BlockProp','Height'};
 obj.Orientation = 'top';
 obj.BasePos     = 0;
+obj.Height      = 1;
 obj.Parent      = gca;
 obj.BlockProp   = {'LineWidth', 0.8};
 obj.ColorList   = [0.55, 0.83, 0.78; 1.00, 1.00, 0.70; 0.75, 0.73, 0.85;
@@ -51,9 +52,9 @@ CCList  = [0, find([diff(Class), 1] ~= 0)];
 % Preallocate center coordinates (预分配中心坐标)
 if isequal(obj.Orientation, 'top')
     X = zeros(1, length(CCList) - 1);
-    Y = ones(1, length(CCList) - 1) .* (obj.BasePos + 0.5);
+    Y = ones(1, length(CCList) - 1) .* (obj.BasePos - obj.Height/2);
 else
-    X = ones(1, length(CCList) - 1) .* (obj.BasePos + 0.5);
+    X = ones(1, length(CCList) - 1) .* (obj.BasePos - obj.Height/2);
     Y = zeros(1, length(CCList) - 1);
 end
 
@@ -65,12 +66,12 @@ for i = 1:length(CCList) - 1
     if isequal(obj.Orientation, 'top')
         fill(obj.Parent, ...
             CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-            [obj.BasePos, obj.BasePos, obj.BasePos + 1, obj.BasePos + 1], ...
+            [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
             obj.ColorList(colorIdx, :), obj.BlockProp{:});
         X(i) = (CL(1) + CL(2)) / 2;
     else
         fill(obj.Parent, ...
-            [obj.BasePos, obj.BasePos, obj.BasePos + 1, obj.BasePos + 1], ...
+            [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
             CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
             obj.ColorList(colorIdx, :), obj.BlockProp{:});
         obj.Parent.YDir = 'reverse';

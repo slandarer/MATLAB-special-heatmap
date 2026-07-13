@@ -5,7 +5,6 @@ X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*
 % Get the correlation matrix (求相关系数矩阵)
 Data = corr(X);
 
-
 figure()
 SHM_m1 = SHeatmap(Data, 'Format','sq').draw().setType('tril');
 SHM_m1.setColLabel('Visible','off').setText()

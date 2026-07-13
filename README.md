@@ -16,8 +16,8 @@ ___
 
 ```matlab
 figure()
-Data=rand(15,15);
-SHM1=SHeatmap(Data,'Format','sq');
+Data = rand(15, 15);
+SHM1 = SHeatmap(Data, 'Format','sq');
 SHM1.draw();
 ```
 ![](gallery/Basic_positive.png)
@@ -25,8 +25,8 @@ SHM1.draw();
 #### 1.2 Contains negative numbers (绘制有负数热图)
 ```matlab
 figure()
-Data=rand(15,15)-.5;
-SHM2=SHeatmap(Data,'Format','sq');
+Data = rand(15,15) - .5;
+SHM2 = SHeatmap(Data, 'Format','sq');
 SHM2.draw();
 ```
 ![](gallery/Basic_negative.png)
@@ -34,8 +34,8 @@ SHM2.draw();
 #### 1.3 Draw heatmaps of different sizes (绘制不同大小热图)
 ```matlab
 figure()
-Data=rand(25,30);
-SHM3=SHeatmap(Data,'Format','sq');
+Data = rand(25, 30);
+SHM3 = SHeatmap(Data, 'Format','sq');
 SHM3.draw();
 ```
 ![](gallery/Basic_25_30.png)
@@ -43,32 +43,32 @@ SHM3.draw();
 #### 1.4 Adjust the colorbar Location (调整colorbar位置)
 ```matlab
 figure()
-Data=rand(3,12);
-SHM4=SHeatmap(Data,'Format','sq');
+Data = rand(3,12);
+SHM4 = SHeatmap(Data, 'Format','sq');
 SHM4.draw();
-CB=colorbar;
-CB.Location='southoutside';
+CB = colorbar;
+CB.Location = 'southoutside';
 ```
 ![](gallery/Basic_colorbar_location.png)
 
-#### 1.5 绘制有NaN热图(Draw heat map with NaN)
+#### 1.5 Draw heat map with NaN (绘制有 NaN 热图)
 ```matlab
 figure()
-Data=rand(12,12)-.5;
-Data([4,5,13])=nan;
-SHM5=SHeatmap(Data,'Format','sq');
+Data = rand(12, 12) - .5;
+Data([4, 5, 13]) = nan;
+SHM5 = SHeatmap(Data, 'Format','sq');
 SHM5.draw();
 ```
 ![](gallery/Basic_with_NaN.png)
 
-#### 1.6 Draw heat map with NaN (绘制有NaN热图)
-Use the setText() method to display text: \
-使用 setText() 方法显示文字：
+#### 1.6 Draw heat map with value text (绘制有文本热图)
+Use the `obj.setText()` method to display text: \
+使用 `obj.setText()` 方法显示文字：
 ```matlab
 figure()
-Data=rand(12,12)-.5;
-Data([4,5,13])=nan;
-SHM6=SHeatmap(Data,'Format','sq');
+Data = rand(12, 12) - .5;
+Data([4, 5, 13]) = nan;
+SHM6 = SHeatmap(Data, 'Format','sq');
 SHM6.draw();
 SHM6.setText();
 ```
@@ -77,10 +77,10 @@ SHM6.setText();
 #### 1.7 Draw heatmap with labels (绘制带标签热图)
 ```matlab
 figure()
-Data=rand(12,12);
-SHM7=SHeatmap(Data, 'Format','sq');
-SHM7.ColName={'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
-SHM7.RowName={'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
+Data = rand(12, 12);
+SHM7 = SHeatmap(Data, 'Format','sq');
+SHM7.ColName = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
+SHM7.RowName = {'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
 SHM7.draw(); 
 ```
 ![](gallery/Basic_with_labels.png)
@@ -88,40 +88,38 @@ ___
 ### 2 Various Format of heatmaps (各类型热图绘制)
 
 ```matlab
-%   'sq'          : square (default)          : 方形(默认)
-%   'pie'         : pie chart                 : 饼图
-%   'donut'       ：donut chart               : 环形饼图(甜甜圈图)
-%   'circ'        : circle                    : 圆形
-%   'bcirc'       : circle with box           : 有边框的圆形
-%   'oval'        : oval                      : 椭圆形
-%   'hex'         : hexagon                   ：六边形
-%   'star'        : star                      : 五角星
-%   'trill'(tril) : lower left triangle       : 下三角
-%   'triur'(triu) : upper right triangle      : 上三角
-%   'trilr'       : lower right triangle      : 右下三角
-%   'triul'       : upper left triangle       : 左上三角
-%   'asq'         : auto-size square          ：自带调整大小的方形
-%   'acirc'       : auto-size circular        ：自带调整大小的圆形
-% -------------------------------------------------------------------------
-% see demo2_2_Format_Custom.m for detail
-%   'cust'        : custom shape              : 自定义形状
-%   'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
+% 'sq'          : square (default)          : 方形(默认)
+% 'pie'         : pie chart                 : 饼图
+% 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
+% 'circ'        : circular                  : 圆形
+% 'bcirc'       : circle with box           : 有边框的圆形
+% 'oval'        : oval                      : 椭圆形
+% 'hex'         : hexagon                   ：六边形
+% 'star'        : star                      : 五角星
+% 'trill'(tril) : lower left triangle       : 下三角
+% 'triur'(triu) : upper right triangle      : 上三角
+% 'trilr'       : lower right triangle      : 右下三角
+% 'triul'       : upper left triangle       : 左上三角
+% 'asq'         : auto-size square          ：自带调整大小的方形
+% 'acirc'       : auto-size circular        ：自带调整大小的圆形
 
-A=rand(12,12);
-B=rand(12,12)-.5;
+A = rand(12, 12);
+B = rand(12, 12) - .5;
 
 
-% 绘制纯正数热图(Draw positive heat map)
+% Draw positive heatmap (绘制纯正数热图)
 figure();
-SHM_A=SHeatmap(A,'Format','star');
-SHM_A=SHM_A.draw();
-
-% 绘制含负数热图(Draw heat map with negative number)
-figure();
-SHM_B=SHeatmap(B,'Format','donut');
-SHM_B=SHM_B.draw();
+SHM_A = SHeatmap(A, 'Format','star');
+SHM_A.draw();
 ```
 ![](gallery/Format_star_A.png)
+```matlab
+% Draw heat map with negative number (绘制含负数热图)
+figure();
+SHM_B = SHeatmap(B, 'Format','donut');
+SHM_B.draw();
+```
+
 ![](gallery/Format_donut_B.png)
 
 #### 2.2 Custom shape and auto-size custom shape (自定义形状)
@@ -133,50 +131,53 @@ SHM_B=SHM_B.draw();
 t = linspace(0, 2*pi, 200);
 x = 16*sin(t).^3./34;
 y = (13*cos(t) - 5*cos(2*t) - 2*cos(3*t) - cos(4*t) + 2.1)./30;
-SData = [x;y];
+SData = [x; y];
 
 % custom shape
 figure()
-Data=rand(15,15)-.5;
-SHM1=SHeatmap(Data,'Format','cust','SData',SData);
-SHM1=SHM1.draw();
-
-% auto-size custom shape
-figure()
-SHM2=SHeatmap(Data,'Format','acust','SData',SData);
-SHM2=SHM2.draw();
+Data = rand(15, 15) - .5;
+SHM1 = SHeatmap(Data, 'Format','cust', 'SData',SData);
+SHM1.draw();
 ```
 ![](gallery/Format_cust.png)
+```matlab
+% auto-size custom shape
+figure()
+SHM2 = SHeatmap(Data, 'Format','acust', 'SData',SData);
+SHM2.draw();
+```
+
 ![](gallery/Format_acust.png)
 ___
 ### 3 Adjust colormap (调整 colormap)
 #### 3.1 Adjust clim (调整 clim)
-Use function clim() or caxis() to set the CLim \
-使用 clim() 或者 caxis() 调整颜色映射范围
+Use function `clim()` or `caxis()` to set the CLim 
+
+使用 `clim()` 或者 `caxis()` 调整颜色映射范围
 ```matlab
-fig=figure('Position',[50,50,1400,700]);
+fig = figure('Units','normalized', 'Position',[.1,.1,.8,.7]);
+
 % random data
-Data=rand(12,12)-.5;
-Data([4,5,13])=nan;
+Data = rand(12, 12) - .5; Data([4, 5, 13]) = nan;
+
 % subplot1
-ax1=axes('Parent',fig,'Position',[0+1/40,0,1/2-1/20,1]);
-SHM_ax1=SHeatmap(Data,'Format','sq','Parent',ax1);
-SHM_ax1=SHM_ax1.draw();
-SHM_ax1.setText();
+ax1 = axes('Parent',fig, 'Position',[ 1/40, 0, 9/20, 1]);
+SHM_ax1 = SHeatmap(Data, 'Format','sq', 'Parent',ax1).draw();
+SHM_ax1.setText('FontSize',8);
+
 % subplot2 adjust clim
-ax2=axes('Parent',fig,'Position',[1/2+1/40,0,1/2-1/20,1]);
-SHM_ax2=SHeatmap(Data,'Format','sq','Parent',ax2);
-SHM_ax2=SHM_ax2.draw();
-clim([-.8,.8])
-SHM_ax2.setText();
+ax2 = axes('Parent',fig, 'Position',[21/40, 0, 9/20, 1]);
+SHM_ax2 = SHeatmap(Data, 'Format','sq', 'Parent',ax2).draw();
+clim([-.8, .8])
+SHM_ax2.setText('FontSize',8);
 ```
 ![输入图片说明](gallery/Colormap_clim.png)
 
-#### 3.2 Use the built-in colormap in MATLAB (使用MATLAB自带colormap)
+#### 3.2 Use the built-in colormap in MATLAB (使用 MATLAB 自带 colormap)
 ```matlab
 figure()
-Data=rand(14,14);
-SHM_Bone=SHeatmap(Data,'Format','sq');
+Data = rand(14, 14);
+SHM_Bone = SHeatmap(Data, 'Format','sq');
 SHM_Bone.draw();
 colormap(bone)
 ```
@@ -185,86 +186,104 @@ colormap(bone)
 #### 3.3 slanCM (slanCM colormap)
 Zhaoxu Liu / slandarer (2023). 200 colormap (https://www.mathworks.com/matlabcentral/fileexchange/120088-200-colormap), MATLAB Central File Exchange. 检索来源 2023/3/15.
 ```matlab
-% 单向colormap或离散colormap
-for i=20%[20,21,61,177]
+% 单向 colormap 或离散 colormap
+for i = 20 % [20, 21, 61, 177]
     figure()
-    Data=rand(14,14);
-    SHM_slan=SHeatmap(Data,'Format','sq');
+    Data = rand(14, 14);
+    SHM_slan = SHeatmap(Data, 'Format','sq');
     SHM_slan.draw();
     colormap(slanCM(i))
 end
-% 双向colormap(Diverging colormap)
-for i = 141%[141,136,134]
-    figure()
-    Data=rand(14,14)-.5;
-    SHM_slan=SHeatmap(Data,'Format','sq');
-    SHM_slan=SHM_slan.draw();
-    clim([-.7,.7])
-    colormap(slanCM(i))
-    SHM_slan.setText();
-end
 ```
 ![](gallery/Colormap_slanCM_20.png)
+```matlab
+% 双向 colormap (Diverging colormap)
+for i = 141 % [141, 136, 134]
+    figure()
+    Data = rand(14, 14) - .5;
+    SHM_slan = SHeatmap(Data, 'Format','sq');
+    SHM_slan.draw();
+    clim([-.7, .7])
+    colormap(slanCM(i))
+    SHM_slan.setText('FontSize',8);
+end
+```
+
 ![](gallery/Colormap_slanCM_141.png)
 ___
 ### 4 Overall decoration (整体修饰)
-+ setBox   ：修饰边框
-+ setPatch ：修饰图形
-+ setText  ：修饰文本
++ obj.setBox(___)    ：修饰边框
++ obj.setPatch(___)  ：修饰图形
++ obj.setText(___)   ：修饰文本
 
 ```matlab
 figure()
-Data=rand(10,10);
+Data = rand(10, 10);
 
-SHM=SHeatmap(Data,'Format','pie');
-SHM=SHM.draw(); 
-% 容器边框设置为蓝色
-% 图形边框设置为红色
-% The container box border is set to blue
-% The drawing border is set to red
+SHM = SHeatmap(Data, 'Format','pie');
+SHM.draw(); 
+% The container box border is set to blue (容器边框设置为蓝色)
+% The drawing border is set to red (图形边框设置为红色)
 SHM.setBox('Color',[0,0,.8])
 SHM.setPatch('EdgeColor',[.8,0,0])
-
-
-figure()
-Data=rand(10,10);
-Data([4,5,13])=nan;
-
-SHM=SHeatmap(Data,'Format','sq');
-SHM=SHM.draw(); 
-% 设置文本为蓝色并修改字号
-% Set the text to blue and modify the font size
-SHM.setText('Color',[0,0,.8],'FontSize',14)
 ```
 ![](gallery/All1.png)
+```matlab
+figure()
+Data = rand(10, 10); Data([4, 5, 13]) = nan;
+
+SHM = SHeatmap(Data, 'Format','sq');
+SHM.draw(); 
+% Set the text to blue and modify the font size (设置文本为蓝色并修改字号)
+SHM.setText('Color',[0,0,.8], 'FontSize',14)
+```
+
 ![](gallery/All2.png)
 ___
 ### 5 Partial decoration (局部修饰)
-+ setTextMN
-+ setPatchMN
++ obj.setText(m, n, ___)
++ setPatch(m, n, ___)
 
-Set the attributes of the object in row m and column n: for example, change the text with a value greater than 0.9 into an asterisk, frame it in red, and adapt the color at NaN. \
+Set the attributes of the object in row m and column n: for example, change the text with a value greater than 0.9 into an asterisk, frame it in red, and adapt the color at NaN. 
+
 设置第m行n列对象的属性：举个例子，把数值大于0.9部分文字变为星号，并用红色框框起来，并改编NaN处颜色。
 ```matlab
 figure()
-Data=rand(9,9);
-Data([4,5,13])=nan;
-% 绘制方块形状热图
-SHM=SHeatmap(Data,'Format','sq');
-SHM=SHM.draw();
-% 显示文本(Show Text)
+Data = rand(9, 9); Data([4, 5, 13]) = nan;
+
+SHM = SHeatmap(Data, 'Format','sq');
+SHM.draw();
+
+% Show Text (显示文本)
 SHM.setText(); 
-for i=1:size(Data,1)
-    for j=1:size(Data,2)
-        if Data(i,j)>=.9
-            SHM.setTextMN(i,j,'String','**','FontSize',20)         % 修改>=0.9方块颜色
-            SHM.setPatchMN(i,j,'EdgeColor',[1,0,0],'LineWidth',2)  % 修改>=0.9方块文本为**
+
+for i = 1:size(Data,1)
+    for j = 1:size(Data,2)
+        if Data(i, j) >= .9
+            SHM.setText(i, j, 'String','**', 'FontSize',20)         % Modify color of patches where Data >= 0.9 (修改 >= 0.9 方块颜色)
+            SHM.setPatch(i, j, 'EdgeColor',[1,0,0], 'LineWidth',2)  % Set text where Data >= 0.9 to '**' (修改 >= 0.9 方块文本为**)
         end
-        if isnan(Data(i,j))
-            SHM.setPatchMN(i,j,'FaceColor',[.8,.6,.6]) % 修改NaN处颜色
+        if isnan(Data(i, j))
+            SHM.setPatch(i, j, 'FaceColor',[.8,.6,.6])              % Modify color of NaN patches (修改 NaN 处颜色)
         end
     end
 end
+```
+![](gallery/MN.png)
+Using logical values is more convenient.
+
+使用逻辑值会更简单:
+```matlab
+figure()
+Data = rand(9, 9); Data([4,5,13]) = nan;
+
+SHM = SHeatmap(Data, 'Format','sq');
+SHM.draw();
+SHM.setText()
+
+SHM.setText(Data >= .9, 'String','**', 'FontSize',20)         % Modify color of patches where Data >= 0.9 (修改 >= 0.9 方块颜色)
+SHM.setPatch(Data >= .9, 'EdgeColor',[1,0,0], 'LineWidth',2)  % Set text where Data >= 0.9 to '**' (修改 >= 0.9 方块文本为**)
+SHM.setPatch(isnan(Data), 'FaceColor',[.8,.6,.6])             % Modify color of NaN patches (修改 NaN 处颜色)
 ```
 ![](gallery/MN.png)
 ___
@@ -272,20 +291,20 @@ ___
 #### 6.1 upper triangle or lower triangle (上下三角格式)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X);
+Data = corr(X);
 
 % + 'triu'   : upper triangle                  : 上三角部分
 % + 'tril'   : lower triangle                  : 下三角部分
 % + 'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
 % + 'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
 
-Type={'triu','tril','triu0','tril0'};
-for i=1:length(Type)
+Type = {'triu','tril','triu0','tril0'};
+for i = 1:length(Type)
     figure()
-    SHM_s1=SHeatmap(Data,'Format','sq');
-    SHM_s1=SHM_s1.draw();
+    SHM_s1 = SHeatmap(Data, 'Format','sq');
+    SHM_s1.draw();
     SHM_s1.setText();
     % set Type (设置格式)
     SHM_s1.setType(Type{i});
@@ -299,16 +318,16 @@ end
 #### 6.2 Set variable labels' String (设置标签名称)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X);
+Data = corr(X);
 
 figure()
-SHM_s2=SHeatmap(Data,'Format','sq');
-SHM_s2=SHM_s2.draw();
+SHM_s2 = SHeatmap(Data, 'Format','sq');
+SHM_s2.draw();
 SHM_s2.setType('tril');
 
-varName={'A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5'};
+varName = {'A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5'};
 SHM_s2.setVarName(varName)
 ```
 ![](gallery/Type_labels.png)
@@ -316,12 +335,12 @@ SHM_s2.setVarName(varName)
 #### 6.3 Adjust the axis Limit to avoid occlusion (调整轴范围以避免遮挡)
 ```matlab
 figure()
-SHM_s3=SHeatmap(Data,'Format','pie');
-SHM_s3=SHM_s3.draw();
+SHM_s3 = SHeatmap(Data, 'Format','pie');
+SHM_s3.draw();
 SHM_s3.setType('tril');
 SHM_s3.setVarName({'Slandarer'})
-ax=gca;
-ax.XLim(2)=ax.XLim(2)+1;
+ax = gca;
+ax.XLim(2) = ax.XLim(2) + 1;
 ```
 ![](gallery/Type_XLim1.png)
 ![](gallery/Type_XLim2.png)
@@ -329,17 +348,14 @@ ax.XLim(2)=ax.XLim(2)+1;
 #### 6.4 Show upper triangle of all formats (展示所有样式的上三角化)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X);
+Data = corr(X);
 
-Format={'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc'};
-for i=1:length(Format)
+Format = {'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc'};
+for i = 1:length(Format)
     figure()
-    SHM_s4=SHeatmap(Data,'Format',Format{i});
-    SHM_s4=SHM_s4.draw();
-    % set Type (设置格式)
-    SHM_s4.setType('triu');
+    SHeatmap(Data, 'Format',Format{i}).draw().setType('triu');
 end
 ```
 ![](gallery/Type_triu_sq.png)
@@ -359,9 +375,14 @@ end
 
 #### 6.5 Set Label Font (设置标签字体)
 ```matlab
+% Made up some data casually (随便捏造了点数据)
+X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
+% Get the correlation matrix (求相关系数矩阵)
+Data = corr(X);
+
 figure()
-SHM_s5=SHeatmap(Data,'Format','circ');
-SHM_s5=SHM_s5.draw();
+SHM_s5 = SHeatmap(Data, 'Format','circ');
+SHM_s5.draw();
 SHM_s5.setType('triu');
 % Set Font Color (设置标签颜色)
 SHM_s5.setRowLabel('Color',[.8,0,0])
@@ -372,264 +393,178 @@ ___
 ### 7 Merge two triangle heatmaps (合并两个三角热图)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X);
-
+Data = corr(X);
 
 figure()
-SHM_m1=SHeatmap(Data,'Format','sq');
-SHM_m1=SHM_m1.draw();
-SHM_m1.setType('tril');
-SHM_m1.setColLabel('Visible','off')
+SHM_m1 = SHeatmap(Data, 'Format','sq').draw().setType('tril');
+SHM_m1.setColLabel('Visible','off').setText()
 
-SHM_m2=SHeatmap(Data,'Format','hex');
-SHM_m2=SHM_m2.draw();
-SHM_m2.setType('triu0');
-SHM_m2.setRowLabel('Visible','off')
-SHM_m2.setColLabel('Visible','on') % Show the hidden Var-1 label (显示隐藏的Var-1标签)
-
-% clim([-1.2,1.2])
-% colormap(slanCM(141))
-
-SHM_m1.setText();
+SHM_m2 = SHeatmap(Data, 'Format','hex').draw().setType('triu0');
+SHM_m2.setRowLabel('Visible','off').setColLabel('Visible','on') % Show the hidden Var-1 label (显示隐藏的 Var-1 标签)
 ```
 ![](gallery/Type_tri2_1.png)
 ![](gallery/Type_tri2_2.png)
 ### 7.2 Merge two triangle heat maps with two colormaps (合并两个三角热图且使用不同colormap)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X1=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
-X2=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X1 = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
+X2 = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-Data1=corr(X1);
-Data2=corr(X2);
-
+Data1 = corr(X1);
+Data2 = corr(X2);
 
 figure()
 % Draw the first heatmap and freeze colors (绘制第一个热图并冻结配色)
-SHM_m1=SHeatmap(Data1,'Format','triul');
-SHM_m1=SHM_m1.draw();
-SHM_m1=SHM_m1.setType('tril');
+SHM_m1 = SHeatmap(Data1, 'Format','triul').draw().setType('tril');
 SHM_m1.freezeColors() 
 
-SHM_m2=SHeatmap(Data2,'Format','trilr');
-SHM_m2=SHM_m2.draw();
-SHM_m2.setType('tril');
+SHM_m2 = SHeatmap(Data2, 'Format','trilr').draw().setType('tril');
 colormap(cool(32));
 SHM_m2.Colorbar.Position(1) = SHM_m2.Colorbar.Position(1) + .1;
 
-
 % Draw label for colorbars (为两个 colorbar 添加标签)
-LB1 = SHM_m1.Colorbar.Label;
-LB1.String = 'prop 1';
-LB1.FontSize = 18;
-LB1.Position = [-1.5, 0, 0];
-LB2 = SHM_m2.Colorbar.Label;
-LB2.String = 'prop 2';
-LB2.FontSize = 18;
-LB2.Position = [-1.5, 0, 0];
+set(SHM_m1.Colorbar.Label, 'String', 'prop 1', 'FontSize', 18, 'Position',[-1.5, 0, 0]);
+set(SHM_m2.Colorbar.Label, 'String', 'prop 2', 'FontSize', 18, 'Position',[-1.5, 0, 0]);
 ```
 ![](gallery/Type_tri2_colormap2.png)
 ___
 ### 8 Heatmap with dendrogram (带树状图热图) 
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X1 = randn(20,20) + [(linspace(-1,2.5,20)').*ones(1,8),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,7)];
-X2 = randn(20,25) + [(linspace(-1,2.5,20)').*ones(1,10),(linspace(.5,-.7,20)').*ones(1,8),(linspace(.9,-.2,20)').*ones(1,7)];
+X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
+X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 10), (linspace(.5,-.7,20)').*ones(1, 8), (linspace(.9,-.2,20)').*ones(1, 7)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X1,X2);
+Data = corr(X1, X2);
 % rowName and colName
-rowName={'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
-          'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
-colName={'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
-         'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
+rowName = {'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
+    'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
+colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
+    'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
 
-% create figure (图窗创建)
-fig=figure('Position',[100,100,870,720]);
+fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
+ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
 
-% Adjust the position of the main coordinate area 
-% and place the Y axis to the right (调整主坐标区域位置并将Y轴置于右侧)
-axMain=axes('Parent',fig);
-axMain.Position=[.18,.07,.62,.77];
-P=axMain.Position;
-axMain.YAxisLocation='right';
-
-% Draw the left dendrogram (绘制左侧树状图)
-axTreeL=axes('Parent',fig);
-axTreeL.Position=[P(1)-P(3)/5,P(2),P(3)/5,P(4)];
-orderL=SDendrogram(Data,'Orientation','left','Parent',axTreeL);
-
-% Draw the top dendrogram (绘制顶部树状图)
-axTreeT=axes('Parent',fig);
-axTreeT.Position=[P(1),P(2)+P(4),P(3),P(4)/5];
-orderT=SDendrogram(Data,'Orientation','top','Parent',axTreeT);
-
+orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Height',6);  % Draw the left dendrogram (绘制左侧树状图)
+orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5);  % Draw the top  dendrogram (绘制顶部树状图)
 % Exchange data order (交换数据顺序)
-Data=Data(orderL,:);
-Data=Data(:,orderT);
-
-% Draw Heatmap (绘制热图)
-SHM_t1=SHeatmap(Data,'Format','sq','Parent',axMain);
-SHM_t1.draw();
-axMain.DataAspectRatioMode='auto';
-axMain.XTickLabel=colName(orderT);
-axMain.YTickLabel=rowName(orderL);
-CB=colorbar(axMain);
-CB.Position=[P(1)+P(3)*1.15,P(2)+P(4)/2,P(3)/25,P(4)/2];
+Data = Data(orderL, orderT);
+% Draw heatmap (绘制热图)
+SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
+SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
+SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM_t1.setColLabel('Rotation',45)
+% Draw colorbar (绘制颜色条)
+axis(ax, 'tight')
+ax.DataAspectRatioMode = 'auto';
+CB = colorbar(ax);
+yn = size(Data, 1);
+yh = .9.*yn./(yn + 5) + .08;
+CB.Position = [.89, yh - .36, .025, .36];
 ```
 ![](gallery/Tree.png)
 ___
 ### 9 Grouping heatmap (带分组热图)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-ClassCol=[1,1,1,1,2,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,5,5,5,5,5];
-ClassRow=[1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4];
-Data=rand(20,25);
+rowGroup = [1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4];
+colGroup = [1,1,1,1,2,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,5,5,5,5,5];
+rowName = compose('row-%d', 1:20);
+colName = compose('col-%d', 1:25);
+Data = rand(20, 25);
 
 % create figure (图窗创建)
-fig=figure('Position',[100,100,800,800]);
+fig = figure('Units','normalized', 'Position',[.1,.05,.45,.72]);
+ax = axes('Parent',fig, 'Position',[.1,.15,.75,.75]);
 
-% Adjust the position of the main coordinate area 
-% and place the Y axis to the right (调整主坐标区域位置并将Y轴置于右侧)
-axMain=axes('Parent',fig);
-axMain.Position=[.1,.05,.85,.85];
-P=axMain.Position;
-axMain.YAxisLocation='right';
+SClusterBlock(rowGroup, 'Orientation','left', 'Parent',ax); % Draw the left Block (绘制左侧分组方块)
+SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax); % Draw the top  Block (绘制顶部分组方块)
+% Draw heatmap (绘制热图)
+SHM_b1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
+SHM_b1.setRowLabelLocation('right').setColName(colName)
+SHM_b1.setColLabelLocation('bottom').setRowName(rowName)
+SHM_b1.setColLabel('Rotation',45)
 
-% Draw the left Block (绘制左侧分组方块)
-axBlockL=axes('Parent',fig);
-axBlockL.Position=[P(1)-P(3)/20-P(3)*.01,P(2),P(3)/20,P(4)];
-SClusterBlock(ClassRow,'Orientation','left','Parent',axBlockL);
-
-% Draw the top Block (绘制上侧分组方块)
-axBlockT=axes('Parent',fig);
-axBlockT.Position=[P(1),P(2)+P(4)*1.01,P(3),P(4)/20];
-SClusterBlock(ClassCol,'Orientation','top','Parent',axBlockT);
-
-% Draw Heatmap (绘制热图)
-SHM_b1=SHeatmap(Data,'Format','sq','Parent',axMain);
-SHM_b1=SHM_b1.draw();
-axMain.DataAspectRatioMode='auto';
-colorbar(axMain,'off');
-clim(axMain,[-.2,1])
+colorbar(ax, 'off');
+clim(ax, [-.2, 1])
+axis(ax, 'tight')
+ax.DataAspectRatioMode = 'auto';
 ```
 ![](gallery/Group.png)
 ___
 ### 10 Multilayer grouping (多层分组)
 ```matlab
-Data=rand(3,16);
-
-Class1=[1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4];
-Class2=[1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4];
-ClassName1={'AAAAA','BBBBB','CCCCC','DDDDD'};
-ClassName2={'A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'};
-
-% Set Color (设置颜色)
-CList1=[0.7020    0.8863    0.8039
-    0.9559    0.8142    0.6907
-    0.8451    0.8275    0.8510
-    0.8966    0.8083    0.9000];
-CList2=[0.4588    0.4196    0.6941
-    0.6196    0.6039    0.7843
-    0.7373    0.7412    0.8627
-    0.8549    0.8549    0.9216];
+Data = rand(3, 16);
+Class1 = [1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4];
+Class2 = [1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4];
+ClassName1 = {'AAAAA','BBBBB','CCCCC','DDDDD'};
+ClassName2 = {'A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'};
+% Color (配色)
+CList1 = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
+CList2 = [.46,.42,.69; .62,.60,.78; .73,.74,.86; .85,.85,.92];
 
 % create figure and axes (图窗及坐标区域创建)
-fig=figure('Position',[100,100,1000,320]);
-axMain=axes('Parent',fig);
-axMain.Position=[.05,0,.9,.78];
-P=axMain.Position;
-
+fig = figure('Units','normalized', 'Position',[.05,.15,.72,.3]);
+ax = axes('Parent',fig, 'Position',[.05,0,.9,.99]);
 % Draw Heatmap
-SHM5=SHeatmap(Data,'Format','sq','Parent',axMain);
-SHM5=SHM5.draw();
-CB=colorbar;
-CB.Location='southoutside';
-axMain.DataAspectRatioMode='auto';
-
+SHM5 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 % Draw Block
-axBlockT=axes('Parent',fig);
-axBlockT.Position=[P(1),P(2)+P(4)*1.05,P(3),P(4)/5];
-[X1,Y1]=SClusterBlock(Class1,'Orientation','top','Parent',axBlockT,'BasePos',1,'ColorList',CList1);
-[X2,Y2]=SClusterBlock(Class2,'Orientation','top','Parent',axBlockT,'ColorList',CList2);
-
+[X1, Y1] = SClusterBlock(Class1, 'Orientation','top', 'BasePos',-.25, 'Height',.5, 'ColorList',CList1, 'Parent',ax);
+[X2, Y2] = SClusterBlock(Class2, 'Orientation','top', 'BasePos',.25 , 'Height',.5, 'ColorList',CList2, 'Parent',ax);
 % text
-for i=1:length(X1)
-    text(axBlockT,X1(i),Y1(i),ClassName1{i},'FontSize',17,'HorizontalAlignment','center','FontName','Cambria')
-end
-for i=1:length(X2)
-    text(axBlockT,X2(i),Y2(i),ClassName2{i},'FontSize',17,'HorizontalAlignment','center','FontName','Cambria')
-end
+textProp = {'FontSize',17, 'HorizontalAlignment','center', 'FontName','Cambria'};
+for i = 1:length(X1), text(ax, X1(i), Y1(i), ClassName1{i}, textProp{:}); end
+for i = 1:length(X2), text(ax, X2(i), Y2(i), ClassName2{i}, textProp{:}); end
+
+CB = colorbar();
+CB.Location = 'southoutside';
+ax.DataAspectRatioMode = 'auto';
 ```
 ![](gallery/Multilayer.png)
 ___
 ### 11 Tree and Group (树状图及分组)
 ```matlab
+rng(1)
 % Made up some data casually (随便捏造了点数据)
-X1=randn(20,20)+[(linspace(-1,2.5,20)').*ones(1,8),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,7)];
-X2=randn(20,25)+[(linspace(-1,2.5,20)').*ones(1,15),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,5)];
+X1 = randn(20,20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
+X2 = randn(20,25) + [(linspace(-1,2.5,20)').*ones(1, 15), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 5)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X1,X2);
+Data = corr(X1, X2);
 % rowName and colName
-rowName={'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
-          'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
-colName={'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A11','A12','A13',...
-         'A14','A15','B16','B17','B18','B19','B20','C21','C22','C23','C24','C25'};
-% Set Color
-CList=[0.7020    0.8863    0.8039
-    0.9559    0.8142    0.6907
-    0.8451    0.8275    0.8510
-    0.8966    0.8083    0.9000];
+rowName = {'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
+           'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
+colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
+           'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
 
-% create figure (图窗创建)
-fig=figure('Position',[100,100,870,720]);
+CList = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
 
-% Adjust the position of the main coordinate area 
-% and place the Y axis to the right (调整主坐标区域位置并将Y轴置于右侧)
-axMain=axes('Parent',fig);
-axMain.Position=[.18,.07,.62,.77];
-P=axMain.Position;
-axMain.YAxisLocation='right';
+fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
+ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
 
-% Draw the left dendrogram (绘制左侧树状图)
-axTreeL=axes('Parent',fig);
-axTreeL.Position=[P(1)-P(3)/5,P(2),P(3)/5*(5/6),P(4)];
-orderL=SDendrogram(Data,'Orientation','left','Parent',axTreeL,'Method','average');
-
-% Draw the top dendrogram (绘制顶部树状图)
-axTreeT=axes('Parent',fig);
-axTreeT.Position=[P(1),P(2)+P(4)+P(4)/5*(1/6),P(3),P(4)/5*(5/6)];
-orderT=SDendrogram(Data,'Orientation','top','Parent',axTreeT,'Method','average');
-
-% Draw the left Block (绘制左侧分组方块)
-axBlockL=axes('Parent',fig);
-axBlockL.Position=[P(1)-P(3)/5+P(3)/5*(5/6),P(2),P(3)/5*(1/6),P(4)];
-ZL=linkage(Data,'average');
-CL=cluster(ZL,'Maxclust',4);
-CL=CL(orderL);
-SClusterBlock(CL,'Orientation','left','Parent',axBlockL,'ColorList',CList);
-
-% Draw the top Block (绘制顶部分组方块)
-axBlockT=axes('Parent',fig);
-axBlockT.Position=[P(1),P(2)+P(4),P(3),P(4)/5*(1/6)];
-ZT=linkage(Data.','average');
-CT=cluster(ZT,'Maxclust',4);
-CT=CT(orderT);
-SClusterBlock(CT,'Orientation','top','Parent',axBlockT,'ColorList',CList);
+orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',-.5, 'Height',5);  % Draw the left dendrogram (绘制左侧树状图)
+orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',-.5, 'Height',4);  % Draw the top  dendrogram (绘制顶部树状图)
 
 % Exchange data order (交换数据顺序)
-Data=Data(orderL,:);
-Data=Data(:,orderT);
+Data = Data(orderL, orderT);
 
-% Draw Heatmap (绘制热图)
-SHM_t1=SHeatmap(Data,'Format','sq','Parent',axMain);
-SHM_t1=SHM_t1.draw();
-axMain.DataAspectRatioMode='auto';
-axMain.XTickLabel=colName(orderT);
-axMain.YTickLabel=rowName(orderL);
-CB=colorbar(axMain);
-CB.Position=[P(1)+P(3)*1.15,P(2)+P(4)/2,P(3)/25,P(4)/2];
+CL = cluster(linkage(Data, 'average'), 'Maxclust',4);
+CT = cluster(linkage(Data.','average'), 'Maxclust',4);
+SClusterBlock(CL, 'ColorList',CList ,'Orientation','left', 'Parent',ax, 'BasePos',.5); % Draw the left Block (绘制左侧分组方块)
+SClusterBlock(CT, 'ColorList',CList, 'Orientation','top' , 'Parent',ax, 'BasePos',.5); % Draw the top  Block (绘制顶部分组方块)
+
+% Draw heatmap (绘制热图)
+SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
+SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
+SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM_t1.setColLabel('Rotation',45)
+% Draw colorbar (绘制颜色条)
+axis(ax, 'tight')
+ax.DataAspectRatioMode = 'auto';
+CB = colorbar(ax);
+yn = size(Data, 1);
+yh = .9.*yn./(yn + 5) + .08;
+CB.Position = [.89, yh - .36, .025, .36];
 ```
 
 ![](gallery/TreeGroup.png)
@@ -637,38 +572,36 @@ ___
 ### 12 Text Format (数值文本格式)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X = randn(20, 15) + [(linspace(-1, 2.5, 20)').*ones(1, 6), ...
+                     (linspace(.5, -.7, 20)').*ones(1, 5), ...
+                     (linspace(.9, -.2, 20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X);
+Data = corr(X);
 
 % create figure (图窗创建)
-figure('Position',[100,100,870,720]);
+figure('Units','normalized', 'Position',[.1,.05,.45,.72])
 
 % Draw heat map with texts (绘制有文本热图)
-SHM12=SHeatmap(Data,'Format','circ');
-SHM12=SHM12.draw();
-SHM12.setText();
+SHM12 = SHeatmap(Data, 'Format','circ').draw().setText();
 
 % Set text format (调整数值文本格式)
-SHM12.setTextFormat(@(x)sprintf('%0.1f',x))
+SHM12.setTextFormat(@(x) sprintf('%0.1f', x))
 ```
 ![](gallery/Text_Format_0.1f.png)
 
 #### 12.2 Displaying significance (显示显著性)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
-X=randn(20,15)+[(linspace(-1,2.5,20)').*ones(1,6),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,4)];
+X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
-[Data, pval]=corr(X);
+[Data, pval] = corr(X);
 
 % create figure (图窗创建)
-fig=figure('Position',[100,100,870,720]);
+figure('Units','normalized', 'Position',[.1,.05,.45,.72])
 
 % Draw heat map with texts (绘制有文本热图)
-SHM12=SHeatmap(Data,'Format','sq');
-SHM12=SHM12.draw();
-SHM12.setText();
-SHM12.setType('tril');
+SHM12 = SHeatmap(Data, 'Format','sq').draw();
+SHM12.setText().setType('tril');
 
 % Displaying significance (显示显著性)
 SHM12.showStars(pval, 'Levels', [0.05, 0.01, 0.001])
@@ -680,32 +613,28 @@ SHM12.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
 ___
 ### 13 Tiledlayout (Tiledlayout 布局)
 ```matlab
-figure()
-tiledlayout(2,2)
+figure('Units','normalized', 'Position',[.2,.2,.4,.6])
+tiledlayout(2, 2)
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM1=SHeatmap(Data,'Format','sq');
-SHM1=SHM1.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM2=SHeatmap(Data,'Format','sq');
-SHM2=SHM2.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM3=SHeatmap(Data,'Format','sq');
-SHM3=SHM3.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM4=SHeatmap(Data,'Format','sq');
-SHM4=SHM4.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 ```
 ![](gallery/Tiledlayout.png)
 ___

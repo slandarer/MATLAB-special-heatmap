@@ -1,9 +1,9 @@
 %% Colormap
 
-%% 调整clim(Adjust clim)
+%% Adjust clim (调整 clim)
 % 使用 clim() 或者 caxis() 调整颜色映射范围
 % Use function clim() or caxis() to set the CLim
-fig = figure('Position',[50,50,1400,700]);
+fig = figure('Units','normalized', 'Position',[.1,.1,.8,.7]);
 
 % random data
 Data = rand(12, 12) - .5; Data([4, 5, 13]) = nan;
@@ -21,7 +21,7 @@ SHM_ax2.setText();
 
 % exportgraphics(fig, 'gallery\Colormap_clim.png')
 
-%% 使用MATLAB自带colormap (Use the built-in colormap in MATLAB)
+%% Use the built-in colormap in MATLAB (使用 MATLAB 自带 colormap)
 figure()
 Data = rand(14, 14);
 SHM_Bone = SHeatmap(Data, 'Format','sq');
@@ -29,12 +29,12 @@ SHM_Bone.draw();
 colormap(bone)
 % exportgraphics(gca, 'gallery\Colormap_bone.png')
 
-%% slanCM(slanCM colormap)
+%% slanCM (slanCM colormap)
 % Zhaoxu Liu / slandarer (2023). 200 colormap 
 % (https://www.mathworks.com/matlabcentral/fileexchange/120088-200-colormap), 
 % MATLAB Central File Exchange. 检索来源 2023/3/15.
 
-% 单向colormap或离散colormap
+% 单向 colormap 或离散 colormap
 for i = 20 % [20, 21, 61, 177]
     figure()
     Data = rand(14, 14);
@@ -43,7 +43,7 @@ for i = 20 % [20, 21, 61, 177]
     colormap(slanCM(i))
     % exportgraphics(gca, ['gallery\Colormap_slanCM_', num2str(i), '.png'])
 end
-% 双向colormap (Diverging colormap)
+% 双向 colormap (Diverging colormap)
 for i = 141 % [141, 136, 134]
     figure()
     Data = rand(14, 14) - .5;

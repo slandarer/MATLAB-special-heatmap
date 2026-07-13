@@ -5,7 +5,7 @@ if ~exist('gallery\','dir')
     mkdir('gallery\')
 end
 
-%% Draw positive heat map (绘制无负数的热图)
+%% Draw positive heatmap (绘制无负数的热图)
 figure()
 Data = rand(15, 15);
 SHM1 = SHeatmap(Data, 'Format','sq');
@@ -23,7 +23,7 @@ SHM2.draw();
 drawnow
 % exportgraphics(gca, 'gallery\Basic_negative.png')
 
-%% Draw heat maps of different sizes (绘制不同大小热图)
+%% Draw heatmaps of different sizes (绘制不同大小热图)
 figure()
 Data = rand(25, 30);
 SHM3 = SHeatmap(Data, 'Format','sq');
@@ -43,17 +43,17 @@ CB.Location = 'southoutside';
 drawnow
 % exportgraphics(gca, 'gallery\Basic_colorbar_location.png')
 
-%% Draw heat map with NaN (绘制有NaN热图)
+%% Draw heatmap with NaN (绘制有NaN热图)
 figure()
 Data = rand(12, 12) - .5;
 Data([4, 5, 13]) = nan;
 SHM5 = SHeatmap(Data, 'Format','sq');
-SHM5 = SHM5.draw();
+SHM5.draw();
 
 drawnow
 % exportgraphics(gca, 'gallery\Basic_with_NaN.png')
 
-%% Draw heat map with texts (绘制有文本热图)
+%% Draw heatmap with texts (绘制有文本热图)
 figure()
 Data = rand(12, 12) - .5;
 Data([4, 5, 13]) = nan;
@@ -64,7 +64,7 @@ SHM6.setText();
 drawnow
 % exportgraphics(gca, 'gallery\Basic_with_text.png')
 
-%% Draw heat map with labels (绘制带标签热图)
+%% Draw heatmap with labels (绘制带标签热图)
 figure()
 Data = rand(12, 12);
 SHM7 = SHeatmap(Data, 'Format','sq');
