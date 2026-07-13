@@ -1,15 +1,15 @@
 function [X, Y] = SClusterBlock(Class, varargin)
 % SClusterBlock - Draw colored blocks for cluster/group visualization
-%   [X,Y] = SClusterBlock(Class) draws colored blocks for each group in Class
+%   [X, Y] = SClusterBlock(Class) draws colored blocks for each group in Class
 %   along the top orientation (default) and returns center positions X,Y.
 %
 % Parameters:
 %   'Orientation'   - 'top' (default) or 'left'
-%   'BasePos'       - base position for block placement (default: 0)
-%   'Parent'        - axes handle (default: gca)
-%   'ColorList'     - custom color matrix for groups
-%   'BlockProp'     - cell array of patch properties
-%   'Height'        - 
+%   'BasePos'       - Base position for block placement (default: 0)
+%   'Parent'        - Axes handle (default: gca)
+%   'ColorList'     - Custom color matrix for groups
+%   'BlockProp'     - Cell array of patch properties
+%   'Height'        - Height of blocks
 
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap

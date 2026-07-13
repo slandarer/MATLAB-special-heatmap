@@ -9,7 +9,13 @@ function [order, obj] = SDendrogram(Data, varargin)
 %   order = SDendrogram(Data, 'Parent', ax) draws in specified axes
 %
 %   order = SDendrogram(Data, 'Method', method) linkage method (default: 'average')
-
+%
+% Parameters:
+%   'Orientation'   - 'top' (default) or 'left'
+%   'BasePos'       - Base position for dendrogram placement (default: 0)
+%   'Parent'        - Axes handle (default: gca)
+%   'Height'        - Height of dendrogram
+%   'Method'        - Linkage method (default: 'average')
 
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap
