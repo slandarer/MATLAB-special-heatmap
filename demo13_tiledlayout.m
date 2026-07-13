@@ -1,31 +1,26 @@
 %% tiledlayout
 figure()
-
-tiledlayout(2,2)
+tiledlayout(2, 2)
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM1=SHeatmap(Data,'Format','sq');
-SHM1.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM2=SHeatmap(Data,'Format','sq');
-SHM2.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM3=SHeatmap(Data,'Format','sq');
-SHM3.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();
 
 
 nexttile
-Data=rand(5,5);
-Data(randi([1,25], [2,1])) = nan;
-SHM4=SHeatmap(Data,'Format','sq');
-SHM4.draw();
+Data = rand(5, 5);
+Data(randi([1, 25], [2, 1])) = nan;
+SHeatmap(Data, 'Format','sq').draw();

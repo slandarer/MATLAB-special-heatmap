@@ -18,7 +18,7 @@ function order = SDendrogram(Data, varargin)
 % =========================================================================
 
 % Parameter definition (参数定义)
-obj.arginList = {'Orientation', 'Parent', 'Method'};
+obj.arginList = {'Orientation', 'Parent', 'Method', 'BasePos', 'Height'};
 obj.Orientation = 'top';
 obj.Parent = gca;
 obj.DataLen = 0;

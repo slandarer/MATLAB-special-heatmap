@@ -2,18 +2,18 @@
 % 带树状图热图
 
 % Made up some data casually (随便捏造了点数据)
-X1 = randn(20,20) + [(linspace(-1,2.5,20)').*ones(1,8),(linspace(.5,-.7,20)').*ones(1,5),(linspace(.9,-.2,20)').*ones(1,7)];
-X2 = randn(20,25) + [(linspace(-1,2.5,20)').*ones(1,10),(linspace(.5,-.7,20)').*ones(1,8),(linspace(.9,-.2,20)').*ones(1,7)];
+X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
+X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 10), (linspace(.5,-.7,20)').*ones(1, 8), (linspace(.9,-.2,20)').*ones(1, 7)];
 % Get the correlation matrix (求相关系数矩阵)
-Data=corr(X1,X2);
+Data = corr(X1, X2);
 % rowName and colName
-rowName={'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
-          'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
-colName={'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
-         'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
+rowName = {'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
+           'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
+colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
+           'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
 
 % create figure (图窗创建)
-fig=figure('Position',[100,100,870,720]);
+fig = figure('Position',[100,100,870,720]);
 
 % Adjust the position of the main coordinate area 
 % and place the Y axis to the right (调整主坐标区域位置并将Y轴置于右侧)

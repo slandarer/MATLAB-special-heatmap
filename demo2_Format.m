@@ -1,20 +1,18 @@
 %% Set heatmap format
 
-% 各类型热图绘制(Preparation of various Format of heat maps)
-
-A=rand(12,12);
-B=rand(12,12)-.5;
+A = rand(12, 12);
+B = rand(12, 12) - .5;
 
 
-% 绘制纯正数热图(Draw positive heat map)
+% Draw heatmap with all number positive (绘制纯正数热图)
 figure();
-SHM_A=SHeatmap(A,'Format','bcirc');
-SHM_A=SHM_A.draw();
+SHM_A = SHeatmap(A, 'Format','bcirc');
+SHM_A.draw()
 
-% 绘制含负数热图(Draw heat map with negative number)
+% Draw heatmap with negative number (绘制含负数热图)
 figure();
-SHM_B=SHeatmap(B,'Format','txt');
-SHM_B=SHM_B.draw();
+SHM_B = SHeatmap(B, 'Format','txt');
+SHM_B.draw()
 
 
 % 'sq'          : square (default)          : 方形(默认)

@@ -14,13 +14,9 @@ ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]);
 
 [rho, pval] = corr(X1); rho(eye(size(rho)) == 1) = 0;
 objHM = SHeatmap(ax, rho, 'Format','bcirc');
-objHM.draw();
-
-objHM.setType('triu0');
-objHM.setRowLabelLocation('right')
-objHM.setColLabelLocation('top')
-objHM.setRowLabel('Visible','on')
-objHM.setColLabel('Visible','on')
+objHM.draw().setType('triu0');
+objHM.setRowLabelLocation('right').setColLabelLocation('top')
+objHM.setRowLabel('Visible','on').setColLabel('Visible','on')
 delete(objHM.Colorbar)
 set([objHM.rowLabelHdl, objHM.colLabelHdl], 'FontSize',14, 'FontName','Helvetica')
 

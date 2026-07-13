@@ -21,16 +21,10 @@ ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]);
 %% Draw heatmap
 [rho, pval] = corr(Data1);
 objHM = SHeatmap(ax, rho, 'Format','sq');
-objHM.draw();
-
-objHM.setText()
-objHM.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
-objHM.setVarName(labels)
-objHM.setType('triu0');
-objHM.setRowLabelLocation('right')
-objHM.setColLabelLocation('top')
-objHM.setRowLabel('Visible','on')
-objHM.setColLabel('Visible','on')
+objHM.draw().setType('triu0').setText().setVarName(labels);
+objHM.showStars(pval, 'Levels',[0.05, 0.01, 0.001], 'CorrLabel','off')
+objHM.setRowLabelLocation('right').setColLabelLocation('top')
+objHM.setRowLabel('Visible','on').setColLabel('Visible','on')
 delete(objHM.Colorbar)
 
 % Apply a custom colormap with 25 colors (应用自定义 25 色 colormap)

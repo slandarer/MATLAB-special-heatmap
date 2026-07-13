@@ -21,15 +21,15 @@ classdef SHeatmap < handle
 % Basic usage:
 %   Data = rand(5, 15);
 %   SHM = SHeatmap(Data);
-%   SHM = SHM.draw();
+%   SHM.draw();
 %
 % =========================================================================
 % Format
 % -------------------------------------------------------------------------
 % try:
-%   Data = rand(15,15) - .5;
-%   SHM = SHeatmap(Data,'Format','donut');
-%   SHM = SHM.draw();
+%   Data = rand(15, 15) - .5;
+%   SHM = SHeatmap(Data, 'Format','donut');
+%   SHM.draw();
 % -------------------------------------------------------------------------
 %   'sq'          : square (default)          : 方形(默认)
 %   'pie'         : pie chart                 : 饼图
@@ -54,12 +54,12 @@ classdef SHeatmap < handle
 % Type
 % -------------------------------------------------------------------------
 % try:
-%   X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1,6), ...
-%                       (linspace(.5,-.7,20)').*ones(1,5), ...
-%                       (linspace(.9,-.2,20)').*ones(1,4)];
+%   X = randn(20, 15) + [(linspace(-1, 2.5, 20)').*ones(1, 6), ...
+%                        (linspace(.5, -.7, 20)').*ones(1, 5), ...
+%                        (linspace(.9, -.2, 20)').*ones(1, 4)];
 %   Data = corr(X);
 %   SHM = SHeatmap(Data, 'Type','sq');
-%   SHM = SHM.draw();
+%   SHM.draw();
 %   SHM.setType('triu');
 % -------------------------------------------------------------------------
 %   'triu'   : upper triangle                  : 上三角部分
@@ -456,10 +456,59 @@ classdef SHeatmap < handle
 % =========================================================================
 % Text decoration (修饰文本)
 % =========================================================================
-        function setText(obj, varargin)
-            % Show text labels with auto-contrast color and hide based on matrix type
-            % (显示文本标签，自动调整对比色，并根据矩阵类型隐藏部分标签)
+        function varargout = setText(obj, varargin)
+            % obj.setText(varargin) - Show value labels with auto-contrast
+            % color and hide based on matrix type, and set properties for labels 
+            % (显示数值标签，自动调整对比色，并根据矩阵类型隐藏部分标签，设置标签属性)
+            %
+            %   obj.setText(___); Set properties for all value labels.
+            %
+            %   obj.setText(m, n, ___); Set properties for the m‑th row, n-th column value label.
+            %
+            %   obj.setText([m1, m2, ...], [n1, n2, ...], ___); Set
+            %   properties for value labels by their indices.
+            %
+            %   obj.setText([m1; m2; ...], [n1, n2, ...], ___);
+            %   obj.setText([m1, m2, ...], [n1; n2; ...], ___); 
+            %   Set properties for all combinations when the row-index-vector 
+            %   and col-index-vector have different sizes.
+            %  
+            %   obj.setText([m1, m2, ...], [], ___); Set properties for 
+            %   the value labels for all columns in the specified rows.
+            %
+            %   obj.setText([], [n1, n2, ...], ___); Set properties for 
+            %   the value labels for all rows in the specified columns.
+            %
+            %   obj.setText(Bool, ___); Set properties for value labels
+            %   where the logical matrix Bool is true.
 
+            if isempty(varargin)
+                varargin = {'Visible','on'};
+            end
+            if islogical(varargin{1})
+                [M, N] = find(varargin{1});
+                for i = 1:length(M)
+                    m = M(i); n = N(i);
+                    set(obj.textHdl(m, n), varargin{2:end})
+                end
+            elseif isnumeric(varargin{1})
+                M = varargin{1}; N = varargin{2};
+                if all(size(M) == size(N))
+                    for i = 1:length(M)
+                        m = M(i); n = N(i);
+                        set(obj.textHdl(m, n), varargin{3:end})
+                    end
+                else
+                    if isempty(M); M = 1:size(obj.Data, 1); end
+                    if isempty(N); N = 1:size(obj.Data, 2); end
+                    for i = 1:length(M)
+                        for j = 1:length(N)
+                            m = M(i); n = N(j);
+                            set(obj.textHdl(m, n), varargin{3:end})
+                        end
+                    end
+                end
+            else
             % Get grayscale of current colormap (获取当前颜色映射的灰度值)
             cmp = get(obj.ax, 'Colormap');
             graymap = mean(cmp, 2);
@@ -511,21 +560,80 @@ classdef SHeatmap < handle
                         end
                     end
             end
-        end
-        
-        function setTextMN(obj, m, n, varargin)
-            % Set properties of the text label at cell (m,n)
-            % (设置指定单元格 (m,n) 的文本属性)
-            set(obj.textHdl(m, n), varargin{:})
+            end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
 % =========================================================================
 % Set properties for patch handles (设置图形样式)
 % =========================================================================
         % 设置图形样式
-        function setPatch(obj,varargin)
-            % Apply properties to all patch objects (and pie backgrounds if applicable)
+        function varargout = setPatch(obj, varargin)
+            % obj.setPatch(varargin) - Apply properties to all patch objects (and pie backgrounds if applicable)
             % (为所有填充图形设置属性，对饼图类型同时设置背景)
+            %
+            %   obj.setPatch(___); Set properties for all patch objects.
+            %
+            %   obj.setPatch(m, n, ___); Set properties for the m‑th row, n-th column patch object.
+            %
+            %   obj.setPatch([m1, m2, ...], [n1, n2, ...], ___); Set
+            %   properties for patch objects by their indices.
+            %
+            %   obj.setPatch([m1; m2; ...], [n1, n2, ...], ___);
+            %   obj.setPatch([m1, m2, ...], [n1; n2; ...], ___); 
+            %   Set properties for all combinations when the row-index-vector 
+            %   and col-index-vector have different sizes.
+            %  
+            %   obj.setPatch([m1, m2, ...], [], ___); Set properties for 
+            %   the patch objects for all columns in the specified rows.
+            %
+            %   obj.setPatch([], [n1, n2, ...], ___); Set properties for 
+            %   the patch objects for all rows in the specified columns.
+            %
+            %   obj.setPatch(Bool, ___); Set properties for patch objects
+            %   where the logical matrix Bool is true.
+
+            if islogical(varargin{1})
+                [M, N] = find(varargin{1});
+                for i = 1:length(M)
+                    m = M(i); n = N(i);
+                    set(obj.patchHdl(m, n), varargin{2:end});
+                    if isequal(obj.Format, 'pie') || ...
+                       isequal(obj.Format, 'donut') || ...
+                       isequal(obj.Format, 'bcirc')
+                        set(obj.pieHdl(m, n), varargin{2:end});
+                    end
+                end
+            elseif isnumeric(varargin{1})
+                M = varargin{1}; N = varargin{2};
+                if all(size(M) == size(N))
+                    for i = 1:length(M)
+                        m = M(i); n = N(i);
+                        set(obj.patchHdl(m, n), varargin{3:end});
+                        if isequal(obj.Format, 'pie') || ...
+                           isequal(obj.Format, 'donut') || ...
+                           isequal(obj.Format, 'bcirc')
+                            set(obj.pieHdl(m, n), varargin{3:end});
+                        end
+                    end
+                else
+                    if isempty(M); M = 1:size(obj.Data, 1); end
+                    if isempty(N); N = 1:size(obj.Data, 2); end
+                    for i = 1:length(M)
+                        for j = 1:length(N)
+                            m = M(i); n = N(j);
+                            set(obj.patchHdl(m, n), varargin{3:end});
+                            if isequal(obj.Format, 'pie') || ...
+                               isequal(obj.Format, 'donut') || ...
+                               isequal(obj.Format, 'bcirc')
+                                set(obj.pieHdl(m, n), varargin{3:end});
+                            end
+                        end
+                    end
+                end
+            else
             for row = 1:size(obj.Data, 1)
                 for col = 1:size(obj.Data, 2)
                     if ~isnan(obj.Data(row, col))
@@ -533,36 +641,34 @@ classdef SHeatmap < handle
                         % For pie/donut/bcirc formats, also set the pie background handle
                         % (对于 pie/donut/bcirc 格式，同时设置饼图背景句柄)
                         if isequal(obj.Format, 'pie') || ...
-                                isequal(obj.Format, 'donut') || ...
-                                isequal(obj.Format, 'bcirc')
+                           isequal(obj.Format, 'donut') || ...
+                           isequal(obj.Format, 'bcirc')
                             set(obj.pieHdl(row, col), varargin{:});
                         end
                     end
                 end
             end
-        end
-        function setPatchMN(obj, m, n, varargin)
-            % Apply properties to the patch object at cell (m,n)
-            % (设置指定单元格 (m,n) 的填充图形属性)
-            set(obj.patchHdl(m, n), varargin{:});
-            if isequal(obj.Format, 'pie') || ...
-                    isequal(obj.Format, 'donut') || ...
-                    isequal(obj.Format, 'bcirc')
-                set(obj.pieHdl(m, n), varargin{:});
+            end
+            if nargout == 1
+                varargout = {obj};
             end
         end
+        
 
 % =========================================================================
 % Set properties for box handle (设置框样式)
 % =========================================================================
-        function setBox(obj,varargin)
+        function varargout = setBox(obj,varargin)
             set(obj.boxHdl,varargin{:})
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
 % =========================================================================
 % Set triangular type (设置三角样式)
 % =========================================================================
-        function obj = setType(obj, Type)
+        function varargout = setType(obj, Type)
             % Adjust display to show only triangular part of the matrix based on Type
             % (根据类型调整显示，仅展示矩阵的三角部分)
         
@@ -702,12 +808,15 @@ classdef SHeatmap < handle
                         set(obj.colLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
                 end
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
 % =========================================================================
 % 设置变量标签 (Set variable labels)
 % =========================================================================
-        function setVarName(obj, VarName)
+        function varargout = setVarName(obj, VarName)
             % Assign variable names to rows and columns (cyclically if fewer names than size)
             % (为行和列分配变量名，若名称数量少于维度则循环使用)       
             obj.ax.XColor = 'none';
@@ -720,9 +829,12 @@ classdef SHeatmap < handle
                 set(obj.rowLabelHdl(n), 'String', obj.VarName{idx}, 'Visible','on');
                 set(obj.colLabelHdl(n), 'String', obj.VarName{idx}, 'Visible','on');
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
-        function setRowName(obj, RowName)
+        function varargout = setRowName(obj, RowName)
             % Assign variable names to rows (cyclically if fewer names than size)
             % (为行分配变量名，若名称数量少于维度则循环使用)
             obj.ax.YColor = 'none';
@@ -733,9 +845,12 @@ classdef SHeatmap < handle
                 idx = mod(i - 1, RowNameLen) + 1;
                 set(obj.rowLabelHdl(i), 'String', obj.RowName{idx}, 'Visible','on');
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
-        function setColName(obj, ColName)
+        function varargout = setColName(obj, ColName)
             % Assign variable names to cols (cyclically if fewer names than size)
             % (为行分配变量名，若名称数量少于维度则循环使用)
             obj.ax.XColor = 'none';
@@ -746,23 +861,32 @@ classdef SHeatmap < handle
                 idx = mod(j - 1, ColNameLen) + 1;
                 set(obj.colLabelHdl(j), 'String', obj.ColName{idx}, 'Visible','on');
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
         
-        function setRowLabel(obj, varargin)
+        function varargout = setRowLabel(obj, varargin)
             % Set properties for all row label text objects (设置所有行标签的属性)
             for n = 1:size(obj.Data, 1)
                 set(obj.rowLabelHdl(n), varargin{:});
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
         
-        function setColLabel(obj, varargin)
+        function varargout = setColLabel(obj, varargin)
             % Set properties for all column label text objects (设置所有列标签的属性)
             for n = 1:size(obj.Data, 2)
                 set(obj.colLabelHdl(n), varargin{:});
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
-        function setRowLabelLocation(obj, loc)
+        function varargout = setRowLabelLocation(obj, loc)
             % 'left'/'right'/'diag
             for n = 1:size(obj.Data, 1)
                 switch loc
@@ -783,9 +907,12 @@ classdef SHeatmap < handle
                         end
                 end
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
-        function setColLabelLocation(obj, loc)
+        function varargout = setColLabelLocation(obj, loc)
             % 'top'/'bottom'/'diag
             for n = 1:size(obj.Data, 2)
             switch loc
@@ -806,13 +933,16 @@ classdef SHeatmap < handle
                     end
             end
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
 % =========================================================================
 % 自定义文本格式 (Custom text formatting)
 % =========================================================================
 % 2023-05-28 更新
-        function setTextFormat(obj, func)
+        function varargout = setTextFormat(obj, func)
             % Apply a custom formatting function to all displayed text labels
             % (对显示的所有文本标签应用自定义格式化函数)
             %
@@ -827,13 +957,16 @@ classdef SHeatmap < handle
                     end
                 end
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
 % =========================================================================
 % Freeze colormap to data values (冻结颜色映射)
 % =========================================================================
 % 2025-12-01 更新
-        function freezeColors(obj)
+        function varargout = freezeColors(obj)
             % Permanently assign the current colormap colors to each patch based on its value,
             % decoupling them from the colormap axis limits.
             % (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围变化)
@@ -861,12 +994,16 @@ classdef SHeatmap < handle
             obj.Colorbar.Limits   = climit;
             % Slightly shift colorbar position to avoid overlap (微调颜色条位置避免重叠)
             obj.Colorbar.Position = obj.Colorbar.Position + [0.03, 0, 0, 0];
+
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
 % =========================================================================
 % Display significance stars (显示显著性星标)
 % =========================================================================
-        function showStars(obj, pval, varargin)
+        function varargout = showStars(obj, pval, varargin)
             % Overlay significance stars on existing text labels based on p-values.
             % (根据p值在现有文本标签上叠加显著性星标)
             %
@@ -902,6 +1039,9 @@ classdef SHeatmap < handle
                     end
                 end
             end
+            if nargout == 1
+                varargout = {obj};
+            end
         end
 
         function stars = pval2stars(~, pval, levels)
@@ -930,7 +1070,27 @@ classdef SHeatmap < handle
 % Hidden methods >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 % =========================================================================
     methods (Hidden)
-
+        function varargout = setTextMN(obj, m, n, varargin)
+            % Set properties of the text label at cell (m,n)
+            % (设置指定单元格 (m,n) 的文本属性)
+            set(obj.textHdl(m, n), varargin{:})
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
+        function varargout = setPatchMN(obj, m, n, varargin)
+            % Apply properties to the patch object at cell (m,n)
+            % (设置指定单元格 (m,n) 的填充图形属性)
+            set(obj.patchHdl(m, n), varargin{:});
+            if isequal(obj.Format, 'pie') || ...
+                    isequal(obj.Format, 'donut') || ...
+                    isequal(obj.Format, 'bcirc')
+                set(obj.pieHdl(m, n), varargin{:});
+            end
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
     end
 
 end

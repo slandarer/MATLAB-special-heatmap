@@ -1,6 +1,5 @@
 %% Display all heatmap formats
 
-% Preparation of various Format of heat maps (各类型热图绘制)
 if ~exist('gallery\','dir')
     mkdir('gallery\')
 end
@@ -20,29 +19,27 @@ end
 % 'acirc'       : auto-size circular        ：自带调整大小的圆形
 % 'txt'(text)   : colored text              : 带颜色的文本
 
-Format={'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc','txt'};
-A=rand(12,12);
-B=rand(12,12)-.5;
+Format = {'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc','txt'};
+A = rand(12, 12);
+B = rand(12, 12) - .5;
 
 
 % % Draw positive heat map (绘制纯正数热图)
-% for i=1:length(Format)
+% for i = 1:length(Format)
 %     figure();
-%     SHM_A=SHeatmap(A,'Format',Format{i});
-%     SHM_A.draw();
+%     SHeatmap(A, 'Format',Format{i}).draw();
 %
 %     drawnow
-%     % exportgraphics(gca,['gallery\Format_',Format{i},'_A.png']) % 存储图片
+%     % exportgraphics(gca, ['gallery\Format_', Format{i}, '_A.png']) % 存储图片
 % end
 
 
 % Draw heat map with negative number (绘制含负数热图)
-for i=1:length(Format)
+for i = 1:length(Format)
     figure();
-    SHM_B=SHeatmap(B,'Format',Format{i});
-    SHM_B.draw();
+    SHeatmap(B, 'Format',Format{i}).draw();
 
     drawnow
-    % exportgraphics(gca,['gallery\Format_',Format{i},'_B.png']) % 存储图片
+    % exportgraphics(gca, ['gallery\Format_', Format{i}, '_B.png']) % 存储图片
 end
 % close all
