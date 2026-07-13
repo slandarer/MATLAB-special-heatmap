@@ -23,49 +23,61 @@ classdef SHeatmap < handle
 %   SHM = SHeatmap(Data);
 %   SHM.draw();
 %
-% =========================================================================
-% Format
-% -------------------------------------------------------------------------
-% try:
+% Format:
 %   Data = rand(15, 15) - .5;
 %   SHM = SHeatmap(Data, 'Format','donut');
 %   SHM.draw();
-% -------------------------------------------------------------------------
-%   'sq'          : square (default)          : 方形(默认)
-%   'pie'         : pie chart                 : 饼图
-%   'donut'       ：donut chart               : 环形饼图(甜甜圈图)
-%   'circ'        : circle                    : 圆形
-%   'bcirc'       : circle with box           : 有边框的圆形
-%   'oval'        : oval                      : 椭圆形
-%   'hex'         : hexagon                   ：六边形
-%   'star'        : star                      : 五角星
-%   'trill'(tril) : lower left triangle       : 下三角
-%   'triur'(triu) : upper right triangle      : 上三角
-%   'trilr'       : lower right triangle      : 右下三角
-%   'triul'       : upper left triangle       : 左上三角
-%   'asq'         : auto-size square          ：自带调整大小的方形
-%   'acirc'       : auto-size circular        ：自带调整大小的圆形
-%   'txt'(text)   : colored text              : 带颜色的文本
-% -------------------------------------------------------------------------
-% see demo2_2_Format_Custom.m for detail
-%   'cust'        : custom shape              : 自定义形状
-%   'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
-% =========================================================================
-% Type
-% -------------------------------------------------------------------------
-% try:
+% 
+%     'sq'          : square (default)          : 方形(默认)
+%     'pie'         : pie chart                 : 饼图
+%     'donut'       ：donut chart               : 环形饼图(甜甜圈图)
+%     'circ'        : circle                    : 圆形
+%     'bcirc'       : circle with box           : 有边框的圆形
+%     'oval'        : oval                      : 椭圆形
+%     'hex'         : hexagon                   ：六边形
+%     'star'        : star                      : 五角星
+%     'trill'(tril) : lower left triangle       : 下三角
+%     'triur'(triu) : upper right triangle      : 上三角
+%     'trilr'       : lower right triangle      : 右下三角
+%     'triul'       : upper left triangle       : 左上三角
+%     'asq'         : auto-size square          ：自带调整大小的方形
+%     'acirc'       : auto-size circular        ：自带调整大小的圆形
+%     'txt'(text)   : colored text              : 带颜色的文本
+%     'cust'        : custom shape              : 自定义形状
+%     'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
+% 
+% Type:
 %   X = randn(20, 15) + [(linspace(-1, 2.5, 20)').*ones(1, 6), ...
 %                        (linspace(.5, -.7, 20)').*ones(1, 5), ...
 %                        (linspace(.9, -.2, 20)').*ones(1, 4)];
 %   Data = corr(X);
-%   SHM = SHeatmap(Data, 'Type','sq');
-%   SHM.draw();
+%   SHM = SHeatmap(Data, 'Type','sq').draw();
 %   SHM.setType('triu');
-% -------------------------------------------------------------------------
-%   'triu'   : upper triangle                  : 上三角部分
-%   'tril'   : lower triangle                  : 下三角部分
-%   'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
-%   'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
+%
+%     'triu'   : upper triangle                  : 上三角部分
+%     'tril'   : lower triangle                  : 下三角部分
+%     'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
+%     'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
+%
+% Methods: (try: help SHeatmap.setText)
+%   draw                - Render the heatmap object (渲染热图对象)
+%   setType             - Adjust display to show only triangular part of the matrix (仅展示矩阵的三角部分)
+%   setVarName          - Assign variable names to rows and columns (为行和列分配变量名)
+%   setRowName          - Assign variable names to rows (为行分配变量名)
+%   setColName          - Assign variable names to cols (为列分配变量名)
+%   setText             - Show value labels with auto-contrast color, and set properties (显示数值标签并自动调整颜色，设置标签属性)
+%   setTextFormat       - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
+%   showStars           - Overlay significance stars on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
+%   setBox              - Set properties for box handle (设置框样式)
+%   setPatch            - Set properties for all patch objects (为所有填充图形设置属性)
+%   setRowLabel         - Set properties for all row label text objects (设置所有行标签的属性)
+%   setColLabel         - Set properties for all col label text objects (设置所有列标签的属性)
+%   setRowLabelLocation - Move row labels to specified location (设置行标签位置)
+%   setColLabelLocation - Move col labels to specified location (设置列标签位置)
+%   freezeColors        - Permanently assign the current colormap colors to each patch 
+%                         based on its value, decoupling them from both the 
+%                         colormap axis limits (CLim) and the colormap itself.
+%                         (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围或颜色映射表的变化而改变)
 
 
 % =========================================================================
@@ -200,7 +212,8 @@ classdef SHeatmap < handle
 % Draw: Render the SHeatmap (渲染热图)
 % =========================================================================
         function varargout = draw(obj)
-            % Draw the heatmap (绘制热图)
+            % obj.draw() - Render the heatmap object (渲染热图对象)
+
             % Set axes handle (设置坐标轴句柄)
             if isempty(obj.Parent)
                 obj.ax = gca;
@@ -658,7 +671,8 @@ classdef SHeatmap < handle
 % =========================================================================
 % Set properties for box handle (设置框样式)
 % =========================================================================
-        function varargout = setBox(obj,varargin)
+        function varargout = setBox(obj, varargin)
+            % obj.setBox(varargin) - Set properties for box handle (设置框样式)
             set(obj.boxHdl,varargin{:})
             if nargout == 1
                 varargout = {obj};
@@ -669,8 +683,14 @@ classdef SHeatmap < handle
 % Set triangular type (设置三角样式)
 % =========================================================================
         function varargout = setType(obj, Type)
-            % Adjust display to show only triangular part of the matrix based on Type
+            % obj.setType(Type) - Adjust display to show only triangular part of the matrix based on Type
             % (根据类型调整显示，仅展示矩阵的三角部分)
+            %
+            % Type:
+            %   'triu'   : upper triangle (including diagonal) : 上三角部分 (含对角线)
+            %   'tril'   : lower triangle (including diagonal) : 下三角部分 (含对角线)
+            %   'triu0'  : upper triangle without diagonal     : 扣除对角线上三角部分 (不含对角线)
+            %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
         
             % Only apply if matrix is square (仅当矩阵为方阵时生效)
             if size(obj.Data, 1) == size(obj.Data, 2)
@@ -817,7 +837,7 @@ classdef SHeatmap < handle
 % 设置变量标签 (Set variable labels)
 % =========================================================================
         function varargout = setVarName(obj, VarName)
-            % Assign variable names to rows and columns (cyclically if fewer names than size)
+            % obj.setVarName(VarName) - Assign variable names to rows and columns (cyclically if fewer names than size)
             % (为行和列分配变量名，若名称数量少于维度则循环使用)       
             obj.ax.XColor = 'none';
             obj.ax.YColor = 'none';
@@ -835,8 +855,8 @@ classdef SHeatmap < handle
         end
 
         function varargout = setRowName(obj, RowName)
-            % Assign variable names to rows (cyclically if fewer names than size)
-            % (为行分配变量名，若名称数量少于维度则循环使用)
+            % obj.setRowName(RowName) - Assign variable names to rows (cyclically if fewer names than size)
+            % (为列分配变量名，若名称数量少于维度则循环使用)
             obj.ax.YColor = 'none';
             obj.RowName = RowName;
             RowNameLen = length(obj.RowName);
@@ -851,7 +871,7 @@ classdef SHeatmap < handle
         end
 
         function varargout = setColName(obj, ColName)
-            % Assign variable names to cols (cyclically if fewer names than size)
+            % obj.setColName(ColName) - Assign variable names to cols (cyclically if fewer names than size)
             % (为行分配变量名，若名称数量少于维度则循环使用)
             obj.ax.XColor = 'none';
             obj.ColName = ColName;
@@ -867,7 +887,7 @@ classdef SHeatmap < handle
         end
         
         function varargout = setRowLabel(obj, varargin)
-            % Set properties for all row label text objects (设置所有行标签的属性)
+            % obj.setRowLabel(varargin) - Set properties for all row label text objects (设置所有行标签的属性)
             for n = 1:size(obj.Data, 1)
                 set(obj.rowLabelHdl(n), varargin{:});
             end
@@ -877,7 +897,7 @@ classdef SHeatmap < handle
         end
         
         function varargout = setColLabel(obj, varargin)
-            % Set properties for all column label text objects (设置所有列标签的属性)
+            % obj.setColLabel(varargin) - Set properties for all col label text objects (设置所有列标签的属性)
             for n = 1:size(obj.Data, 2)
                 set(obj.colLabelHdl(n), varargin{:});
             end
@@ -887,6 +907,15 @@ classdef SHeatmap < handle
         end
 
         function varargout = setRowLabelLocation(obj, loc)
+            % obj.setRowLabelLocation(loc) - Move row labels to 
+            % specified location (设置行标签位置)
+            %
+            % loc can be:
+            %   'left'  - aligned to the left side of the first column
+            %   'right' - aligned to the right side of the last column
+            %   'diag'  - placed along the diagonal
+
+
             % 'left'/'right'/'diag
             for n = 1:size(obj.Data, 1)
                 switch loc
@@ -913,6 +942,15 @@ classdef SHeatmap < handle
         end
 
         function varargout = setColLabelLocation(obj, loc)
+            % obj.setColLabelLocation(loc) - Move col labels to
+            % specified location (设置列标签位置)
+            %
+            % loc can be:
+            %   'top'    - aligned above the first row
+            %   'bottom' - aligned below the last row
+            %   'diag'   - placed along the diagonal
+
+
             % 'top'/'bottom'/'diag
             for n = 1:size(obj.Data, 2)
             switch loc
@@ -943,8 +981,7 @@ classdef SHeatmap < handle
 % =========================================================================
 % 2023-05-28 更新
         function varargout = setTextFormat(obj, func)
-            % Apply a custom formatting function to all displayed text labels
-            % (对显示的所有文本标签应用自定义格式化函数)
+            % obj.setTextFormat(func) - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
             %
             %   func : function handle that takes a numeric value and returns a string
             %          (函数句柄，接受数值并返回字符串)
@@ -967,9 +1004,9 @@ classdef SHeatmap < handle
 % =========================================================================
 % 2025-12-01 更新
         function varargout = freezeColors(obj)
-            % Permanently assign the current colormap colors to each patch based on its value,
-            % decoupling them from the colormap axis limits.
-            % (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围变化)
+            % obj.freezeColors() - Permanently assign the current colormap colors to each patch 
+            % based on its value, decoupling them from both the colormap axis limits (CLim) and the colormap itself.
+            % (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围或颜色映射表的变化而改变)
         
             climit = get(obj.ax, 'CLim');
             cmap   = get(obj.ax, 'Colormap');
@@ -1004,10 +1041,27 @@ classdef SHeatmap < handle
 % Display significance stars (显示显著性星标)
 % =========================================================================
         function varargout = showStars(obj, pval, varargin)
-            % Overlay significance stars on existing text labels based on p-values.
-            % (根据p值在现有文本标签上叠加显著性星标)
+            % obj.showStars(pval, varargin) - Overlay significance stars 
+            % on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
             %
-            %   pval        : matrix of p-values corresponding to each data cell (p值矩阵)
+            %   obj.showStars(pval);
+            %       Overlays stars (*, **, ***, ****) onto each existing text label according
+            %       to the p-value in the corresponding cell. The default significance levels
+            %       are [0.05, 0.01, 0.001], producing '*', '**', '***', and '****' for
+            %       p < 0.0001.
+            %
+            %   obj.showStars(pval, 'Levels', levels, ___);
+            %       Specifies custom significance thresholds. levels must be a strictly
+            %       increasing numeric vector (e.g., [0.05, 0.01]). The number of stars
+            %       equals the number of thresholds that the p-value is below.
+            %
+            %   obj.showStars(pval, 'CorrLabel', 'off', ___);
+            %       By default ('on'), the original label text is kept and stars are added
+            %       as a superscript (or below, depending on implementation). When set to
+            %       'off', the original text is completely replaced by the star string.
+            %
+            % Parameters:
+            %    pval       : matrix of p-values corresponding to each data cell (p 值矩阵)
             %   'Levels'    : significance thresholds, default [0.05, 0.01, 0.001] (显著性阈值)
             %   'CorrLabel' : 'on' to keep original text below stars, 'off' to replace (是否保留原文本)
         
