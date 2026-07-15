@@ -54,10 +54,14 @@ classdef SHeatmap < handle
 %   SHM = SHeatmap(Data, 'Type','sq').draw();
 %   SHM.setType('triu');
 %
-%     'triu'   : upper triangle                  : 上三角部分
-%     'tril'   : lower triangle                  : 下三角部分
-%     'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
-%     'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
+%     'triu'   : upper triangle                   : 上三角部分
+%     'tril'   : lower triangle                   : 下三角部分
+%     'triu0'  : upper triangle without diagonal  : 扣除对角线上三角部分
+%                (strictly upper triangular part) : (严格上三角)
+%     'tril0'  : lower triangle without diagonal  : 扣除对角线下三角部分
+%                (strictly lower triangular part) : (严格下三角)
+%     'linkl'  : lower triangle for mantel links  : 适配 mantel 链接的下三角
+%     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
 %
 % Methods: (try: help SHeatmap.setText)
 %   draw                - Render the heatmap object (渲染热图对象)
@@ -124,10 +128,14 @@ classdef SHeatmap < handle
         SData = [.45, .21, .22, .09, .00, -.09, -.22, -.21, -.45, -.21, -.22, -.09, -.00,  .09,  0.22,  .21,   .45
                  .00, .09, .22, .21, .45,  .21,  .22,  .09,  .00, -.09, -.22, -.21, -.45, -.21, -0.22, -.09, -.00];
         Type = 'full';
-        % 'triu'   : upper triangle                  : 上三角部分
-        % 'tril'   : lower triangle                  : 下三角部分
-        % 'triu0'  : upper triangle without diagonal : 扣除对角线上三角部分
-        % 'tril0'  : lower triangle without diagonal : 扣除对角线下三角部分
+        %     'triu'   : upper triangle                   : 上三角部分
+        %     'tril'   : lower triangle                   : 下三角部分
+        %     'triu0'  : upper triangle without diagonal  : 扣除对角线上三角部分
+        %                (strictly upper triangular part) : (严格上三角)
+        %     'tril0'  : lower triangle without diagonal  : 扣除对角线下三角部分
+        %                (strictly lower triangular part) : (严格下三角)
+        %     'linkl'  : lower triangle for mantel links  : 适配 mantel 链接的下三角
+        %     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
 
         Colormap;       % Colormap (颜色映射表)
         Colorbar;       % Colorbar (颜色条) 
@@ -547,7 +555,7 @@ classdef SHeatmap < handle
                     set(obj.textHdl(row, col), 'Visible','on', 'Color',textColor, varargin{:});
                 end
             end
-            switch obj.Type
+            switch lower(obj.Type)
                 case 'triu'      % upper triangle (including diagonal) (上三角，含对角线)
                     for row = 1:size(obj.Data, 1)
                         for col = 1:(row - 1)
@@ -560,13 +568,13 @@ classdef SHeatmap < handle
                             set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case 'triu0'     % upper triangle without diagonal (扣除对角线，上三角不含对角线)
+                case {'triu0', 'linku'}     % upper triangle without diagonal (扣除对角线，上三角不含对角线)
                     for row = 1:size(obj.Data, 1)
                         for col = 1:(row)
                             set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case 'tril0'     % lower triangle without diagonal (扣除对角线，下三角不含对角线)
+                case {'tril0', 'linkl'}      % lower triangle without diagonal (扣除对角线，下三角不含对角线)
                     for col = 1:size(obj.Data, 2)
                         for row = 1:(col)
                             set(obj.textHdl(row, col), 'Visible','off');
@@ -691,6 +699,8 @@ classdef SHeatmap < handle
             %   'tril'   : lower triangle (including diagonal) : 下三角部分 (含对角线)
             %   'triu0'  : upper triangle without diagonal     : 扣除对角线上三角部分 (不含对角线)
             %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
+            %   'linkl'  : lower triangle for mantel links     : 适配 mantel 链接的下三角
+            %   'linku'  : upper triangle for mantel links     : 适配 mantel 链接的上三角
         
             % Only apply if matrix is square (仅当矩阵为方阵时生效)
             if size(obj.Data, 1) == size(obj.Data, 2)
@@ -718,7 +728,9 @@ classdef SHeatmap < handle
                 %   'tril'   : lower triangle (including diagonal) : 下三角部分 (含对角线)
                 %   'triu0'  : upper triangle without diagonal     : 扣除对角线上三角部分 (不含对角线)
                 %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
-                switch obj.Type
+                %   'linkl'  : lower triangle for mantel links     : 适配 mantel 链接的下三角
+                %   'linku'  : upper triangle for mantel links     : 适配 mantel 链接的上三角
+                switch lower(obj.Type)
                     case 'triu'   % upper triangle (including diagonal) (上三角含对角线)
                         % Hide lower-left patches/texts (隐藏左下部分图形和文本)
                         for row = 1:size(obj.Data, 1)
@@ -769,7 +781,7 @@ classdef SHeatmap < handle
                             set(obj.colLabelHdl(n), 'Position', [n, 0.25 - 1 + n, 0]);
                         end
         
-                    case 'triu0'  % upper triangle without diagonal (扣除对角线，上三角不含对角线)
+                    case {'triu0', 'linku'}  % upper triangle without diagonal (扣除对角线，上三角不含对角线)
                         % Hide diagonal and lower-left patches/texts (隐藏对角线及左下部分)
                         for row = 1:size(obj.Data, 1)
                             for col = 1:(row)
@@ -798,7 +810,7 @@ classdef SHeatmap < handle
                         set(obj.colLabelHdl(1), 'Visible', 'off');
                         set(obj.rowLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
         
-                    case 'tril0'  % lower triangle without diagonal (扣除对角线，下三角不含对角线)
+                    case {'tril0', 'linkl'}  % lower triangle without diagonal (扣除对角线，下三角不含对角线)
                         % Hide diagonal and upper-right patches/texts (隐藏对角线及右上部分)
                         for col = 1:size(obj.Data, 2)
                             for row = 1:(col)
@@ -825,9 +837,30 @@ classdef SHeatmap < handle
                             set(obj.colLabelHdl(n), 'Position', [n, 0.25 + n, 0]);
                         end
                         set(obj.rowLabelHdl(1), 'Visible', 'off');
-                        set(obj.colLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
+                        set(obj.colLabelHdl(size(obj.Data, 2)), 'Visible', 'off');
                 end
             end
+
+            if strcmpi(obj.Type, 'linkl')
+                for n = 1:size(obj.Data, 1)
+                    set(obj.rowLabelHdl(n), 'Position',[0.25, n, 0], 'HorizontalAlignment','right', 'Visible','on')
+                end
+                for n = 1:size(obj.Data, 2)
+                    set(obj.colLabelHdl(n), 'Position',[n, size(obj.Data, 1) + 0.75, 0], 'HorizontalAlignment','right', 'Visible','on')
+                end
+                delete(obj.Colorbar)
+            end
+
+            if strcmpi(obj.Type, 'linku')
+                for n = 1:size(obj.Data, 1)
+                    set(obj.rowLabelHdl(n), 'Position',[size(obj.Data, 2) + 0.75, n, 0], 'HorizontalAlignment','left', 'Visible','on')
+                end
+                for n = 1:size(obj.Data, 2)
+                    set(obj.colLabelHdl(n), 'Position',[n, 0.25, 0], 'HorizontalAlignment','left', 'Visible','on')
+                end
+                delete(obj.Colorbar)
+            end
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -920,19 +953,19 @@ classdef SHeatmap < handle
             for n = 1:size(obj.Data, 1)
                 switch loc
                     case 'left'
-                        set(obj.rowLabelHdl(n), 'Position', [0.25, n, 0], 'HorizontalAlignment', 'right')
+                        set(obj.rowLabelHdl(n), 'Position',[0.25, n, 0], 'HorizontalAlignment','right')
                     case 'right'
-                        set(obj.rowLabelHdl(n), 'Position', [size(obj.Data, 2) + 0.75, n, 0], 'HorizontalAlignment', 'left')
+                        set(obj.rowLabelHdl(n), 'Position',[size(obj.Data, 2) + 0.75, n, 0], 'HorizontalAlignment','left')
                     case 'diag'
                         switch obj.Type
                             case 'tril'
-                                set(obj.rowLabelHdl(n), 'Position', [0.75 + n, n, 0], 'HorizontalAlignment', 'left')
+                                set(obj.rowLabelHdl(n), 'Position',[0.75 + n, n, 0], 'HorizontalAlignment','left')
                             case 'tril0'
-                                set(obj.rowLabelHdl(n), 'Position', [0.75 - 1 + n, n, 0], 'HorizontalAlignment', 'left')
+                                set(obj.rowLabelHdl(n), 'Position',[0.75 - 1 + n, n, 0], 'HorizontalAlignment','left')
                             case 'triu'
-                                set(obj.rowLabelHdl(n), 'Position', [0.25 - 1 + n, n, 0], 'HorizontalAlignment', 'right')
+                                set(obj.rowLabelHdl(n), 'Position',[0.25 - 1 + n, n, 0], 'HorizontalAlignment','right')
                             case 'triu0'
-                                set(obj.rowLabelHdl(n), 'Position', [0.25 + n, n, 0], 'HorizontalAlignment', 'right')
+                                set(obj.rowLabelHdl(n), 'Position',[0.25 + n, n, 0], 'HorizontalAlignment','right')
                         end
                 end
             end
@@ -955,19 +988,19 @@ classdef SHeatmap < handle
             for n = 1:size(obj.Data, 2)
             switch loc
                 case 'top'
-                    set(obj.colLabelHdl(n), 'Position', [n, 0.25, 0], 'HorizontalAlignment', 'left')
+                    set(obj.colLabelHdl(n), 'Position',[n, 0.25, 0], 'HorizontalAlignment','left')
                 case 'bottom'
-                    set(obj.colLabelHdl(n), 'Position', [n, size(obj.Data, 1) + 0.75, 0], 'HorizontalAlignment', 'right')
+                    set(obj.colLabelHdl(n), 'Position',[n, size(obj.Data, 1) + 0.75, 0], 'HorizontalAlignment','right')
                 case 'diag'
                     switch obj.Type
                         case 'tril'
-                            set(obj.colLabelHdl(n), 'Position', [n, 0.25 - 1 + n, 0], 'HorizontalAlignment', 'left')
+                            set(obj.colLabelHdl(n), 'Position',[n, 0.25 - 1 + n, 0], 'HorizontalAlignment','left')
                         case 'tril0'
-                            set(obj.colLabelHdl(n), 'Position', [n, 0.25 + n, 0], 'HorizontalAlignment', 'left')
+                            set(obj.colLabelHdl(n), 'Position',[n, 0.25 + n, 0], 'HorizontalAlignment','left')
                         case 'triu'
-                            set(obj.colLabelHdl(n), 'Position', [n, n - .25 + 1, 0], 'HorizontalAlignment', 'right')
+                            set(obj.colLabelHdl(n), 'Position',[n, n - .25 + 1, 0], 'HorizontalAlignment','right')
                         case 'triu0'
-                            set(obj.colLabelHdl(n), 'Position', [n, n - .25, 0], 'HorizontalAlignment', 'right')
+                            set(obj.colLabelHdl(n), 'Position',[n, n - .25, 0], 'HorizontalAlignment','right')
                     end
             end
             end

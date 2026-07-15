@@ -12,14 +12,10 @@ group(12:15) = 3;
 fig = figure('Units','normalized', 'Position',[.05,.15,.72,.72]); 
 ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]); 
 
+%% Draw heatmap
 [rho, pval] = corr(X1); rho(eye(size(rho)) == 1) = 0;
-objHM = SHeatmap(ax, rho, 'Format','bcirc');
-objHM.draw().setType('triu0');
-objHM.setRowLabelLocation('right').setColLabelLocation('top')
-objHM.setRowLabel('Visible','on').setColLabel('Visible','on')
-delete(objHM.Colorbar)
+objHM = SHeatmap(ax, rho, 'Format','bcirc').draw().setType('linku');
 set([objHM.rowLabelHdl, objHM.colLabelHdl], 'FontSize',14, 'FontName','Helvetica')
-
 
 %% Draw mantel links
 objML = SMantelLink(ax, X1, X2, 'Group',group);

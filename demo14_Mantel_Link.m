@@ -21,22 +21,10 @@ ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]);
 
 %% Draw heatmap
 [rho, pval] = corr(Data1);
-objHM = SHeatmap(ax, rho, 'Format','sq');
-objHM.draw();
-
+objHM = SHeatmap(ax, rho, 'Format','sq').draw();
 % Display significance stars: p < 0.05 *, p < 0.01 **, p < 0.001 *** 
-objHM.setText()
-objHM.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
-
-objHM.setVarName(labels)             % Set row/column labels (设置行列标签)
-objHM.setType('tril0');              % Show only lower triangle without diagonal (仅显示下三角矩阵，不含对角线)
-% Adjust label positions (调整标签位置)
-objHM.setRowLabelLocation('left')    
-objHM.setColLabelLocation('bottom')
-% Show all labels, including those that were previously hidden. (显示所有标签，包括被隐藏的标签)
-objHM.setRowLabel('Visible','on')
-objHM.setColLabel('Visible','on')
-delete(objHM.Colorbar)
+objHM.setText().showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
+objHM.setVarName(labels).setType('linkl')
 
 %% Draw mantel links
 % Create Mantel link object with env data, species data and groups (创建Mantel链接对象，传入环境数据、物种数据及分组信息)
@@ -44,12 +32,10 @@ objML = SMantelLink(ax, Data1, Data2, 'Group',group);
 objML.GroupName = groupName;          % Set group names (设置组名)
 objML.LegendLocation = 'west';        % Place legend on the left (图例置于左侧)
 objML.Layout = 'triu';                % Links placed in upper triangle (链接采用上三角布局)
-
 % objML.Curvature = -1/3;
 % objML.LinkBendMode = 'simple';
 % objML.NumPerm = 9999;
-
-objML.draw()                          % Render the links (渲染链接图)
+objML.draw() 
 
 
 

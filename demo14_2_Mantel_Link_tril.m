@@ -20,12 +20,8 @@ ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]);
 
 %% Draw heatmap
 [rho, pval] = corr(Data1);
-objHM = SHeatmap(ax, rho, 'Format','sq');
-objHM.draw().setType('triu0').setText().setVarName(labels);
-objHM.showStars(pval, 'Levels',[0.05, 0.01, 0.001], 'CorrLabel','off')
-objHM.setRowLabelLocation('right').setColLabelLocation('top')
-objHM.setRowLabel('Visible','on').setColLabel('Visible','on')
-delete(objHM.Colorbar)
+objHM = SHeatmap(ax, rho, 'Format','sq').draw().setVarName(labels).setType('linku');
+objHM.setText().showStars(pval, 'Levels',[0.05, 0.01, 0.001], 'CorrLabel','off')
 
 % Apply a custom colormap with 25 colors (应用自定义 25 色 colormap)
 colormap(slanCM(102, 25))
@@ -37,12 +33,10 @@ set([objHM.rowLabelHdl, objHM.colLabelHdl], 'FontSize',14, 'FontName','Helvetica
 objML = SMantelLink(ax, Data1, Data2, 'Group',group);
 objML.GroupName = groupName;
 objML.Layout = 'tril';
-
 % Customize colors (自定义颜色)
 objML.PColor = [0,64,115; 79,148,204; 224,224,224]./255;
 objML.NodeColor1 = [184,207,248]./255;
 objML.NodeColor2 = [184,207,248]./255;
-
 objML.draw()
 
 % Adjust legend and group label fonts (调整图例和组标签字体)
