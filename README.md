@@ -640,10 +640,11 @@ SHeatmap(Data, 'Format','sq').draw();
 ___
 ### 14 Heatmap with Mantel test links (带 Mantel 链接的热图)
 ```matlab
+rng(7)
 %% Load data (加载数据)
-load('lichenData.mat')                  % Load pre-saved data package (加载预存的数据包)
-Data1 = varechem.Variables;             % Environmental matrix (环境因子矩阵)
-Data2 = varespec.Variables;             % Species composition matrix (物种组成矩阵)
+load('lichenData.mat')                      % Load pre-saved data package (加载预存的数据包)
+Data1 = varechem.Variables;                 % Environmental matrix (环境因子矩阵)
+Data2 = varespec.Variables;                 % Species composition matrix (物种组成矩阵)
 labels = varechem.Properties.VariableNames; % Environmental variable names (环境变量名称)
 
 % Define species groups: 44 columns into 4 groups (将44个物种列分为4组)
@@ -660,22 +661,10 @@ ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]);
 
 %% Draw heatmap
 [rho, pval] = corr(Data1);
-objHM = SHeatmap(ax, rho, 'Format','sq');
-objHM.draw();
-
+objHM = SHeatmap(ax, rho, 'Format','sq').draw();
 % Display significance stars: p < 0.05 *, p < 0.01 **, p < 0.001 *** 
-objHM.setText()
-objHM.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
-
-objHM.setVarName(labels)             % Set row/column labels (设置行列标签)
-objHM.setType('tril0');              % Show only lower triangle without diagonal (仅显示下三角矩阵，不含对角线)
-% Adjust label positions (调整标签位置)
-objHM.setRowLabelLocation('left')    
-objHM.setColLabelLocation('bottom')
-% Show all labels, including those that were previously hidden. (显示所有标签，包括被隐藏的标签)
-objHM.setRowLabel('Visible','on')
-objHM.setColLabel('Visible','on')
-delete(objHM.Colorbar)
+objHM.setText().showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
+objHM.setVarName(labels).setType('linkl')
 
 %% Draw mantel links
 % Create Mantel link object with env data, species data and groups (创建Mantel链接对象，传入环境数据、物种数据及分组信息)
@@ -683,13 +672,13 @@ objML = SMantelLink(ax, Data1, Data2, 'Group',group);
 objML.GroupName = groupName;          % Set group names (设置组名)
 objML.LegendLocation = 'west';        % Place legend on the left (图例置于左侧)
 objML.Layout = 'triu';                % Links placed in upper triangle (链接采用上三角布局)
-objML.draw()                          % Render the links (渲染链接图)
-
+objML.draw() 
 ```
 ![](gallery/Mantel_Link.png)
 
 #### 14.2 Heatmap with Mantel test links - tril layout (链接在左下方)
 ```matlab
+rng(7)
 %% Load data
 load('lichenData.mat')
 Data1 = varechem.Variables;
@@ -709,37 +698,23 @@ ax = axes('Parent',fig, 'Position',[.06,.05,.88,.9]);
 
 %% Draw heatmap
 [rho, pval] = corr(Data1);
-objHM = SHeatmap(ax, rho, 'Format','sq');
-objHM.draw();
-
-objHM.setText()
-objHM.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
-objHM.setVarName(labels)
-objHM.setType('triu0');
-objHM.setRowLabelLocation('right')
-objHM.setColLabelLocation('top')
-objHM.setRowLabel('Visible','on')
-objHM.setColLabel('Visible','on')
-delete(objHM.Colorbar)
+objHM = SHeatmap(ax, rho, 'Format','sq').draw().setVarName(labels).setType('linku');
+objHM.setText().showStars(pval, 'Levels',[0.05, 0.01, 0.001], 'CorrLabel','off')
 
 % Apply a custom colormap with 25 colors (应用自定义 25 色 colormap)
 colormap(slanCM(102, 25))
 % Adjust font properties for labels (调整标签字体)
 set([objHM.rowLabelHdl, objHM.colLabelHdl], 'FontSize',14, 'FontName','Helvetica')
 
-
 %% Draw mantel links
 objML = SMantelLink(ax, Data1, Data2, 'Group',group);
 objML.GroupName = groupName;
 objML.Layout = 'tril';
-
 % Customize colors (自定义颜色)
 objML.PColor = [0,64,115; 79,148,204; 224,224,224]./255;
 objML.NodeColor1 = [184,207,248]./255;
 objML.NodeColor2 = [184,207,248]./255;
-
 objML.draw()
-
 
 % Adjust legend and group label fonts (调整图例和组标签字体)
 set(objML.legendTitleHdl, 'FontName','Helvetica')
