@@ -64,13 +64,24 @@ SHM6.setText();
 drawnow
 % exportgraphics(gca, 'gallery\Basic_with_text.png')
 
-%% Draw heatmap with labels (绘制带标签热图)
+%% Draw heatmap with labels by XTick and YTick (绘制带标签热图, 使用 axes 原本的 XY 刻度)
 figure()
 Data = rand(12, 12);
 SHM7 = SHeatmap(Data, 'Format','sq');
-SHM7.ColName = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
-SHM7.RowName = {'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
 SHM7.draw(); 
+SHM7.ax.XTickLabel = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
+SHM7.ax.YTickLabel = {'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
+
+drawnow
+
+%% Draw heatmap with labels by RowName and ColName (绘制带标签热图, 使用 SHeatmap 的行列标签功能)
+figure()
+Data = rand(12, 12);
+SHM8 = SHeatmap(Data, 'Format','sq');
+SHM8.ColName = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
+SHM8.RowName = {'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
+SHM8.draw(); 
+SHM8.setFrame()
 
 drawnow
 % exportgraphics(gca, 'gallery\Basic_with_labels.png')

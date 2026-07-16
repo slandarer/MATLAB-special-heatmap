@@ -23,7 +23,7 @@ Data = Data(orderL, orderT);
 SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
 SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
-SHM_t1.setColLabel('Rotation',45)
+SHM_t1.setColLabel('Rotation',45).setFrame()
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';

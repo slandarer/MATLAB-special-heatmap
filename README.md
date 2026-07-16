@@ -82,6 +82,7 @@ SHM7 = SHeatmap(Data, 'Format','sq');
 SHM7.ColName = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
 SHM7.RowName = {'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
 SHM7.draw(); 
+SHM7.setFrame()
 ```
 ![](gallery/Basic_with_labels.png)
 ___
@@ -215,6 +216,7 @@ ___
 + obj.setBox(___)    ：修饰边框
 + obj.setPatch(___)  ：修饰图形
 + obj.setText(___)   ：修饰文本
++ obj.setFrame(___) : 修饰外轮廓
 
 ```matlab
 figure()
@@ -236,6 +238,7 @@ SHM = SHeatmap(Data, 'Format','sq');
 SHM.draw(); 
 % Set the text to blue and modify the font size (设置文本为蓝色并修改字号)
 SHM.setText('Color',[0,0,.8], 'FontSize',14)
+SHM.setFrame('LineWidth',2)
 ```
 
 ![](gallery/All2.png)
@@ -454,7 +457,7 @@ Data = Data(orderL, orderT);
 SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
 SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
-SHM_t1.setColLabel('Rotation',45)
+SHM_t1.setColLabel('Rotation',45).setFrame()
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';
@@ -484,7 +487,7 @@ SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax); % Draw the top  Bloc
 SHM_b1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM_b1.setRowLabelLocation('right').setColName(colName)
 SHM_b1.setColLabelLocation('bottom').setRowName(rowName)
-SHM_b1.setColLabel('Rotation',45)
+SHM_b1.setColLabel('Rotation',45).setFrame()
 
 colorbar(ax, 'off');
 clim(ax, [-.2, 1])
@@ -557,7 +560,7 @@ SClusterBlock(CT, 'ColorList',CList, 'Orientation','top' , 'Parent',ax, 'BasePos
 SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
 SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
-SHM_t1.setColLabel('Rotation',45)
+SHM_t1.setColLabel('Rotation',45).setFrame('LineWidth',.8)
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';

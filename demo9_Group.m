@@ -17,7 +17,7 @@ SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax); % Draw the top  Bloc
 SHM_b1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM_b1.setRowLabelLocation('right').setColName(colName)
 SHM_b1.setColLabelLocation('bottom').setRowName(rowName)
-SHM_b1.setColLabel('Rotation',45)
+SHM_b1.setColLabel('Rotation',45).setFrame()
 
 colorbar(ax, 'off');
 clim(ax, [-.2, 1])

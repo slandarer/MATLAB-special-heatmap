@@ -73,6 +73,7 @@ classdef SHeatmap < handle
 %   setTextFormat       - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
 %   showStars           - Overlay significance stars on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
 %   setBox              - Set properties for box handle (设置框样式)
+%   setFrame            - Set properties for frame and tick handle (设置外轮廓样式)
 %   setPatch            - Set properties for all patch objects (为所有填充图形设置属性)
 %   setRowLabel         - Set properties for all row label text objects (设置所有行标签的属性)
 %   setColLabel         - Set properties for all col label text objects (设置所有列标签的属性)
@@ -137,6 +138,10 @@ classdef SHeatmap < handle
         %     'linkl'  : lower triangle for mantel links  : 适配 mantel 链接的下三角
         %     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
 
+        TickLength = .1;
+        RowLabelLocation = 'left';
+        ColLabelLocation = 'bottom';
+
         Colormap;       % Colormap (颜色映射表)
         Colorbar;       % Colorbar (颜色条) 
 
@@ -153,6 +158,10 @@ classdef SHeatmap < handle
         pieHdl;         % Pie chart handle (饼图句柄)
         rowLabelHdl;    % Row label handle (行标签句柄)
         colLabelHdl;    % Column label handle (列标签句柄)
+        frameHdl;       % Frame (outline) handle (外轮廓句柄)
+        rowTickHdl;     % Row tick handle (行刻度句柄)
+        colTickHdl;     % Col tick handle (列刻度句柄)
+        
     end
 
     properties (Hidden)
@@ -425,6 +434,12 @@ classdef SHeatmap < handle
                 obj.setText()
             end
 
+            obj.frameHdl = plot(obj.ax, [0, 1, 1, 0, 0, 1].*size(obj.Data, 2) + .5, ...
+                                        [0, 0, 1, 1, 0, 0].*size(obj.Data, 1) + .5, ...
+                                        'Color','k', 'LineWidth',1, 'LineJoin','miter', 'Visible','off');
+            obj.rowTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
+            obj.colTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
+
             if isempty(obj.VarName)
                 % Create default variable names (生成默认变量名)
                 obj.VarName{length(obj.Data)} = '';
@@ -686,7 +701,144 @@ classdef SHeatmap < handle
                 varargout = {obj};
             end
         end
+% =========================================================================
+% Set properties for frame handle (设置外轮廓样式)
+% =========================================================================
+        function varargout = setFrame(obj, varargin)
+            % obj.setFrame(varargin) - Set properties for frame and tick handle (设置外轮廓样式)
+            obj.TickLength(obj.TickLength < 0) = 0;
+            obj.TickLength(obj.TickLength > .5) = .5;
 
+            if isempty(obj.RowName)
+                obj.RowName = compose('%d', 1:size(obj.Data, 1));
+            end
+            if isempty(obj.ColName)
+                obj.ColName = compose('%d', 1:size(obj.Data, 2));
+            end
+            obj.ax.XColor = 'none';
+            obj.ax.YColor = 'none';
+            obj.setRowName(obj.RowName);
+            obj.setColName(obj.ColName);
+
+            set(obj.frameHdl, 'Visible','on', varargin{:})
+            switch obj.RowLabelLocation
+                case 'left'
+                    switch lower(obj.Type)
+                        case 'triu'
+                            X = nan; Y = nan;
+                        case 'tril'
+                            X = [.5; .5 - obj.TickLength; nan]*ones(1, size(obj.Data, 1));
+                            Y = [1; 1; nan]*(1:size(obj.Data, 1));
+                        case {'triu0', 'linku'}
+                            X = nan; Y = nan;
+                        case {'tril0', 'linkl'}
+                            X = [.5; .5 - obj.TickLength; nan]*ones(1, size(obj.Data, 1) - 1);
+                            Y = [1; 1; nan]*(2:size(obj.Data, 1));
+                        case 'full'
+                            X = [.5; .5 - obj.TickLength; nan]*ones(1, size(obj.Data, 1));
+                            Y = [1; 1; nan]*(1:size(obj.Data, 1));
+                    end
+                    set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
+                case 'right'
+                    switch lower(obj.Type)
+                        case 'triu'
+                            X = [size(obj.Data, 2) + .5; size(obj.Data, 2) + .5 + obj.TickLength; nan]*ones(1, size(obj.Data, 1));
+                            Y = [1; 1; nan]*(1:size(obj.Data, 1));
+                        case 'tril'
+                            X = nan; Y = nan;
+                        case {'triu0', 'linku'}
+                            X = [size(obj.Data, 2) + .5; size(obj.Data, 2) + .5 + obj.TickLength; nan]*ones(1, size(obj.Data, 1) - 1);
+                            Y = [1; 1; nan]*(1:(size(obj.Data, 1) - 1));
+                        case {'tril0', 'linkl'}
+                            X = nan; Y = nan;
+                        case 'full'
+                            X = [size(obj.Data, 2) + .5; size(obj.Data, 2) + .5 + obj.TickLength; nan]*ones(1, size(obj.Data, 1));
+                            Y = [1; 1; nan]*(1:size(obj.Data, 1));
+                    end
+                    set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
+                case 'diag'
+                    switch lower(obj.Type)
+                        case 'triu'
+                            X = [(1:size(obj.Data, 1)) - .5; (1:size(obj.Data, 1)) - .5 - obj.TickLength; nan(1, size(obj.Data, 1))];
+                            Y = [1; 1; nan]*(1:size(obj.Data, 1));
+                        case 'tril'
+                            X = [(1:size(obj.Data, 1)) + .5; (1:size(obj.Data, 1)) + .5 + obj.TickLength; nan(1, size(obj.Data, 1))];
+                            Y = [1; 1; nan]*(1:size(obj.Data, 1));
+                        case {'triu0', 'linku'}
+                            X = [(2:size(obj.Data, 1)) - .5; (2:size(obj.Data, 1)) - .5 - obj.TickLength; nan(1, size(obj.Data, 1) - 1)];
+                            Y = [1; 1; nan]*(1:(size(obj.Data, 1) - 1));
+                        case {'tril0', 'linkl'}
+                            X = [(1:(size(obj.Data, 1) - 1)) + .5; (1:(size(obj.Data, 1) - 1)) + .5 + obj.TickLength; nan(1, size(obj.Data, 1) - 1)];
+                            Y = [1; 1; nan]*(2:size(obj.Data, 1));
+                    end
+                    set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
+            end
+            switch obj.ColLabelLocation
+                case 'top'
+                    switch lower(obj.Type)
+                        case 'triu'
+                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, size(obj.Data, 2));
+                            X = [1; 1; nan]*(1:size(obj.Data, 2));
+                        case 'tril'
+                            X = nan; Y = nan;
+                        case {'triu0', 'linku'}
+                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, size(obj.Data, 2) - 1);
+                            X = [1; 1; nan]*(2:size(obj.Data, 2));
+                        case {'tril0', 'linkl'}
+                            X = nan; Y = nan;
+                        case 'full'
+                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, size(obj.Data, 2));
+                            X = [1; 1; nan]*(1:size(obj.Data, 2));
+                    end
+                    set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
+                case 'bottom'
+                    switch lower(obj.Type)
+                        case 'triu'
+                            X = nan; Y = nan;
+                        case 'tril'
+                            Y = [size(obj.Data, 1) + .5; size(obj.Data, 1) + .5 + obj.TickLength; nan]*ones(1, size(obj.Data, 2));
+                            X = [1; 1; nan]*(1:size(obj.Data, 2));
+                        case {'triu0', 'linku'}
+                            X = nan; Y = nan;
+                        case {'tril0', 'linkl'}
+                            Y = [size(obj.Data, 1) + .5; size(obj.Data, 1) + .5 + obj.TickLength; nan]*ones(1, size(obj.Data, 2) - 1);
+                            X = [1; 1; nan]*(1:(size(obj.Data, 2) - 1));
+                        case 'full'
+                            Y = [size(obj.Data, 1) + .5; size(obj.Data, 1) + .5 + obj.TickLength; nan]*ones(1, size(obj.Data, 2));
+                            X = [1; 1; nan]*(1:size(obj.Data, 2));
+                    end
+                    set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
+                case 'diag'
+                    switch lower(obj.Type)
+                        case 'triu'
+                            Y = [(1:size(obj.Data, 2)) + .5; (1:size(obj.Data, 2)) + .5 + obj.TickLength; nan(1, size(obj.Data, 2))];
+                            X = [1; 1; nan]*(1:size(obj.Data, 2));
+                        case 'tril'
+                            Y = [(1:size(obj.Data, 2)) - .5; (1:size(obj.Data, 2)) - .5 - obj.TickLength; nan(1, size(obj.Data, 2))];
+                            X = [1; 1; nan]*(1:size(obj.Data, 2));
+                        case {'triu0', 'linku'}
+                            Y = [(2:size(obj.Data, 2)) - .5; (2:size(obj.Data, 2)) - .5 + obj.TickLength; nan(1, size(obj.Data, 2) - 1)];
+                            X = [1; 1; nan]*(2:size(obj.Data, 2));
+                        case {'tril0', 'linkl'}
+                            Y = [(2:size(obj.Data, 2)) - .5; (2:size(obj.Data, 2)) - .5 - obj.TickLength; nan(1, size(obj.Data, 2) - 1)];
+                            X = [1; 1; nan]*(1:(size(obj.Data, 2) - 1));
+                    end
+                    set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
+            end
+
+            obj.setRowLabelLocation(obj.RowLabelLocation)
+            obj.setColLabelLocation(obj.ColLabelLocation)
+            try
+                obj.Colorbar.TickLength = .005;
+                obj.Colorbar.TickDirection = 'out';
+                obj.Colorbar.LineWidth = obj.frameHdl.LineWidth;
+            catch
+            end
+
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
 % =========================================================================
 % Set triangular type (设置三角样式)
 % =========================================================================
@@ -721,6 +873,15 @@ classdef SHeatmap < handle
                 for n = 1:size(obj.Data, 1)
                     set(obj.rowLabelHdl(n), 'Visible', 'on');
                     set(obj.colLabelHdl(n), 'Visible', 'on');
+                end
+
+                if strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0') || strcmpi(obj.Type, 'linku') 
+                    obj.RowLabelLocation = 'diag';
+                    obj.ColLabelLocation = 'top';
+                end
+                if strcmpi(obj.Type, 'tril') || strcmpi(obj.Type, 'triul') || strcmpi(obj.Type, 'linkl') 
+                    obj.RowLabelLocation = 'left';
+                    obj.ColLabelLocation = 'diag';
                 end
         
                 % Apply specific triangular type (应用特定三角类型)
@@ -861,6 +1022,28 @@ classdef SHeatmap < handle
                 delete(obj.Colorbar)
             end
 
+            [M, N] = size(obj.Data);
+            X2 = reshape([1;1]*(0:(N-1)), 1, []);
+            Y2 = reshape([1;1]*(0:(M-1)), 1, []);
+            switch lower(obj.Type)
+                case 'triu'
+                    X = [X2, N, N, 0, 0] + .5;
+                    Y = [Y2(2:end), M, M, 0, 0, 1] +.5;
+                    set(obj.frameHdl, 'XData',X, 'YData',Y)
+                case 'tril'
+                    X = [X2(2:end), N, N, 0, 0, 1] + .5;
+                    Y = [Y2, M, M, 0, 0] + .5;
+                    set(obj.frameHdl, 'XData',X, 'YData',Y)
+                case {'triu0', 'linku'}
+                    X = [X2(3:end), N, N, 1, 1] + .5;
+                    Y = [Y2(2:end-2), M - 1, M - 1, 0, 0, 1] +.5;
+                    set(obj.frameHdl, 'XData',X, 'YData',Y)
+                case {'tril0', 'linkl'}
+                    X = [X2(2:end-2), N - 1, N - 1, 0, 0, 1] +.5;
+                    Y = [Y2(3:end), M, M, 1, 1] + .5;
+                    set(obj.frameHdl, 'XData',X, 'YData',Y)
+            end
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -875,12 +1058,18 @@ classdef SHeatmap < handle
             obj.ax.XColor = 'none';
             obj.ax.YColor = 'none';
             obj.VarName = VarName;
+            obj.RowName = VarName;
+            obj.ColName = VarName;
             VarNameLen = length(obj.VarName);
             for n = 1:size(obj.Data, 1)
                 % Apply names cyclically (循环应用名称)
                 idx = mod(n - 1, VarNameLen) + 1;
-                set(obj.rowLabelHdl(n), 'String', obj.VarName{idx}, 'Visible','on');
-                set(obj.colLabelHdl(n), 'String', obj.VarName{idx}, 'Visible','on');
+                set(obj.rowLabelHdl(n), 'String', obj.VarName{idx});
+                set(obj.colLabelHdl(n), 'String', obj.VarName{idx});
+                if strcmpi(obj.Type, 'full')
+                    set(obj.rowLabelHdl(n), 'Visible','on')
+                    set(obj.colLabelHdl(n), 'Visible','on')
+                end
             end
             if nargout == 1
                 varargout = {obj};
@@ -896,7 +1085,10 @@ classdef SHeatmap < handle
             for i = 1:size(obj.Data, 1)
                 % Apply names cyclically (循环应用名称)
                 idx = mod(i - 1, RowNameLen) + 1;
-                set(obj.rowLabelHdl(i), 'String', obj.RowName{idx}, 'Visible','on');
+                set(obj.rowLabelHdl(i), 'String', obj.RowName{idx});
+                if strcmpi(obj.Type, 'full')
+                    set(obj.rowLabelHdl(i), 'Visible','on')
+                end
             end
             if nargout == 1
                 varargout = {obj};
@@ -912,7 +1104,10 @@ classdef SHeatmap < handle
             for j = 1:size(obj.Data, 2)
                 % Apply names cyclically (循环应用名称)
                 idx = mod(j - 1, ColNameLen) + 1;
-                set(obj.colLabelHdl(j), 'String', obj.ColName{idx}, 'Visible','on');
+                set(obj.colLabelHdl(j), 'String', obj.ColName{idx});
+                if strcmpi(obj.Type, 'full')
+                    set(obj.colLabelHdl(j), 'Visible','on')
+                end
             end
             if nargout == 1
                 varargout = {obj};
@@ -948,24 +1143,60 @@ classdef SHeatmap < handle
             %   'right' - aligned to the right side of the last column
             %   'diag'  - placed along the diagonal
 
+            obj.RowLabelLocation = loc;
+            obj.TickLength(obj.TickLength < 0) = 0;
+            obj.TickLength(obj.TickLength > .5) = .5;
 
-            % 'left'/'right'/'diag
+            % 'left'/'right'/'diag'
             for n = 1:size(obj.Data, 1)
                 switch loc
                     case 'left'
-                        set(obj.rowLabelHdl(n), 'Position',[0.25, n, 0], 'HorizontalAlignment','right')
+                        set(obj.rowLabelHdl(n), 'Position',[.25, n, 0], 'HorizontalAlignment','right')
+                        if strcmpi(obj.rowTickHdl.Visible, 'on')
+                            set(obj.rowLabelHdl(n), 'Position',[.25 - obj.TickLength, n, 0])
+                        end
                     case 'right'
-                        set(obj.rowLabelHdl(n), 'Position',[size(obj.Data, 2) + 0.75, n, 0], 'HorizontalAlignment','left')
+                        set(obj.rowLabelHdl(n), 'Position',[size(obj.Data, 2) + .75, n, 0], 'HorizontalAlignment','left')
+                        if strcmpi(obj.rowTickHdl.Visible, 'on')
+                            set(obj.rowLabelHdl(n), 'Position',[size(obj.Data, 2) + .75 + obj.TickLength, n, 0])
+                        end
                     case 'diag'
                         switch obj.Type
                             case 'tril'
-                                set(obj.rowLabelHdl(n), 'Position',[0.75 + n, n, 0], 'HorizontalAlignment','left')
-                            case 'tril0'
-                                set(obj.rowLabelHdl(n), 'Position',[0.75 - 1 + n, n, 0], 'HorizontalAlignment','left')
+                                set(obj.rowLabelHdl(n), 'Position',[.75 + n, n, 0], 'HorizontalAlignment','left')
+                                if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                    set(obj.rowLabelHdl(n), 'Position',[.75 + n + obj.TickLength, n, 0])
+                                end
+                            case {'tril0','linkl'}
+                                set(obj.rowLabelHdl(n), 'Position',[.75 - 1 + n, n, 0], 'HorizontalAlignment','left')
+                                if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                    set(obj.rowLabelHdl(n), 'Position',[.75 - 1 + n + obj.TickLength, n, 0])
+                                end
                             case 'triu'
-                                set(obj.rowLabelHdl(n), 'Position',[0.25 - 1 + n, n, 0], 'HorizontalAlignment','right')
-                            case 'triu0'
-                                set(obj.rowLabelHdl(n), 'Position',[0.25 + n, n, 0], 'HorizontalAlignment','right')
+                                set(obj.rowLabelHdl(n), 'Position',[.25 - 1 + n, n, 0], 'HorizontalAlignment','right')
+                                if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                    set(obj.rowLabelHdl(n), 'Position',[.25 - 1 + n - obj.TickLength, n, 0])
+                                end
+                            case {'triu0','linku'}
+                                set(obj.rowLabelHdl(n), 'Position',[.25 + n, n, 0], 'HorizontalAlignment','right')
+                                if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                    set(obj.rowLabelHdl(n), 'Position',[.25 + n - obj.TickLength, n, 0])
+                                end
+                        end
+                end
+            end
+            if strcmpi(obj.rowTickHdl.Visible, 'on')
+                switch loc
+                    case 'left'
+                        obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength);
+                    case 'right'
+                        obj.ax.XLim(2) = max(obj.ax.XLim(2), size(obj.Data, 2) + .5 + obj.TickLength);
+                    case 'diag'
+                        switch lower(obj.Type)
+                            case 'tril'
+                                obj.ax.XLim(2) = max(obj.ax.XLim(2), size(obj.Data, 2) + .5 + obj.TickLength);
+                            case 'triu'
+                                obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength);
                         end
                 end
             end
@@ -983,26 +1214,63 @@ classdef SHeatmap < handle
             %   'bottom' - aligned below the last row
             %   'diag'   - placed along the diagonal
 
+            obj.ColLabelLocation = loc;
+            obj.TickLength(obj.TickLength < 0) = 0;
+            obj.TickLength(obj.TickLength > .5) = .5;
 
             % 'top'/'bottom'/'diag
             for n = 1:size(obj.Data, 2)
             switch loc
                 case 'top'
-                    set(obj.colLabelHdl(n), 'Position',[n, 0.25, 0], 'HorizontalAlignment','left')
+                    set(obj.colLabelHdl(n), 'Position',[n, .25, 0], 'HorizontalAlignment','left')
+                    if strcmpi(obj.colTickHdl.Visible, 'on')
+                        set(obj.colLabelHdl(n), 'Position',[n, .25 - obj.TickLength, 0])
+                    end
                 case 'bottom'
-                    set(obj.colLabelHdl(n), 'Position',[n, size(obj.Data, 1) + 0.75, 0], 'HorizontalAlignment','right')
+                    set(obj.colLabelHdl(n), 'Position',[n, size(obj.Data, 1) + .75, 0], 'HorizontalAlignment','right')
+                    if strcmpi(obj.colTickHdl.Visible, 'on')
+                        set(obj.colLabelHdl(n), 'Position',[n, size(obj.Data, 1) + .75 + obj.TickLength, 0])
+                    end
                 case 'diag'
-                    switch obj.Type
+                    switch lower(obj.Type)
                         case 'tril'
-                            set(obj.colLabelHdl(n), 'Position',[n, 0.25 - 1 + n, 0], 'HorizontalAlignment','left')
-                        case 'tril0'
-                            set(obj.colLabelHdl(n), 'Position',[n, 0.25 + n, 0], 'HorizontalAlignment','left')
+                            set(obj.colLabelHdl(n), 'Position',[n, .25 - 1 + n, 0], 'HorizontalAlignment','left')
+                            if strcmpi(obj.colTickHdl.Visible, 'on')
+                                set(obj.colLabelHdl(n), 'Position',[n, .25 - 1 + n - obj.TickLength, 0])
+                            end
+                        case {'tril0','linkl'}
+                            set(obj.colLabelHdl(n), 'Position',[n, .25 + n, 0], 'HorizontalAlignment','left')
+                            if strcmpi(obj.colTickHdl.Visible, 'on')
+                                set(obj.colLabelHdl(n), 'Position',[n, .25 + n - obj.TickLength, 0])
+                            end
                         case 'triu'
                             set(obj.colLabelHdl(n), 'Position',[n, n - .25 + 1, 0], 'HorizontalAlignment','right')
-                        case 'triu0'
+                            if strcmpi(obj.colTickHdl.Visible, 'on')
+                                set(obj.colLabelHdl(n), 'Position',[n, n - .25 + 1 + obj.TickLength, 0])
+                            end
+                        case {'triu0','linku'}
                             set(obj.colLabelHdl(n), 'Position',[n, n - .25, 0], 'HorizontalAlignment','right')
+                            if strcmpi(obj.colTickHdl.Visible, 'on')
+                                set(obj.colLabelHdl(n), 'Position',[n, n - .25 + obj.TickLength, 0])
+                            end
                     end
             end
+            end
+            if strcmpi(obj.colTickHdl.Visible, 'on')
+                switch loc
+                    case 'top'
+                        obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength);
+                    case 'bottom'
+                        obj.ax.YLim(2) = max(obj.ax.YLim(2), size(obj.Data, 1) + .5 + obj.TickLength);
+                    case 'diag'
+                        switch lower(obj.Type)
+                            case 'tril'
+                                obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength);
+                            case 'triu'
+                                obj.ax.YLim(2) = max(obj.ax.YLim(2), size(obj.Data, 1) + .5 + obj.TickLength);
+                        end
+
+                end
             end
             if nargout == 1
                 varargout = {obj};

@@ -16,23 +16,19 @@ CList = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
 
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
-
+% Draw tree and block (绘制树状图及分组方块)
 orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',-.5, 'Height',5);  % Draw the left dendrogram (绘制左侧树状图)
 orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',-.5, 'Height',4);  % Draw the top  dendrogram (绘制顶部树状图)
-
-% Exchange data order (交换数据顺序)
-Data = Data(orderL, orderT);
-
+Data = Data(orderL, orderT);  % Exchange data order (交换数据顺序)
 CL = cluster(linkage(Data, 'average'), 'Maxclust',4);
 CT = cluster(linkage(Data.','average'), 'Maxclust',4);
 SClusterBlock(CL, 'ColorList',CList ,'Orientation','left', 'Parent',ax, 'BasePos',.5); % Draw the left Block (绘制左侧分组方块)
 SClusterBlock(CT, 'ColorList',CList, 'Orientation','top' , 'Parent',ax, 'BasePos',.5); % Draw the top  Block (绘制顶部分组方块)
-
 % Draw heatmap (绘制热图)
 SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
 SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
-SHM_t1.setColLabel('Rotation',45)
+SHM_t1.setColLabel('Rotation',45).setFrame('LineWidth',.8)
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';
@@ -41,5 +37,4 @@ yn = size(Data, 1);
 yh = .9.*yn./(yn + 5) + .08;
 CB.Position = [.89, yh - .36, .025, .36];
 [M, N] = size(Data);
-plot(ax, [0, N, N, 0, 0] + .5, [0, 0, M, M, 0] + .5, 'Color','k', 'LineWidth',1)
 
