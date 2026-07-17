@@ -12,7 +12,6 @@ SHM1 = SHeatmap(Data, 'Format','sq');
 SHM1.draw();
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_positive.png')
 
 %% Contains negative numbers (绘制有负数热图)
 figure()
@@ -21,7 +20,6 @@ SHM2 = SHeatmap(Data, 'Format','sq');
 SHM2.draw();
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_negative.png')
 
 %% Draw heatmaps of different sizes (绘制不同大小热图)
 figure()
@@ -30,7 +28,6 @@ SHM3 = SHeatmap(Data, 'Format','sq');
 SHM3.draw();
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_25_30.png')
 
 %% Adjust the colorbar Location (调整colorbar位置)
 figure()
@@ -41,7 +38,6 @@ CB = colorbar;
 CB.Location = 'southoutside';
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_colorbar_location.png')
 
 %% Draw heatmap with NaN (绘制有NaN热图)
 figure()
@@ -51,7 +47,6 @@ SHM5 = SHeatmap(Data, 'Format','sq');
 SHM5.draw();
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_with_NaN.png')
 
 %% Draw heatmap with texts (绘制有文本热图)
 figure()
@@ -62,7 +57,6 @@ SHM6.draw();
 SHM6.setText();
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_with_text.png')
 
 %% Draw heatmap with labels by XTick and YTick (绘制带标签热图, 使用 axes 原本的 XY 刻度)
 figure()
@@ -84,4 +78,3 @@ SHM8.draw();
 SHM8.setFrame()
 
 drawnow
-% exportgraphics(gca, 'gallery\Basic_with_labels.png')

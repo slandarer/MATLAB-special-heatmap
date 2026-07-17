@@ -10,6 +10,8 @@ function [X, Y] = SClusterBlock(Class, varargin)
 %   'ColorList'     - Custom color matrix for groups
 %   'BlockProp'     - Cell array of patch properties
 %   'Height'        - Height of blocks
+%   'Group'         - Group assignments
+%   'GroupSep'      - Group separation gap
 
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap
@@ -18,7 +20,7 @@ function [X, Y] = SClusterBlock(Class, varargin)
 % =========================================================================
 
 % Parameter definition (参数定义)
-obj.arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', 'BlockProp','Height'};
+obj.arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', 'BlockProp', 'Height', 'Group', 'GroupSep'};
 obj.Orientation = 'top';
 obj.BasePos     = 0;
 obj.Height      = 1;
@@ -29,6 +31,8 @@ obj.ColorList   = [0.55, 0.83, 0.78; 1.00, 1.00, 0.70; 0.75, 0.73, 0.85;
     0.70, 0.87, 0.41; 0.99, 0.80, 0.90; 0.85, 0.85, 0.85;
     0.74, 0.50, 0.74; 0.80, 0.92, 0.77; 1.00, 0.93, 0.44];
 obj.ColorList = [obj.ColorList; rand(max(Class), 3) ./ 5 + 0.5];
+obj.Group = [];
+obj.GroupSep = .5;
 
 % Parse input arguments (解析输入参数)
 for i = 1:2:(length(varargin) - 1)
@@ -45,9 +49,21 @@ obj.Parent.XTick       = [];
 obj.Parent.YTick       = [];
 obj.Parent.NextPlot    = 'add';
 
+if isempty(obj.Group)
+    obj.Group = ones(1, length(Class));
+end
+obj.Group = cumsum([1, diff(obj.Group(:).') ~= 0]);
+
 % Find group boundaries (查找分组边界)
+[~, ~, Class] = unique(Class(:).', 'stable');
 Class   = Class(:).';
 CCList  = [0, find([diff(Class), 1] ~= 0)];
+CPos = 1:length(Class);
+
+for j = max(obj.Group):-1:2
+    pos = find(obj.Group == j, 1);
+    CPos(CPos >= pos) = CPos(CPos >= pos) + obj.GroupSep;
+end
 
 % Preallocate center coordinates (预分配中心坐标)
 if isequal(obj.Orientation, 'top')
@@ -60,7 +76,7 @@ end
 
 % Draw blocks (绘制方块)
 for i = 1:length(CCList) - 1
-    CL = [CCList(i) + 1, CCList(i + 1)];
+    CL = [CPos(CCList(i) + 1), CPos(CCList(i + 1))];
     colorIdx = Class(CCList(i) + 1);
 
     if isequal(obj.Orientation, 'top')
@@ -78,6 +94,5 @@ for i = 1:length(CCList) - 1
         Y(i) = (CL(1) + CL(2)) / 2;
     end
 end
-
 axis(obj.Parent, 'tight')
 end

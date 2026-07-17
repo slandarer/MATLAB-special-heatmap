@@ -19,7 +19,6 @@ SHM_ax2 = SHeatmap(Data, 'Format','sq', 'Parent',ax2).draw();
 clim([-.8, .8])
 SHM_ax2.setText();
 
-% exportgraphics(fig, 'gallery\Colormap_clim.png')
 
 %% Use the built-in colormap in MATLAB (使用 MATLAB 自带 colormap)
 figure()
@@ -27,7 +26,6 @@ Data = rand(14, 14);
 SHM_Bone = SHeatmap(Data, 'Format','sq');
 SHM_Bone.draw();
 colormap(bone)
-% exportgraphics(gca, 'gallery\Colormap_bone.png')
 
 %% slanCM (slanCM colormap)
 % Zhaoxu Liu / slandarer (2023). 200 colormap 

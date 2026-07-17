@@ -1,4 +1,4 @@
-%% Grouping heat map
+%% Group block 
 
 % Made up some data casually (随便捏造了点数据)
 rowGroup = [1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4];

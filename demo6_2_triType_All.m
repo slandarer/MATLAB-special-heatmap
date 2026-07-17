@@ -34,7 +34,6 @@ SHM_s2.setType('tril');
 
 varName = {'A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5'};
 SHM_s2.setVarName(varName)
-% exportgraphics(gca,'gallery\Type_labels.png')
 
 
 %% Adjust the axis Limit to avoid occlusion (调整轴范围以避免遮挡)
@@ -65,4 +64,3 @@ SHM_s5.setType('triu');
 % Set Font Color (设置标签颜色)
 SHM_s5.setRowLabel('Color',[.8,0,0])
 SHM_s5.setColLabel('Color',[0,0,.8]) 
-% exportgraphics(gca,'gallery\Type_Font.png')

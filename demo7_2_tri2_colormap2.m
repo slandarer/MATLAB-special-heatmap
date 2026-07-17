@@ -20,5 +20,5 @@ SHM_m2.Colorbar.Position(1) = SHM_m2.Colorbar.Position(1) + .1;
 % Draw label for colorbars (为两个 colorbar 添加标签)
 set(SHM_m1.Colorbar.Label, 'String', 'prop 1', 'FontSize', 18, 'Position',[-1.5, 0, 0]);
 set(SHM_m2.Colorbar.Label, 'String', 'prop 2', 'FontSize', 18, 'Position',[-1.5, 0, 0]);
-% exportgraphics(gcf,'gallery\Type_tri2_colormap2.png')
+
 

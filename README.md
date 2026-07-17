@@ -3,8 +3,9 @@
 ![](gallery/Mantel_Link_tril.png)
 ![](gallery/Type_triu_bcirc.png)
 ![](gallery/Type_triu_donut.png)
-![](gallery/Type_tri2_2.png)
+![](gallery/Type_tri2_1.png)
 ![](gallery/Type_tri2_colormap2.png)
+![](gallery/GroupSep.png)
 ___
 
 #### 介绍
@@ -435,6 +436,7 @@ set(SHM_m2.Colorbar.Label, 'String', 'prop 2', 'FontSize', 18, 'Position',[-1.5,
 ___
 ### 8 Heatmap with dendrogram (带树状图热图) 
 ```matlab
+rng(1)
 % Made up some data casually (随便捏造了点数据)
 X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
 X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 10), (linspace(.5,-.7,20)').*ones(1, 8), (linspace(.9,-.2,20)').*ones(1, 7)];
@@ -461,14 +463,12 @@ SHM_t1.setColLabel('Rotation',45).setFrame()
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';
-CB = colorbar(ax);
-yn = size(Data, 1);
-yh = .9.*yn./(yn + 5) + .08;
-CB.Position = [.89, yh - .36, .025, .36];
+yn = size(Data, 1); yh = .9.*yn./(yn + 5) + .08;
+SHM_t1.Colorbar.Position = [.89, yh - .36, .025, .36];
 ```
 ![](gallery/Tree.png)
 ___
-### 9 Grouping heatmap (带分组热图)
+### 9 Grouping block (分组方块)
 ```matlab
 % Made up some data casually (随便捏造了点数据)
 rowGroup = [1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4];
@@ -499,8 +499,8 @@ ___
 ### 10 Multilayer grouping (多层分组)
 ```matlab
 Data = rand(3, 16);
-Class1 = [1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4];
-Class2 = [1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4];
+Class1 = [1,1,1,1, 2,2,2,2, 3,3,3,3, 4,4,4,4];
+Class2 = [1,2,3,4, 1,2,3,4, 1,2,3,4, 1,2,3,4];
 ClassName1 = {'AAAAA','BBBBB','CCCCC','DDDDD'};
 ClassName2 = {'A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'};
 % Color (配色)
@@ -508,10 +508,13 @@ CList1 = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
 CList2 = [.46,.42,.69; .62,.60,.78; .73,.74,.86; .85,.85,.92];
 
 % create figure and axes (图窗及坐标区域创建)
-fig = figure('Units','normalized', 'Position',[.05,.15,.72,.3]);
-ax = axes('Parent',fig, 'Position',[.05,0,.9,.99]);
+fig = figure('Units','normalized', 'Position',[.05,.15,.72,.45]);
+ax = axes('Parent',fig, 'Position',[.05,.15,.9,.85]);
 % Draw Heatmap
-SHM5 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
+SHM_m1 = SHeatmap(Data, 'Format','sq', 'Parent',ax);
+SHM_m1.RowName = compose('Row-%d', 1:3);
+SHM_m1.ColName = compose('Col-%d', 1:16);
+SHM_m1.draw().setFrame();
 % Draw Block
 [X1, Y1] = SClusterBlock(Class1, 'Orientation','top', 'BasePos',-.25, 'Height',.5, 'ColorList',CList1, 'Parent',ax);
 [X2, Y2] = SClusterBlock(Class2, 'Orientation','top', 'BasePos',.25 , 'Height',.5, 'ColorList',CList2, 'Parent',ax);
@@ -520,18 +523,17 @@ textProp = {'FontSize',17, 'HorizontalAlignment','center', 'FontName','Cambria'}
 for i = 1:length(X1), text(ax, X1(i), Y1(i), ClassName1{i}, textProp{:}); end
 for i = 1:length(X2), text(ax, X2(i), Y2(i), ClassName2{i}, textProp{:}); end
 
-CB = colorbar();
-CB.Location = 'southoutside';
-ax.DataAspectRatioMode = 'auto';
+SHM_m1.Colorbar.Location = 'southoutside';
+SHM_m1.Colorbar.Position = [.05, .1, .9, .04];
 ```
 ![](gallery/Multilayer.png)
 ___
-### 11 Tree and Group (树状图及分组)
+### 11 Tree and Group block (树状图及分组方块)
 ```matlab
 rng(1)
 % Made up some data casually (随便捏造了点数据)
-X1 = randn(20,20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
-X2 = randn(20,25) + [(linspace(-1,2.5,20)').*ones(1, 15), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 5)];
+X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
+X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 15), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 5)];
 % Get the correlation matrix (求相关系数矩阵)
 Data = corr(X1, X2);
 % rowName and colName
@@ -544,30 +546,23 @@ CList = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
 
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
-
-orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',-.5, 'Height',5);  % Draw the left dendrogram (绘制左侧树状图)
-orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',-.5, 'Height',4);  % Draw the top  dendrogram (绘制顶部树状图)
-
-% Exchange data order (交换数据顺序)
-Data = Data(orderL, orderT);
-
-CL = cluster(linkage(Data, 'average'), 'Maxclust',4);
-CT = cluster(linkage(Data.','average'), 'Maxclust',4);
-SClusterBlock(CL, 'ColorList',CList ,'Orientation','left', 'Parent',ax, 'BasePos',.5); % Draw the left Block (绘制左侧分组方块)
-SClusterBlock(CT, 'ColorList',CList, 'Orientation','top' , 'Parent',ax, 'BasePos',.5); % Draw the top  Block (绘制顶部分组方块)
-
+% Draw tree and block (绘制树状图及分组方块)
+[orderL, objL] = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',-.5, 'Height',5, 'MaxClust',4);  % Draw the left dendrogram (绘制左侧树状图)
+[orderT, objT] = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',-.5, 'Height',4, 'MaxClust',4);  % Draw the top  dendrogram (绘制顶部树状图)
+Data = Data(orderL, orderT);  % Exchange data order (交换数据顺序)
+SClusterBlock(objL.Group, 'ColorList',CList ,'Orientation','left', 'Parent',ax, 'BasePos',.5); % Draw the left Block (绘制左侧分组方块)
+SClusterBlock(objT.Group, 'ColorList',CList, 'Orientation','top' , 'Parent',ax, 'BasePos',.5); % Draw the top  Block (绘制顶部分组方块)
 % Draw heatmap (绘制热图)
-SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
-SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
-SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
-SHM_t1.setColLabel('Rotation',45).setFrame('LineWidth',.8)
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
+SHM.setRowLabelLocation('right').setColName(colName(orderT))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabel('Rotation',45).setFrame('LineWidth',.8)
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';
-CB = colorbar(ax);
-yn = size(Data, 1);
-yh = .9.*yn./(yn + 5) + .08;
-CB.Position = [.89, yh - .36, .025, .36];
+yn = size(Data, 1); yh = .9.*yn./(yn + 5) + .08;
+SHM.Colorbar.Position = [.89, yh - .36, .025, .36];
+
 ```
 
 ![](gallery/TreeGroup.png)
@@ -725,3 +720,180 @@ set(objML.legendTickLabelHdl, 'FontSize',13, 'FontName','Helvetica')
 set(objML.groupLabelHdl, 'FontSize',14, 'FontName','Helvetica')
 ```
 ![](gallery/Mantel_Link_tril.png)
+
+___
+### 15 GroupSep (分组间隙)
+```matlab
+figure()
+Data = rand(12, 12);
+SHM = SHeatmap(Data, 'Format','sq');
+SHM.RowName = {'Y-1','Y-2','Y-3','Y-4','Y-5','Y-6','Y-7','Y-8','Y-9','Y-10','Y-11','Y-12'};
+SHM.ColName = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-11','X-12'};
+SHM.RowGroup = [1,1,1,1,1,1, 2,2,2,2, 3,3];
+SHM.ColGroup = [1,1,1,1,1, 2,2,2,2,2,2,2];
+SHM.draw().setFrame()
+```
+![](gallery/GroupSep.png)
+
+#### 15.2 Group Sep with non-square matrix (分组间隙与非方阵)
+```matlab
+figure()
+Data = rand(3, 12);
+SHM = SHeatmap(Data, 'Format','sq');
+SHM.RowName = {'Off-peak', 'Peak', 'Regular'};
+SHM.ColName = {'Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen'};
+SHM.ColGroup = [1,1,1,1, 2,2,2,2, 3,3,3,3];
+SHM.draw().setFrame()
+```
+![](gallery/GroupSep_non_sq.png)
+
+#### 15.3 Group Sep with triangular heatmap (分组间隙与三角热图)
+```matlab
+% Made up some data casually (随便捏造了点数据)
+X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), ...
+    (linspace(.5,-.7,20)').*ones(1, 3), ...
+    (linspace(.9,-.2,20)').*ones(1, 5), ...
+    linspace(1.9,-.2,20)'];
+% Get the correlation matrix (求相关系数矩阵)
+Data = corr(X);
+
+figure()
+SHM = SHeatmap(Data, 'Format','donut');
+SHM.RowGroup = [1,1,1,1,1,1, 2,2,2, 3,3,3,3,3, 4];
+SHM.ColGroup = [1,1,1,1,1,1, 2,2,2, 3,3,3,3,3, 4];
+SHM.VarName = {'A1','A2','A3','A4','A5','A6', 'B1','B2','B3', 'C1','C2','C3','C4','C5', 'D1'};
+SHM.draw().setType('triu').setFrame()
+```
+![](gallery/GroupSep_triType.png)
+![](gallery/GroupSep_triType_2.png)
+
+#### 15.4 Group Sep with group block (分组间隙与分组方块)
+```matlab
+% Made up some data casually (随便捏造了点数据)
+rowGroup = [1,1,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,4,5,5];
+colGroup = [1,1,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,4,4];
+rowName = compose('row-%d', 1:20);
+colName = compose('col-%d', 1:20);
+Data = rand(20, 20);
+
+% create figure (图窗创建)
+fig = figure('Units','normalized', 'Position',[.1,.05,.45,.72]);
+ax = axes('Parent',fig, 'Position',[.1,.15,.75,.75]);
+
+SClusterBlock(rowGroup, 'Orientation','left', 'Parent',ax, 'Group',rowGroup); % Draw the left Block (绘制左侧分组方块)
+SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax, 'Group',colGroup); % Draw the top  Block (绘制顶部分组方块)
+% Draw heatmap (绘制热图)
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',rowGroup, 'ColGroup',colGroup).draw();
+SHM.setRowLabelLocation('right').setColName(colName)
+SHM.setColLabelLocation('bottom').setRowName(rowName)
+SHM.setColLabel('Rotation',45).setFrame()
+
+colorbar(ax, 'off');
+clim(ax, [-.2, 1])
+axis(ax, 'tight')
+ax.DataAspectRatioMode = 'auto';
+```
+![](gallery/GroupSep_Block.png)
+
+#### 15.5 Group Sep with multilayer grouping block (分组间隙与多层分组方块)
+```matlab
+Data = rand(3, 16);
+Class1 = [1,1,1,1, 2,2,2,2, 3,3,3,3, 4,4,4,4];
+Class2 = [1,2,3,4, 1,2,3,4, 1,2,3,4, 1,2,3,4];
+ClassName1 = {'AAAAA','BBBBB','CCCCC','DDDDD'};
+ClassName2 = {'A1','A2','A3','A4','B1','B2','B3','B4','C1','C2','C3','C4','D1','D2','D3','D4'};
+% Color (配色)
+CList1 = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
+CList2 = [.46,.42,.69; .62,.60,.78; .73,.74,.86; .85,.85,.92];
+
+% create figure and axes (图窗及坐标区域创建)
+fig = figure('Units','normalized', 'Position',[.05,.15,.72,.45]);
+ax = axes('Parent',fig, 'Position',[.05,.15,.9,.85]);
+% Draw Heatmap
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'ColGroup',Class1);
+SHM.RowName = compose('Row-%d', 1:3);
+SHM.ColName = compose('Col-%d', 1:16);
+SHM.draw().setFrame();
+% Draw Block
+[X1, Y1] = SClusterBlock(Class1, 'Orientation','top', 'BasePos',-.25, 'Height',.5, 'ColorList',CList1, 'Parent',ax, 'Group',Class1);
+[X2, Y2] = SClusterBlock(Class2, 'Orientation','top', 'BasePos',.25 , 'Height',.5, 'ColorList',CList2, 'Parent',ax, 'Group',Class1);
+% text
+textProp = {'FontSize',17, 'HorizontalAlignment','center', 'FontName','Cambria'};
+for i = 1:length(X1), text(ax, X1(i), Y1(i), ClassName1{i}, textProp{:}); end
+for i = 1:length(X2), text(ax, X2(i), Y2(i), ClassName2{i}, textProp{:}); end
+
+SHM.Colorbar.Location = 'southoutside';
+SHM.Colorbar.Position = [.05, .1, .9, .04];
+```
+![](gallery/GroupSep_multi_Group.png)
+
+#### 15.6 Group Sep with Tree (分组间隙与树状图)
+```matlab
+rng(1)
+% Made up some data casually (随便捏造了点数据)
+X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
+X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 10), (linspace(.5,-.7,20)').*ones(1, 8), (linspace(.9,-.2,20)').*ones(1, 7)];
+% Get the correlation matrix (求相关系数矩阵)
+Data = corr(X1, X2);
+% rowName and colName
+rowName = {'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
+    'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
+colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
+    'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
+
+fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
+ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
+
+[orderL, objL] = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Height',6, 'MaxClust',4, 'GroupSep',.5);  % Draw the left dendrogram (绘制左侧树状图)
+[orderT, objT] = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5, 'MaxClust',4, 'GroupSep',.5);  % Draw the top  dendrogram (绘制顶部树状图)
+% Exchange data order (交换数据顺序)
+Data = Data(orderL, orderT);
+% Draw heatmap (绘制热图)
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',objL.Group, 'ColGroup',objT.Group).draw();
+SHM.setRowLabelLocation('right').setColName(colName(orderT))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabel('Rotation',45).setFrame()
+% Draw colorbar (绘制颜色条)
+axis(ax, 'tight')
+ax.DataAspectRatioMode = 'auto';
+yn = size(Data, 1); yh = .9.*yn./(yn + 5) + .08;
+SHM.Colorbar.Position = [.89, yh - .36, .025, .36];
+```
+![](gallery/GroupSep_Tree.png)
+
+#### 15.7 Group Sep with Tree and Group block (分组间隙与树状图及分组方块)
+```matlab
+rng(1)
+% Made up some data casually (随便捏造了点数据)
+X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];
+X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 15), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 5)];
+% Get the correlation matrix (求相关系数矩阵)
+Data = corr(X1, X2);
+% rowName and colName
+rowName = {'FREM2','ALDH9A1','RBL1','AP2A2','HNRNPK','ATP1A1','ARPC3','SMG5','RPS27A',...
+    'RAB8A','SPARC','DDX3X','EEF1D','EEF1B2','RPS11','RPL13','RPL34','GCN1','FGG','CCT3'};
+colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',...
+    'B14','B15','B16','B17','B18','C19','C20','C21','C22','C23','C24','C25'};
+
+CList = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
+
+fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
+ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
+% Draw tree and block (绘制树状图及分组方块)
+[orderL, objL] = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',-.5, 'Height',5, 'MaxClust',4, 'GroupSep',.5);  % Draw the left dendrogram (绘制左侧树状图)
+[orderT, objT] = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',-.5, 'Height',4, 'MaxClust',4, 'GroupSep',.5);  % Draw the top  dendrogram (绘制顶部树状图)
+Data = Data(orderL, orderT);  % Exchange data order (交换数据顺序)
+SClusterBlock(objL.Group, 'ColorList',CList ,'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Group',objL.Group); % Draw the left Block (绘制左侧分组方块)
+SClusterBlock(objT.Group, 'ColorList',CList, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Group',objT.Group); % Draw the top  Block (绘制顶部分组方块)
+% Draw heatmap (绘制热图)
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',objL.Group, 'ColGroup',objT.Group).draw();
+SHM.setRowLabelLocation('right').setColName(colName(orderT))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabel('Rotation',45).setFrame('LineWidth',.8)
+% Draw colorbar (绘制颜色条)
+axis(ax, 'tight')
+ax.DataAspectRatioMode = 'auto';
+yn = size(Data, 1); yh = .9.*yn./(yn + 5) + .08;
+SHM.Colorbar.Position = [.89, yh - .36, .025, .36];
+```
+![](gallery/GroupSep_Tree_Block.png)

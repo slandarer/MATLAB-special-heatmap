@@ -14,10 +14,8 @@ figure()
 Data = rand(15,15) - .5;
 SHM1 = SHeatmap(Data, 'Format','cust', 'SData',SData);
 SHM1.draw();
-% exportgraphics(gca, 'gallery\Format_cust.png')
 
 % auto-size custom shape
 figure()
 SHM2 = SHeatmap(Data, 'Format','acust', 'SData',SData);
 SHM2.draw();
-% exportgraphics(gca, 'gallery\Format_acust.png')

@@ -105,7 +105,9 @@ classdef SHeatmap < handle
     properties
         ax, 
         Parent = [];
-        arginList = {'Parent', 'Format', 'SData', 'Type', 'VarName', 'RowName', 'ColName'}
+        arginList = {'Parent', 'Format', 'SData', 'Type', ...
+                     'VarName', 'RowName', 'ColName', ...
+                     'GroupSep', 'RowGroup', 'ColGroup'}
         Data
 
         Format = 'sq'  
@@ -152,7 +154,7 @@ classdef SHeatmap < handle
         ColName;        % Names of variables in dataset Y (列变量名称)
         RowGroup = [];
         ColGroup = [];
-        groupSep = .5;
+        GroupSep = .5;
 
 
         textHdl;        % Text (data value) handle (文本句柄)
@@ -279,8 +281,8 @@ classdef SHeatmap < handle
             end
             
 
-            obj.groupSep(obj.groupSep < 0) = 0;
-            obj.groupSep(obj.groupSep > 3) = 3;
+            obj.GroupSep(obj.GroupSep < 0) = 0;
+            obj.GroupSep(obj.GroupSep > 3) = 3;
 
             if isempty(obj.RowGroup) || length(obj.RowGroup) < size(obj.Data, 1)
                 obj.RowGroup = ones(1, size(obj.Data, 1));
@@ -292,8 +294,8 @@ classdef SHeatmap < handle
             obj.ColGroup = obj.ColGroup(1:size(obj.Data, 2));
             obj.RowGroup = cumsum([1, diff(obj.RowGroup(:).') ~= 0]);
             obj.ColGroup = cumsum([1, diff(obj.ColGroup(:).') ~= 0]);
-            obj.RP = (1:size(obj.Data, 1)) + (obj.RowGroup - 1).*obj.groupSep;
-            obj.CP = (1:size(obj.Data, 2)) + (obj.ColGroup - 1).*obj.groupSep;
+            obj.RP = (1:size(obj.Data, 1)) + (obj.RowGroup - 1).*obj.GroupSep;
+            obj.CP = (1:size(obj.Data, 2)) + (obj.ColGroup - 1).*obj.GroupSep;
 
 
             obj.ax.XLim = [0.5, obj.CP(end) + 0.5];
@@ -938,13 +940,21 @@ classdef SHeatmap < handle
                     set(obj.colLabelHdl(n), 'Visible', 'on');
                 end
 
-                if strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0') || strcmpi(obj.Type, 'linku') 
+                if strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0')
                     obj.RowLabelLocation = 'diag';
                     obj.ColLabelLocation = 'top';
                 end
-                if strcmpi(obj.Type, 'tril') || strcmpi(obj.Type, 'tril0') || strcmpi(obj.Type, 'linkl') 
+                if strcmpi(obj.Type, 'tril') || strcmpi(obj.Type, 'tril0')
                     obj.RowLabelLocation = 'left';
                     obj.ColLabelLocation = 'diag';
+                end
+                if strcmpi(obj.Type, 'linku')
+                    obj.RowLabelLocation = 'right';
+                    obj.ColLabelLocation = 'top';
+                end
+                if strcmpi(obj.Type, 'linkl') 
+                    obj.RowLabelLocation = 'left';
+                    obj.ColLabelLocation = 'bottom';
                 end
         
                 % Apply specific triangular type (应用特定三角类型)
@@ -1605,55 +1615,55 @@ classdef SHeatmap < handle
 end
 
 
-function mustBeAllowedFormat(x)
-allowed = {'sq', 'pie', 'donut', 'circ', 'bcirc', 'oval', 'hex', 'star', ...
-    'trill', 'tril', 'triur', 'triu', 'trilr', 'triul', ...
-    'asq', 'acirc', 'txt', 'text', 'cust', 'acust'};
-if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
-    quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
-    invalid = quotedString(x);
-    error('''%s'' is not a valid value. Use one of these values: %s', ...
-        invalid, strjoin(quoted, ' | '));
-end
-end
-
-function mustBeAllowedTriType(x)
-allowed = {'full', 'triu', 'tril', 'triu0', 'tril0', 'linku', 'linkl'};
-if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
-    quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
-    invalid = quotedString(x);
-    error('''%s'' is not a valid value. Use one of these values: %s', ...
-        invalid, strjoin(quoted, ' | '));
-end
-end
-
-function mustBeAllowedRowLabelLocation(x)
-allowed = {'left', 'right', 'diag'};
-if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
-    quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
-    invalid = quotedString(x);
-    error('''%s'' is not a valid value. Use one of these values: %s', ...
-        invalid, strjoin(quoted, ' | '));
-end
-end
-
-function mustBeAllowedColLabelLocation(x)
-allowed = {'top', 'bottom', 'diag'};
-if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
-    quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
-    invalid = quotedString(x);
-    error('''%s'' is not a valid value. Use one of these values: %s', ...
-        invalid, strjoin(quoted, ' | '));
-end
-end
-
-function str = quotedString(val)
-if ischar(val) || isstring(val)
-    str = char(val);
-else
-    str = num2str(val);
-end
-end
+% function mustBeAllowedFormat(x)
+% allowed = {'sq', 'pie', 'donut', 'circ', 'bcirc', 'oval', 'hex', 'star', ...
+%     'trill', 'tril', 'triur', 'triu', 'trilr', 'triul', ...
+%     'asq', 'acirc', 'txt', 'text', 'cust', 'acust'};
+% if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
+%     quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
+%     invalid = quotedString(x);
+%     error('''%s'' is not a valid value. Use one of these values: %s', ...
+%         invalid, strjoin(quoted, ' | '));
+% end
+% end
+% 
+% function mustBeAllowedTriType(x)
+% allowed = {'full', 'triu', 'tril', 'triu0', 'tril0', 'linku', 'linkl'};
+% if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
+%     quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
+%     invalid = quotedString(x);
+%     error('''%s'' is not a valid value. Use one of these values: %s', ...
+%         invalid, strjoin(quoted, ' | '));
+% end
+% end
+% 
+% function mustBeAllowedRowLabelLocation(x)
+% allowed = {'left', 'right', 'diag'};
+% if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
+%     quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
+%     invalid = quotedString(x);
+%     error('''%s'' is not a valid value. Use one of these values: %s', ...
+%         invalid, strjoin(quoted, ' | '));
+% end
+% end
+% 
+% function mustBeAllowedColLabelLocation(x)
+% allowed = {'top', 'bottom', 'diag'};
+% if ~(ischar(x) || isstring(x)) || ~ismember(x, allowed)
+%     quoted = cellfun(@(c) ['''', c, ''''], allowed, 'UniformOutput', false);
+%     invalid = quotedString(x);
+%     error('''%s'' is not a valid value. Use one of these values: %s', ...
+%         invalid, strjoin(quoted, ' | '));
+% end
+% end
+% 
+% function str = quotedString(val)
+% if ischar(val) || isstring(val)
+%     str = char(val);
+% else
+%     str = num2str(val);
+% end
+% end
 
 % =========================================================================
 % Copyright (c) 2023-2026, Zhaoxu Liu / slandarer

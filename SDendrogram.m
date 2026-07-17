@@ -16,6 +16,9 @@ function [order, obj] = SDendrogram(Data, varargin)
 %   'Parent'        - Axes handle (default: gca)
 %   'Height'        - Height of dendrogram
 %   'Method'        - Linkage method (default: 'average')
+%   'Group'         - Group assignments for leaf nodes
+%   'GroupSep'      - Group separation gap
+%   'MaxClust'      - Maximum number of clusters
 
 % =========================================================================
 % Zhaoxu Liu / slandarer (2023). special heatmap
@@ -24,13 +27,17 @@ function [order, obj] = SDendrogram(Data, varargin)
 % =========================================================================
 
 % Parameter definition (参数定义)
-obj.arginList = {'Orientation', 'Parent', 'Method', 'BasePos', 'Height'};
+obj.arginList = {'Orientation', 'Parent', 'Method', 'BasePos', 'Height', 'Group', 'GroupSep'};
 obj.Orientation = 'top';
 obj.Parent = gca;
 obj.DataLen = 0;
 obj.Method = 'average';
 obj.Height = 1;
 obj.BasePos = 0;
+obj.Group = [];
+obj.GroupSep = 0;
+obj.MaxClust = 4;
+
 
 % Parse input arguments (解析输入参数)
 for i = 1:2:(length(varargin) - 1)
@@ -39,6 +46,7 @@ for i = 1:2:(length(varargin) - 1)
         obj.(obj.arginList{tid}) = varargin{i + 1};
     end
 end
+
 obj.Parent.XColor = 'none';
 obj.Parent.YColor = 'none';
 obj.Parent.XTick = [];
@@ -55,8 +63,17 @@ else
     tree = linkage(Data  , obj.Method);
 end
 
+
+
+
 % Draw dendrogram (绘制树状图)
 [treeHdl, ~, order] = dendrogram(ax, tree, 0, 'Orientation', obj.Orientation);
+
+if isempty(obj.Group)
+    obj.Group = cluster(tree, 'Maxclust',obj.MaxClust);
+    obj.Group = obj.Group(order);
+end
+obj.Group = cumsum([1, diff(obj.Group(:).') ~= 0]);
 
 minX = 0; maxX = 0; minY = 0; maxY = 0;
 for i = 1:length(treeHdl)
@@ -73,8 +90,16 @@ for i = 1:length(treeHdl)
     switch obj.Orientation
         case 'top'
             Y = (Y - minY)./(maxY - minY).*(- obj.Height) + obj.BasePos;
+            for j = max(obj.Group):-1:2
+                pos = find(obj.Group == j, 1);
+                X(X >= pos) = X(X >= pos) + obj.GroupSep;
+            end
         case 'left'
             X = (X - minX)./(maxX - minX).*(- obj.Height) + obj.BasePos;
+            for j = max(obj.Group):-1:2
+                pos = find(obj.Group == j, 1);
+                Y(Y >= pos) = Y(Y >= pos) + obj.GroupSep;
+            end
     end
     obj.TreeHdl(i) = plot(obj.Parent, X, Y, 'Color',[0,0,0], 'LineWidth',1);
 end
@@ -84,12 +109,12 @@ axis(obj.Parent, 'tight');
 % Set axis limits (设置坐标轴范围)
 switch obj.Orientation
     case 'top'
-        obj.DataLen = size(Data, 2);
+        obj.DataLen = size(Data, 2) + (max(obj.Group) - 1).*obj.GroupSep;
         tLim = [1, obj.DataLen] + [-0.5, 0.5];
         obj.Parent.XLim(1) = min(obj.Parent.XLim(1), tLim(1));
         obj.Parent.XLim(2) = max(obj.Parent.XLim(2), tLim(2));
     case 'left'
-        obj.DataLen = size(Data, 1);
+        obj.DataLen = size(Data, 1) + (max(obj.Group) - 1).*obj.GroupSep;
         tLim = [1, obj.DataLen] + [-0.5, 0.5];
         obj.Parent.YLim(1) = min(obj.Parent.YLim(1), tLim(1));
         obj.Parent.YLim(2) = max(obj.Parent.YLim(2), tLim(2));
