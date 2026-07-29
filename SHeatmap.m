@@ -1772,21 +1772,24 @@ classdef SHeatmap < handle
                     obj.colLabelHdl(j).Position(1) = nX; obj.colLabelHdl(j).Position(2) = nY;
                 end
 
-                for i = 1:length(obj.rowLabelHdl)
-                    X = obj.rowLabelHdl(i).Position(1); 
-                    Y = obj.rowLabelHdl(i).Position(2);
-                    T = atan2(Y, X)/pi*180;
-                    if sqrt(X.^2 + Y.^2) < obj.XLim(1)
-                        if T <= 90 && T >= -90
-                            set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','right')
+                if abs(diff(obj.TLim)) < eps
+                else
+                    for i = 1:length(obj.rowLabelHdl)
+                        X = obj.rowLabelHdl(i).Position(1);
+                        Y = obj.rowLabelHdl(i).Position(2);
+                        T = atan2(Y, X)/pi*180;
+                        if sqrt(X.^2 + Y.^2) < obj.XLim(1)
+                            if T <= 90 && T >= -90
+                                set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','right')
+                            else
+                                set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','left')
+                            end
                         else
-                            set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','left')
-                        end
-                    else
-                        if T <= 90 && T >= -90
-                            set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','left')
-                        else
-                            set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','right')
+                            if T <= 90 && T >= -90
+                                set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','left')
+                            else
+                                set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','right')
+                            end
                         end
                     end
                 end
