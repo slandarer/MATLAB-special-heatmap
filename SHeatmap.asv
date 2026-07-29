@@ -1777,17 +1777,9 @@ classdef SHeatmap < handle
                     Y = obj.rowLabelHdl(i).Position(2);
                     T = atan2(Y, X)/pi*180;
                     if sqrt(X.^2 + Y.^2) < obj.XLim(1)
-                        if T <= 90 && T >= -90
-                            set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','right')
-                        else
-                            set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','left')
-                        end
+
                     else
-                        if T <= 90 && T >= -90
-                            set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','left')
-                        else
-                            set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','right')
-                        end
+
                     end
                 end
 
