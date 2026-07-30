@@ -81,8 +81,9 @@ classdef SHeatmap < handle
 %   setColLabelLocation - Move col labels to specified location (设置列标签位置)
 %   freezeColors        - Permanently assign the current colormap colors to each patch 
 %                         based on its value, decoupling them from both the 
-%                         colormap axis limits (CLim) and the colormap itself.
+%                         colormap axis limits (CLim) and the colormap itself
 %                         (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围或颜色映射表的变化而改变)
+%   setXYTLim            - Set X, Y, and Theta limits for the heatmap (设置热图 X轴、 Y轴、角度范围)
 
 
 % =========================================================================
@@ -156,6 +157,7 @@ classdef SHeatmap < handle
         ColGroup = [];
         GroupSep = .5;
 
+        % For 
         XLim = [], 
         YLim = [], 
         TLim = [0, 0];
@@ -208,6 +210,7 @@ classdef SHeatmap < handle
             % Parse axes handle if provided (解析坐标区句柄)
             if isa(varargin{1}, 'matlab.graphics.axis.Axes')
                 obj.ax = varargin{1};
+                obj.Parent = varargin{1};
                 varargin(1) = [];
             else
                 % No axes provided
@@ -247,7 +250,7 @@ classdef SHeatmap < handle
             % mustBeAllowedTriType(obj.Type)
 
             % Set axes handle (设置坐标轴句柄)
-            if isempty(obj.Parent)
+            if isempty(obj.Parent) && isempty(obj.ax)
                 obj.ax = gca;
             else
                 obj.ax = obj.Parent;
@@ -540,8 +543,8 @@ classdef SHeatmap < handle
             % Add column labels ('Visible', 'off') (添加列标签，默认隐藏)
             obj.colLabelHdl = gobjects(1, size(obj.Data, 2));
             for col = 1:size(obj.Data, 2)
-                obj.colLabelHdl(col) = text(obj.ax, obj.CP(col), 0.5 - 0.25, ...
-                    obj.VarName{col}, 'HorizontalAlignment','left', ...
+                obj.colLabelHdl(col) = text(obj.ax, obj.CP(col), obj.RP(end) + 0.75, ...
+                    obj.VarName{col}, 'HorizontalAlignment','right', ...
                     'FontName','Times New Roman', 'FontSize',12, 'Rotation',30, 'Visible','off');
             end
 
@@ -1639,6 +1642,12 @@ classdef SHeatmap < handle
 
     methods
         function varargout = setXYTLim(obj, varargin)
+            % obj.setXYTLim(varargin) - Set X, Y, and Theta limits for the heatmap (设置热图 X轴、 Y轴、角度范围)
+            %   obj.setXYTLim('XLim', [xmin, xmax], 'YLim', [ymin, ymax], 'TLim', [tmin, tmax])
+            %       TLim(1) == TLim(2): rotation without deformation (rectangular shape preserved)
+            %       TLim(1) ~= TLim(2): annular/sector heatmap generated
+            %       Do NOT call setType after this function, as it may override the current XYT Lim.
+
             tArginList = {'XLim', 'YLim', 'TLim'};
             for i = 1:2:(length(varargin) - 1)
                 tid = ismember(lower(tArginList), lower(varargin{i}));
@@ -1661,9 +1670,11 @@ classdef SHeatmap < handle
                     obj.ax.DataAspectRatio = [1,1,1];
                 end
 
+                tLen = max(1./diff(OXLim).*diff(obj.XLim), 1./diff(OYLim).*diff(obj.YLim));
+
                 obj.XLim = sort(obj.XLim);
                 obj.YLim = sort(obj.YLim);
-                obj.TLim = sort(obj.TLim);
+                % obj.TLim = sort(obj.TLim);
 
                 if abs(diff(obj.XLim)) < eps
                     obj.XLim = [obj.CP(1) - .5, obj.CP(end) + .5];
@@ -1688,8 +1699,8 @@ classdef SHeatmap < handle
                     nV = [nX(2, :) - nX(1, :); nY(2, :) - nY(1, :)];
                     nL = sqrt(nV(1, :).^2 + nV(2, :).^2);
                     nV = nV./[nL; nL];
-                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength./diff(OXLim).*diff(obj.XLim);
-                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength./diff(OXLim).*diff(obj.XLim);
+                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength.*tLen;
+                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength.*tLen;
                 end
                 obj.rowTickHdl.XData = nX(:); obj.rowTickHdl.YData = nY(:);
 
@@ -1701,8 +1712,8 @@ classdef SHeatmap < handle
                     nV = [nX(2, :) - nX(1, :); nY(2, :) - nY(1, :)];
                     nL = sqrt(nV(1, :).^2 + nV(2, :).^2);
                     nV = nV./[nL; nL];
-                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength./diff(OYLim).*diff(obj.YLim);
-                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength./diff(OYLim).*diff(obj.YLim);
+                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength.*tLen;
+                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength.*tLen;
                 end
                 obj.colTickHdl.XData = nX(:); obj.colTickHdl.YData = nY(:);
 
@@ -1754,8 +1765,8 @@ classdef SHeatmap < handle
                     if strcmpi(obj.Type, 'full')
                         nV = [nX - tRowX(i), nY - tRowY(i)];
                         nV = nV./norm(nV);
-                        nX = tRowX(i) + nV(1).*(obj.TickLength + .25)./diff(OXLim).*diff(obj.XLim);
-                        nY = tRowY(i) + nV(2).*(obj.TickLength + .25)./diff(OXLim).*diff(obj.XLim);
+                        nX = tRowX(i) + nV(1).*(obj.TickLength + .25).*tLen;
+                        nY = tRowY(i) + nV(2).*(obj.TickLength + .25).*tLen;
                     end
                     obj.rowLabelHdl(i).Position(1) = nX; obj.rowLabelHdl(i).Position(2) = nY;
                 end
@@ -1766,23 +1777,89 @@ classdef SHeatmap < handle
                     if strcmpi(obj.Type, 'full')
                         nV = [nX - tColX(j), nY - tColY(j)];
                         nV = nV./norm(nV);
-                        nX = tColX(j) + nV(1).*(obj.TickLength + .25)./diff(OYLim).*diff(obj.YLim);
-                        nY = tColY(j) + nV(2).*(obj.TickLength + .25)./diff(OYLim).*diff(obj.YLim);
+                        nX = tColX(j) + nV(1).*(obj.TickLength + .25).*tLen;
+                        nY = tColY(j) + nV(2).*(obj.TickLength + .25).*tLen;
                     end
                     obj.colLabelHdl(j).Position(1) = nX; obj.colLabelHdl(j).Position(2) = nY;
                 end
 
                 if abs(diff(obj.TLim)) < eps
+                    T = mod(obj.TLim(1)/pi*180 + 180, 360) - 180;
+                    for i = 1:length(obj.colLabelHdl)
+                        if strcmpi(obj.ColLabelLocation, 'top') || (strcmpi(obj.ColLabelLocation, 'diag') && (strcmpi(obj.Type, 'tril') || strcmpi(obj.Type, 'tril0')))
+                            if T > 0
+                                set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','right')
+                            else
+                                set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','left')
+                            end
+                        else
+                            if T > 0
+                                set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','left')
+                            else
+                                set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','right')
+                            end
+                        end
+                    end
+                    for i = 1:length(obj.rowLabelHdl)
+                        if strcmpi(obj.RowLabelLocation, 'left') || (strcmpi(obj.RowLabelLocation, 'diag') && (strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0')))
+                            if T < 90 && T > -90
+                                set(obj.rowLabelHdl(i), 'Rotation',T, 'HorizontalAlignment','right')
+                            else
+                                set(obj.rowLabelHdl(i), 'Rotation',T + 180, 'HorizontalAlignment','left')
+                            end
+                        else
+                            if T <= 90 && T >= -90
+                                set(obj.rowLabelHdl(i), 'Rotation',T, 'HorizontalAlignment','left')
+                            else
+                                set(obj.rowLabelHdl(i), 'Rotation',T + 180, 'HorizontalAlignment','right')
+                            end
+                        end 
+                    end
                 else
+                    if strcmpi(obj.ColLabelLocation, 'top')
+                        T = mod(obj.TLim(1)/pi*180 + 180, 360) - 180;
+                        for i = 1:length(obj.colLabelHdl)
+                            if T > 0
+                                if obj.TLim(1) < obj.TLim(2)
+                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','left')
+                                else
+                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','right')
+                                end
+                            else
+                                if obj.TLim(1) < obj.TLim(2)
+                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','right')
+                                else
+                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','left')
+                                end
+                            end
+                        end
+                    else
+                        T = mod(obj.TLim(2)/pi*180 + 180, 360) - 180;
+                        for i = 1:length(obj.colLabelHdl)
+                            if T > 0
+                                if obj.TLim(1) < obj.TLim(2)
+                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','right')
+                                else
+                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','left')
+                                end
+                            else
+                                if obj.TLim(1) < obj.TLim(2)
+                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','left')
+                                else
+                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','right')
+                                end
+                            end
+                        end
+                    end
                     for i = 1:length(obj.rowLabelHdl)
                         X = obj.rowLabelHdl(i).Position(1);
                         Y = obj.rowLabelHdl(i).Position(2);
                         T = atan2(Y, X)/pi*180;
                         if sqrt(X.^2 + Y.^2) < obj.XLim(1)
                             if T <= 90 && T >= -90
-                                set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','right')
+                                set(obj.rowLabelHdl(i), 'Rotation',- T, 'HorizontalAlignment','right')
                             else
-                                set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','left')
+                                set(obj.rowLabelHdl(i), 'Rotation',180 - T, 'HorizontalAlignment','left')
                             end
                         else
                             if T <= 90 && T >= -90
@@ -1799,7 +1876,7 @@ classdef SHeatmap < handle
 
 
             function [nX, nY] = getNewXY(X, Y, OXLim, OYLim, XLim, YLim, TLim)
-                TLim = [-TLim(2), -TLim(1)];
+                TLim = [-TLim(1), -TLim(2)];
                 X = (X - OXLim(1))./diff(OXLim).*diff(XLim) + XLim(1);
                 Y = (Y - OYLim(1))./diff(OYLim).*diff(YLim) + YLim(1);
 

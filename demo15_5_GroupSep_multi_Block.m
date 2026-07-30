@@ -18,8 +18,8 @@ SHM.RowName = compose('Row-%d', 1:3);
 SHM.ColName = compose('Col-%d', 1:16);
 SHM.draw().setFrame();
 % Draw Block
-[X1, Y1] = SClusterBlock(Class1, 'Orientation','top', 'BasePos',-.25, 'Height',.5, 'ColorList',CList1, 'Parent',ax, 'Group',Class1);
-[X2, Y2] = SClusterBlock(Class2, 'Orientation','top', 'BasePos',.25 , 'Height',.5, 'ColorList',CList2, 'Parent',ax, 'Group',Class1);
+[X1, Y1] = SClusterBlock(Class1, 'Orientation','top', 'BasePos',-.25, 'Height',.5, 'ColorList',CList1, 'Parent',ax, 'Group',Class1).draw();
+[X2, Y2] = SClusterBlock(Class2, 'Orientation','top', 'BasePos',.25 , 'Height',.5, 'ColorList',CList2, 'Parent',ax, 'Group',Class1).draw();
 % text
 textProp = {'FontSize',17, 'HorizontalAlignment','center', 'FontName','Cambria'};
 for i = 1:length(X1), text(ax, X1(i), Y1(i), ClassName1{i}, textProp{:}); end

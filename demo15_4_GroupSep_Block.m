@@ -12,8 +12,8 @@ Data = rand(20, 20);
 fig = figure('Units','normalized', 'Position',[.1,.05,.45,.72]);
 ax = axes('Parent',fig, 'Position',[.1,.15,.75,.75]);
 
-SClusterBlock(rowGroup, 'Orientation','left', 'Parent',ax, 'Group',rowGroup); % Draw the left Block (绘制左侧分组方块)
-SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax, 'Group',colGroup); % Draw the top  Block (绘制顶部分组方块)
+SClusterBlock(rowGroup, 'Orientation','left', 'Parent',ax, 'Group',rowGroup).draw(); % Draw the left Block (绘制左侧分组方块)
+SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax, 'Group',colGroup).draw(); % Draw the top  Block (绘制顶部分组方块)
 % Draw heatmap (绘制热图)
 SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',rowGroup, 'ColGroup',colGroup).draw();
 SHM.setRowLabelLocation('right').setColName(colName)

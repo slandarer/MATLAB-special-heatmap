@@ -16,8 +16,8 @@ colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
 
-orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Height',6);  % Draw the left dendrogram (绘制左侧树状图)
-orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5);  % Draw the top  dendrogram (绘制顶部树状图)
+orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Height',6).draw();  % Draw the left dendrogram (绘制左侧树状图)
+orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5).draw();  % Draw the top  dendrogram (绘制顶部树状图)
 % Exchange data order (交换数据顺序)
 Data = Data(orderL, orderT);
 % Draw heatmap (绘制热图)
