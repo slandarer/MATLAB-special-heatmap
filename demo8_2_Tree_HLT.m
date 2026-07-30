@@ -1,5 +1,4 @@
-%% Heatmap with dendrogram
-% 带树状图热图
+%% Heatmap with highlighted dendrogram
 
 rng(1)
 % Made up some data casually (随便捏造了点数据)
@@ -15,18 +14,23 @@ colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',
 
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.02,.08,.76,.9]);
-
-orderL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Height',6).draw();  % Draw the left dendrogram (绘制左侧树状图)
-orderT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5).draw();  % Draw the top  dendrogram (绘制顶部树状图)
+% Draw the left dendrogram (绘制左侧树状图)
+objL = SDendrogram(Data, 'Orientation','left', 'Parent',ax, 'BasePos',.5, 'Height',6);  
+set(objL, 'BranchColor','on', 'BranchHighlight','on', 'GroupHighlight','on' ,'HeightRatio',[0, .15, .15, 1])
+orderL = objL.draw();
+% Draw the top  dendrogram (绘制顶部树状图)
+objT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5);  
+set(objT, 'BranchColor','on', 'BranchHighlight','on', 'GroupHighlight','on', 'HeightRatio',[0, .15, .15, 1])
+orderT = objT.draw();
 % Exchange data order (交换数据顺序)
 Data = Data(orderL, orderT);
 % Draw heatmap (绘制热图)
-SHM_t1 = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
-SHM_t1.setRowLabelLocation('right').setColName(colName(orderT))
-SHM_t1.setColLabelLocation('bottom').setRowName(rowName(orderL))
-SHM_t1.setColLabel('Rotation',45).setFrame()
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
+SHM.setRowLabelLocation('right').setColName(colName(orderT))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabel('Rotation',45).setFrame()
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
 ax.DataAspectRatioMode = 'auto';
 yn = size(Data, 1); yh = .9.*yn./(yn + 5) + .08;
-SHM_t1.Colorbar.Position = [.89, yh - .36, .025, .36];
+SHM.Colorbar.Position = [.89, yh - .36, .025, .36];

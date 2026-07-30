@@ -51,7 +51,9 @@ classdef SDendrogram < handle
     properties
         ax, 
         Parent = [];
-        arginList = {'Orientation', 'Parent', 'Method', 'BasePos', 'Height', 'GroupSep'};
+        arginList = {'Orientation', 'Parent', 'Method', 'BasePos', 'Height', ...
+            'GroupSep', 'HeightRatio', 'MaxClust', 'BranchColor', 'BranchHighlight', 'GroupHighlight', ...
+            'XLim', 'YLim', 'TLim', 'ColorList'};
 
         Data; Tree
 
@@ -63,18 +65,37 @@ classdef SDendrogram < handle
         Order = [];              % Leaf order (叶节点顺序)
         Group = [];              % Group assignments for leaf nodes (叶节点的分组标签)
         GroupSep = 0;            % Group separation gap (组间分离间距)
+
+
+        ColorList = [204,  61,  36; 243, 197,  88; 109, 174, 144;
+                      48, 180, 204;   0,  79, 122]./255;
+
+        BranchColor = 'off'
+        BranchHighlight = 'off'
+        GroupHighlight = 'off'
+
+        % HeightRatio = [bottomGroup, topGroup, leafLevel, apexLevel]
+        %   - bottomGroup : lower edge of GroupHighlight patch
+        %   - topGroup    : upper edge of GroupHighlight patch
+        %   - leafLevel   : baseline of dendrogram leaves
+        %   - apexLevel   : topmost node of dendrogram
+        HeightRatio = [-.1, 0, 0, 1];  
         
 
         XLim
         YLim
-        TLim
+        TLim = [0,0];
 
         treeHdl
+        branchHighlightHdl
+        groupHighlightHdl
     end
 
     properties (Hidden)
-        DataLen = 0;
-
+        DataLen;
+        X, Y, OX, OY, OXLim, OYLim, CutOff, CutH, BOOL
+        W, H, OW, OH, BW, BH, GW, GH, WPos, GIds, BIds, LIds, 
+        BX, BY, GX, GY
     end
 
     methods
@@ -112,6 +133,9 @@ classdef SDendrogram < handle
                 obj.ax = obj.Parent;
             end
 
+            if size(obj.ColorList, 1) < obj.MaxClust
+                obj.ColorList = [obj.ColorList; rand(obj.MaxClust, 3)./5 + .3];
+            end
 
             obj.ax.XColor = 'none';
             obj.ax.YColor = 'none';
@@ -127,58 +151,152 @@ classdef SDendrogram < handle
                 obj.Tree = linkage(obj.Data  , obj.Method);
             end
 
+            obj.CutOff = median([obj.Tree(end - (obj.MaxClust - 1), 3), obj.Tree(end - (obj.MaxClust - 2), 3)]);
+
             % Draw dendrogram (绘制树状图)
             [tTreeHdl, ~, obj.Order] = dendrogram(tAx, obj.Tree, 0, 'Orientation', obj.Orientation);
             obj.Group = cluster(obj.Tree, 'Maxclust',obj.MaxClust);
             obj.Group = obj.Group(obj.Order);
             obj.Group = cumsum([1, diff(obj.Group(:).') ~= 0]);
 
-            minX = 0; maxX = 0; minY = 0; maxY = 0;
-            for i = 1:length(tTreeHdl)
-                minX = min(minX, min(tTreeHdl(i).XData));
-                maxX = max(maxX, max(tTreeHdl(i).XData));
-                minY = min(minY, min(tTreeHdl(i).YData));
-                maxY = max(maxY, max(tTreeHdl(i).YData));
+            obj.OX = reshape([tTreeHdl(:).XData], 4, []).';
+            obj.OY = reshape([tTreeHdl(:).YData], 4, []).';
+            minX = min(min(obj.OX)); maxX = max(max(obj.OX));
+            minY = min(min(obj.OY)); maxY = max(max(obj.OY));
+
+            obj.treeHdl = gobjects(1, length(tTreeHdl)); delete(tFig);
+            obj.X = obj.OX; obj.Y = obj.OY;
+            obj.WPos = 1:length(obj.Group);
+            switch obj.Orientation
+                case 'top'
+                    obj.Y = (obj.Y - minY)./(maxY - minY).*(- obj.Height).*(obj.HeightRatio(4) - obj.HeightRatio(3)) ...
+                        + obj.BasePos - obj.Height.*(obj.HeightRatio(3) - 0);
+                    for j = max(obj.Group):-1:2
+                        pos = find(obj.Group == j, 1);
+                        obj.X(obj.X >= pos) = obj.X(obj.X >= pos) + obj.GroupSep;
+                        obj.WPos(obj.WPos >= pos) = obj.WPos(obj.WPos >= pos) + obj.GroupSep;
+                    end
+                    obj.OYLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
+                    obj.OXLim = [min(min(obj.X)) - .5, max(max(obj.X)) + .5];
+                    obj.W = obj.X; obj.H = obj.Y;
+                    obj.OW = obj.OX; obj.OH = obj.OY;
+                case 'left'
+                    obj.X = (obj.X - minX)./(maxX - minX).*(- obj.Height).*(obj.HeightRatio(4) - obj.HeightRatio(3)) ...
+                        + obj.BasePos - obj.Height.*(obj.HeightRatio(3) - 0);
+                    for j = max(obj.Group):-1:2
+                        pos = find(obj.Group == j, 1);
+                        obj.Y(obj.Y >= pos) = obj.Y(obj.Y >= pos) + obj.GroupSep;
+                        obj.WPos(obj.WPos >= pos) = obj.WPos(obj.WPos >= pos) + obj.GroupSep;
+                    end
+                    obj.OXLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
+                    obj.OYLim = [min(min(obj.Y)) - .5, max(max(obj.Y)) + .5];
+                    obj.W = obj.Y; obj.H = obj.X;
+                    obj.OW = obj.OY; obj.OH = obj.OX;
+            end
+            obj.GIds = unique(obj.Group, 'stable');
+            OWSet = [obj.OW(:,1:2); obj.OW(:,3:4)];
+            OHSet = [obj.OH(:,1:2); obj.OH(:,3:4)];
+            HSet = [obj.H(:,1:2); obj.H(:,3:4)];
+            obj.BOOL = (OHSet(:,1) - obj.CutOff).*(OHSet(:,2) - obj.CutOff) < 0;
+            obj.CutH = (HSet(obj.BOOL, 1) + HSet(obj.BOOL, 2))./2;
+            obj.BIds = obj.Group(round(OWSet(obj.BOOL, 1)));
+            tG = obj.Group(round((obj.OW(:,2) + obj.OW(:,3))./2));
+            obj.LIds = all(obj.OH < obj.CutOff, 2).*tG(:);
+
+
+            for i = 1:max(obj.GIds)
+                tInd = find(obj.Group == obj.GIds(i));
+                tW = [obj.WPos(tInd(1)) - .5, obj.WPos(tInd(end)) + .5];
+                tO = obj.BasePos - obj.Height.*(obj.HeightRatio(3) - 0);
+                obj.BW(i,:) = [linspace(tW(1), tW(2), 50), tW(2).*ones(1,50), ...
+                               linspace(tW(2), tW(1), 50), tW(1).*ones(1,50)];
+                obj.BH(i,:) = [obj.CutH(obj.BIds == obj.GIds(i)).*ones(1,50), ...
+                              linspace(obj.CutH(obj.BIds == obj.GIds(i)), tO, 50), ...
+                              tO.*ones(1,50), linspace(tO, obj.CutH(obj.BIds == obj.GIds(i)), 50)];
+                tH = obj.BasePos - obj.Height.*obj.HeightRatio([1, 2]);
+                obj.GH(i,:) = [tH(1).*ones(1,50), linspace(tH(1), tH(2), 50), ...
+                               tH(2).*ones(1,50), linspace(tH(2), tH(1), 50)];
+            end
+            obj.GW = obj.BW;
+
+            switch obj.Orientation
+                case 'top'
+                    obj.BX = obj.BW;
+                    obj.BY = obj.BH;
+                    obj.GX = obj.GW;
+                    obj.GY = obj.GH;
+                case 'left'
+                    obj.BX = obj.BH;
+                    obj.BY = obj.BW;
+                    obj.GX = obj.GH;
+                    obj.GY = obj.GW;
+            end
+            if strcmpi(obj.BranchColor, 'on')
+                tCData = [zeros(1, 3); obj.ColorList];
+            else
+                tCData = zeros(obj.MaxClust + 1, 3);
+            end
+            
+            obj.treeHdl = gobjects(1, length(obj.LIds));
+            for i = 1:length(obj.LIds)
+                obj.treeHdl(i) = plot(obj.ax, obj.X(i,:), obj.Y(i,:), 'Color',tCData(obj.LIds(i) + 1, :), 'LineWidth',1);
             end
 
-            obj.treeHdl = gobjects(1, length(tTreeHdl));
-            for i = 1:length(tTreeHdl)
-                X = tTreeHdl(i).XData;
-                Y = tTreeHdl(i).YData;
-                switch obj.Orientation
-                    case 'top'
-                        Y = (Y - minY)./(maxY - minY).*(- obj.Height) + obj.BasePos;
-                        for j = max(obj.Group):-1:2
-                            pos = find(obj.Group == j, 1);
-                            X(X >= pos) = X(X >= pos) + obj.GroupSep;
-                        end
-                    case 'left'
-                        X = (X - minX)./(maxX - minX).*(- obj.Height) + obj.BasePos;
-                        for j = max(obj.Group):-1:2
-                            pos = find(obj.Group == j, 1);
-                            Y(Y >= pos) = Y(Y >= pos) + obj.GroupSep;
-                        end
-                end
-                obj.treeHdl(i) = plot(obj.Parent, X, Y, 'Color',[0,0,0], 'LineWidth',1);
+            obj.branchHighlightHdl = gobjects(1, length(obj.GIds));
+            for i = 1:length(obj.GIds)
+                obj.branchHighlightHdl(i) = fill(obj.ax, obj.BX(i,:), obj.BY(i,:), obj.ColorList(i,:), 'EdgeColor', 'none', 'FaceAlpha', .25);
             end
-            delete(tFig);
+
+            if ~strcmpi(obj.BranchHighlight, 'on')
+                for i = 1:length(obj.GIds)
+                    set(obj.branchHighlightHdl(i), 'Visible','off');
+                end
+            end
+
+            obj.groupHighlightHdl = gobjects(1, length(obj.GIds));
+            for i = 1:length(obj.GIds)
+                obj.groupHighlightHdl(i) = fill(obj.ax, obj.GX(i,:), obj.GY(i,:), obj.ColorList(i,:), 'EdgeColor', 'none', 'FaceAlpha', .9);
+            end
+
+            if ~strcmpi(obj.GroupHighlight, 'on')
+                for i = 1:length(obj.GIds)
+                    set(obj.groupHighlightHdl(i), 'Visible','off');
+                end
+            end
+
             try axis(obj.ax, 'tight'); catch, end
             switch obj.Orientation
                 case 'top'
                     obj.DataLen = size(obj.Data, 2) + (max(obj.Group) - 1).*obj.GroupSep;
                     tLim = [1, obj.DataLen] + [-0.5, 0.5];
-                    obj.Parent.XLim(1) = min(obj.Parent.XLim(1), tLim(1));
-                    obj.Parent.XLim(2) = max(obj.Parent.XLim(2), tLim(2));
+                    obj.ax.XLim(1) = min(obj.ax.XLim(1), tLim(1));
+                    obj.ax.XLim(2) = max(obj.ax.XLim(2), tLim(2));
                 case 'left'
                     obj.DataLen = size(obj.Data, 1) + (max(obj.Group) - 1).*obj.GroupSep;
                     tLim = [1, obj.DataLen] + [-0.5, 0.5];
-                    obj.Parent.YLim(1) = min(obj.Parent.YLim(1), tLim(1));
-                    obj.Parent.YLim(2) = max(obj.Parent.YLim(2), tLim(2));
+                    obj.ax.YLim(1) = min(obj.ax.YLim(1), tLim(1));
+                    obj.ax.YLim(2) = max(obj.ax.YLim(2), tLim(2));
             end
             if nargout == 1
                 varargout = {obj.Order};
             elseif nargout == 2
                 varargout = {obj.Order, obj.Group};
+            end
+        end
+
+        function varargout = set(obj, varargin)
+            % Properties setting
+            
+            % Parse optional arguments (解析可选参数)
+            for i = 1:2:(length(varargin) - 1)
+                tid = ismember(lower(obj.arginList), lower(varargin{i}));
+                if any(tid)
+                    obj.(obj.arginList{tid}) = varargin{i + 1};
+                end
+            end
+
+            if nargout == 1
+                varargout = {obj};
             end
         end
     end
