@@ -8,7 +8,7 @@
 ![](gallery/Type_tri2_colormap2.png)
 ![](gallery/XYT_45_Tree_Block_GS.png)
 ![](gallery/XYT_45_Block_GS.png)
-
+![](gallery/GroupSep.png)
 
 ___
 
