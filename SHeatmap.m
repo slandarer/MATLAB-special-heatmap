@@ -108,7 +108,8 @@ classdef SHeatmap < handle
         Parent = [];
         arginList = {'Parent', 'Format', 'SData', 'Type', ...
                      'VarName', 'RowName', 'ColName', ...
-                     'GroupSep', 'RowGroup', 'ColGroup'}
+                     'GroupSep', 'RowGroup', 'ColGroup', ...
+                     'TickLength'}
         Data
 
         Format = 'sq'  
@@ -512,7 +513,7 @@ classdef SHeatmap < handle
                 for gj = 1:max(obj.ColGroup)
                     posi = obj.RP(obj.RowGroup == gi);
                     posj = obj.CP(obj.ColGroup == gj);
-                    numY = max(posi) - min(posi) + 2;
+                    numY = round(max(posi) - min(posi) + 2);
                     obj.FX = [obj.FX, [0, ones(1, numY), zeros(1, numY), 1, nan].*(max(posj) - min(posj) + 1) + min(posj) - .5];
                     obj.FY = [obj.FY, [0, linspace(0, 1, numY), linspace(1, 0, numY), 0, nan].*(max(posi) - min(posi) + 1) + min(posi) - .5];
                 end
@@ -1687,9 +1688,18 @@ classdef SHeatmap < handle
                 [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 obj.boxHdl.XData = nX; obj.boxHdl.YData = nY;
 
-                X = obj.frameHdl.XData; Y = obj.frameHdl.YData;
-                [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
+                if abs(diff(obj.TLim)) < eps
+                    X = obj.frameHdl.XData; Y = obj.frameHdl.YData;
+                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
+                else
+                    X = interpDataNaN(obj.frameHdl.XData);
+                    Y = interpDataNaN(obj.frameHdl.YData);
+                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
+
+                    set(obj.boxHdl, 'Visible','off');
+                end
 
                 X = obj.rowTickHdl.XData; Y = obj.rowTickHdl.YData;
                 [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
@@ -1718,13 +1728,26 @@ classdef SHeatmap < handle
                 obj.colTickHdl.XData = nX(:); obj.colTickHdl.YData = nY(:);
 
                 if ~isempty(obj.PatchX)
-                    [nX, nY] = getNewXY(obj.PatchX, obj.PatchY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                    for i = 1:size(obj.patchHdl, 1)
-                        for j = 1:size(obj.patchHdl, 2)
-                            n = sub2ind(size(obj.Data), i, j);
-                            if isnan(obj.Data(i, j))
-                                set(obj.patchHdl(i, j), 'XData',nX(1:4, n), 'YData',nY(1:4, n))
-                            else
+                    if abs(diff(obj.TLim)) < eps
+                        [nX, nY] = getNewXY(obj.PatchX, obj.PatchY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                        for i = 1:size(obj.patchHdl, 1)
+                            for j = 1:size(obj.patchHdl, 2)
+                                n = sub2ind(size(obj.Data), i, j);
+                                if isnan(obj.Data(i, j))
+                                    set(obj.patchHdl(i, j), 'XData',nX(1:4, n), 'YData',nY(1:4, n))
+                                else
+                                    set(obj.patchHdl(i, j), 'XData',nX(:, n), 'YData',nY(:, n))
+                                end
+                            end
+                        end
+                    else
+                        tT1 = [1, 2, 3, 4, 5]; tT2 = [linspace(1, 2, 10), linspace(2, 3, 10), linspace(3, 4, 10), linspace(4, 5, 10)];
+                        tX = [obj.PatchX; obj.PatchX(1, :)]; tY = [obj.PatchY; obj.PatchY(1, :)];
+                        tX = interp1(tT1, tX, tT2); tY = interp1(tT1, tY, tT2);
+                        [nX, nY] = getNewXY(tX, tY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                        for i = 1:size(obj.patchHdl, 1)
+                            for j = 1:size(obj.patchHdl, 2)
+                                n = sub2ind(size(obj.Data), i, j);
                                 set(obj.patchHdl(i, j), 'XData',nX(:, n), 'YData',nY(:, n))
                             end
                         end
@@ -1874,6 +1897,14 @@ classdef SHeatmap < handle
                 try axis(obj.ax, 'tight'), catch, end
             end
 
+            function nX = interpDataNaN(X)
+                XX = [X(1:end-1), nan; X(2:end), nan];
+                ind = any(isnan(XX), 1);
+                XX(:, ind) = 1;
+                nX = interp1([0,1], XX, linspace(0,1,10));
+                nX(:, ind) = nan;
+                nX = nX(:).';
+            end
 
             function [nX, nY] = getNewXY(X, Y, OXLim, OYLim, XLim, YLim, TLim)
                 TLim = [-TLim(1), -TLim(2)];
@@ -1898,8 +1929,6 @@ classdef SHeatmap < handle
                 varargout = {obj};
             end
         end
-    
-        
     end
 
 

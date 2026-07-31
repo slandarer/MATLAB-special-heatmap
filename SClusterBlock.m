@@ -1,8 +1,8 @@
-classdef SClusterBlock
+classdef SClusterBlock < handle
 % SClusterBlock - Create colored blocks for cluster/group visualization
 %   SCB = SClusterBlock(Class) Creates colored blocks for each group
 %   along the top orientation (default).
-%   创建顶部方向聚类方块对象。
+%   创建顶部聚类方块对象。
 %  
 %   SCB = SClusterBlock(Class, 'Orientation', ori); specifies orientation 
 %   指定方向 'top'/'left'。
@@ -55,10 +55,16 @@ classdef SClusterBlock
         Group = [];                       % Group assignments (分组)
         GroupSep = .5;                    % Group separation gap (组间分离间距)
         X, Y
+
+        XLim
+        YLim
+        TLim = [0, 0];
+
+        blockHdl
     end
 
     properties (Hidden)
-        CC; CP
+        CC; CP; OXLim; OYLim
     end
 
     methods
@@ -125,24 +131,31 @@ classdef SClusterBlock
             if isequal(obj.Orientation, 'top')
                 obj.X = zeros(1, length(obj.CC) - 1);
                 obj.Y = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
+                obj.OXLim = [min(obj.CP) - .5, max(obj.CP) + .5];
+                obj.OYLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
             else
                 obj.X = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
                 obj.Y = zeros(1, length(obj.CC) - 1);
+                obj.OYLim = [min(obj.CP) - .5, max(obj.CP) + .5];
+                obj.OXLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
             end
+            obj.XLim = obj.OXLim;
+            obj.YLim = obj.OYLim;
 
             % Draw blocks (绘制方块)
+            obj.blockHdl = gobjects(1, length(obj.CC) - 1);
             for i = 1:length(obj.CC) - 1
                 CL = [obj.CP(obj.CC(i) + 1), obj.CP(obj.CC(i + 1))];
                 CInd = obj.Class(obj.CC(i) + 1);
 
                 if isequal(obj.Orientation, 'top')
-                    fill(obj.ax, ...
+                    obj.blockHdl(i) = fill(obj.ax, ...
                         CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
                         [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
                         obj.ColorList(CInd, :), obj.BlockProp{:});
                     obj.X(i) = (CL(1) + CL(2)) / 2;
                 else
-                    fill(obj.ax, ...
+                    obj.blockHdl(i) = fill(obj.ax, ...
                         [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
                         CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
                         obj.ColorList(CInd, :), obj.BlockProp{:});
@@ -157,6 +170,68 @@ classdef SClusterBlock
             elseif nargout == 2
                 varargout = {obj.X, obj.Y};
             end
+        end
+
+        function varargout = setXYTLim(obj, varargin)
+            % obj.setXYTLim(varargin) - Set X, Y, and Theta limits for the group block (设置分组方块 X轴、 Y轴、角度范围)
+            %   obj.setXYTLim('XLim', [xmin, xmax], 'YLim', [ymin, ymax], 'TLim', [tmin, tmax])
+
+            tArginList = {'XLim', 'YLim', 'TLim'};
+            for i = 1:2:(length(varargin) - 1)
+                tid = ismember(lower(tArginList), lower(varargin{i}));
+                if any(tid)
+                    obj.(tArginList{tid}) = varargin{i + 1};
+                end
+            end
+
+            obj.XLim = sort(obj.XLim);
+            obj.YLim = sort(obj.YLim);
+
+            if abs(diff(obj.TLim)) < eps
+                for i = 1:length(obj.blockHdl)
+                    tX = obj.blockHdl(i).XData;
+                    tY = obj.blockHdl(i).YData;
+                    [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    set(obj.blockHdl(i), 'XData',nX, 'YData',nY);
+                end
+            else
+                for i = 1:length(obj.blockHdl)
+                    tX = obj.blockHdl(i).XData;
+                    tY = obj.blockHdl(i).YData;
+                    tXX = [linspace(tX(1), tX(2), 30), linspace(tX(2), tX(3), 30), linspace(tX(3), tX(4), 30), linspace(tX(4), tX(1), 30)];
+                    tYY = [linspace(tY(1), tY(2), 30), linspace(tY(2), tY(3), 30), linspace(tY(3), tY(4), 30), linspace(tY(4), tY(1), 30)];
+                    [nX, nY] = getNewXY(tXX, tYY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    set(obj.blockHdl(i), 'XData',nX, 'YData',nY);
+                end
+            end
+            
+            [obj.X, obj.Y] = getNewXY(obj.X, obj.Y, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
+
+            try axis(obj.ax, 'tight'), catch, end
+            % Helper function: coordinate transformation (辅助函数：坐标变换) 
+            function [nX, nY] = getNewXY(X, Y, OXLim, OYLim, XLim, YLim, TLim)
+                TLim = [-TLim(1), -TLim(2)];
+                X = (X - OXLim(1))./diff(OXLim).*diff(XLim) + XLim(1);
+                Y = (Y - OYLim(1))./diff(OYLim).*diff(YLim) + YLim(1);
+
+                if abs(diff(TLim)) < eps
+                    RMat = [cos(TLim(1)), sin(TLim(1));
+                        -sin(TLim(1)), cos(TLim(1))];
+                    XY = [X(:), Y(:)]*RMat;
+                    nX = reshape(XY(:, 1), size(X, 1), []);
+                    nY = reshape(XY(:, 2), size(Y, 1), []);
+                else
+                    TArr = (Y - YLim(1))./diff(YLim).*diff(TLim) + TLim(1);
+                    RArr = X;
+                    nX = cos(TArr).*RArr;
+                    nY = sin(TArr).*RArr;
+                end
+            end
+
+            if nargout == 1
+                varargout = {obj};
+            end
+
         end
     end
 end
