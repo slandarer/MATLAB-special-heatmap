@@ -4,6 +4,7 @@
 ![](gallery/Type_triu_bcirc.png)
 ![](gallery/full_circ.png)
 ![](gallery/XYT_circ_Tree_Block_GS.png)
+![](gallery/XYT_circ_Block_GS_2.png)
 ![](gallery/Type_tri2_1.png)
 ![](gallery/Type_tri2_colormap2.png)
 ![](gallery/XYT_45_Tree_Block_GS.png)
@@ -1496,6 +1497,42 @@ legend([SCB_L.blockHdl, SCB_T.blockHdl], [rgnames, cgnames], ...
     'FontSize',15, 'FontName','Times New Roman')
 ```
 ![](gallery/XYT_circ_Block_GS.png)
+#### 17.6.2 Circular heatmap with Group Block and GroupSep 2 (含间隙环形热图与分组方块 2)
+```matlab
+rng(1)
+Data = randn(100, 5);
+rowName = compose('row-%d', 1:100);
+colName = compose('col-%d', 1:5);
+rowGroup = [ones(1, 25), 2.*ones(1, 15), 3.*ones(1, 20), 4.*ones(1, 20), 5.*ones(1, 20)];
+
+rowColor = [187,207,232; 222,236,247; 253,253,253; 251,225,216; 231,184,192]./255;
+rgnames = {'Group-R1','Group-R2','Group-R3','Group-R4','Group-R5'};
+
+% create figure (图窗创建)
+fig = figure('Units','normalized', 'Position',[.1,.05,.5,.72]);
+ax = axes('Parent',fig, 'Position',[.1,.1,.75,.75]);
+% Draw group block (绘制分组方块)
+SCB_L = SClusterBlock(ax, rowGroup, 'Orientation','left', 'ColorList',rowColor, 'Group',rowGroup, 'GroupSep',2.5);
+SCB_L.draw(); SCB_L.setXYTLim('XLim',[1.65,1.95], 'YLim',[0, 1], 'TLim',[-3*pi/2, pi/3]);
+
+% Draw circular heatmap (绘制环形热图)
+SHM = SHeatmap(ax, Data, 'Format','sq', 'RowGroup',rowGroup, 'GroupSep',2.5);
+SHM.TickLength = .3;
+SHM.draw();
+SHM.setRowName(rowName)
+SHM.setColName(colName)
+SHM.setRowLabelLocation('right')
+SHM.setColLabelLocation('top')
+
+% YLim(1) -> TLim(1), YLim(2) -> TLim(2)
+SHM.setXYTLim('XLim',[2, 3], 'YLim',[0, 1], 'TLim',[-3*pi/2, pi/3]);
+SHM.Colorbar.Position(1) = SHM.Colorbar.Position(1) + .1;
+
+gHdl = text(ax, SCB_L.X, SCB_L.Y, rgnames, 'FontSize',14, 'FontName','Times New Roman');
+setTextPerpRadial(gHdl)
+colormap(slanCM(97, 32))
+```
+![](gallery/XYT_circ_Block_GS_2.png)
 #### 17.7 Circular heatmap with dendrogram and Group Block (环形热图与树状图及分组方块)
 ```matlab
 rng(5)
@@ -1735,3 +1772,70 @@ end
 SHM.Colorbar.Position(1) = SHM.Colorbar.Position(1) + .1;
 ```
 ![](gallery/full_circ.png)
+___
+### 19 Sector heatmap (扇形热图)
+```matlab
+% Inspired: https://blogs.mathworks.com/graphics-and-apps/2025/09/30/polar-plots-with-patches-and-surfaces-r2025a/
+%           https://github.com/MATLAB-Graphics-and-App-Building/matlab-gaab-blog-2025/blob/main/PolarPatchesAndSurfaces/
+% Data source: https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/statewide/mapping
+
+T = load('avgT2024.mat');
+% Isolate the average, high, and low data
+Data = T.Data{:, [6 2 5]};
+rowName = T.Data{:, 1};
+colName = {'AvgLowF', 'AvgF', 'AvgHighF'};
+
+fig = figure('Units','normalized', 'Position',[.2,.1,.6,.8]);
+ax = axes('Parent',fig, 'Position',[.1,.1,.8,.8]);
+
+% Draw sector heatmap (绘制扇形热图)
+SHM = SHeatmap(Data, 'Format','sq', 'RowName',rowName, 'ColName',colName, 'TickLength',0).draw();
+SHM.setRowLabelLocation('right')
+SHM.setXYTLim('XLim',[1,2], 'YLim',[0,1], 'TLim',[0, pi]);
+
+set(SHM.colLabelHdl, 'HorizontalAlignment','center', 'VerticalAlignment','top', 'Rotation',0)
+text(0, -.2, {'Average Temperature'; '2024'}, 'FontWeight','bold', 'FontSize',25, 'HorizontalAlignment','center')
+% Draw the heatmap border (绘制热图轮廓线)
+plot(SHM.boxHdl.XData, SHM.boxHdl.YData, 'Color','k', 'LineWidth',1)
+
+axis([-2, 2, -2, .2])
+colormap("turbo")
+clim([0, 100])
+SHM.Colorbar.Location = 'southoutside';
+```
+![](gallery/sector.png)
+#### 19.2 Sector heatmap with marker (含标记扇形热图)
+```matlab
+Data = rand(16, 8);
+rowName = {'SHMS','SHML','SHMA','SHMN','MATSL','MATPY','MATJA','MAR', ...
+           'SHMS2','BMH','USUK','RST','SUNS','XINS','HDY','RY'};
+colName = {'SHMC-A','SHMC-B','SHMC-C','SHMC-D','SHMC-E','SL-A1','SL-A2','MATSL'};
+markers = {'o', 's', '^', 'v', '>', 'diamond', 'pentagram', 'hexagram'};
+
+fig = figure('Units','normalized', 'Position',[.2,.1,.7,.7]);
+ax = axes('Parent',fig, 'Position',[.05,.1,.8,.8]);
+
+% Draw sector heatmap (绘制扇形热图)
+SHM = SHeatmap(ax, Data, 'Format','sq', 'RowName',rowName, 'ColName',colName, 'TickLength',0).draw();
+SHM.setRowLabelLocation('right')
+SHM.setText()
+SHM.setXYTLim('XLim',[1,2.5], 'YLim',[0,1], 'TLim',[pi/8, 7*pi/8]);
+
+set(SHM.colLabelHdl, 'Visible','off')
+setTextPerpRadial(SHM.rowLabelHdl, 'outer')
+setTextPerpRadial(SHM.textHdl)
+
+% Draw markers
+N = size(Data, 2);
+mHdl = gobjects(1, N);
+for i = 1:N
+    x = cos(7*pi/8).*(1 + (i - .5)/N.*1.5) - .08;
+    y = - sin(7*pi/8).*(1 + (i - .5)/N.*1.5) + .08;
+    mHdl(i) = scatter(ax, x, y, 150, [0,0,0], 'filled', 'Marker',markers{i});
+end
+
+% Draw colorbar and legend
+SHM.Colorbar.Location = 'southoutside';
+legend(mHdl, colName, 'FontSize',15, 'FontName','Times New Roman', 'Location','northeastoutside')
+```
+![](gallery/sector_marker.png)

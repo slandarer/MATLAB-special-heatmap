@@ -1684,21 +1684,27 @@ classdef SHeatmap < handle
                     obj.YLim = [obj.RP(1) - .5, obj.RP(end) + .5];
                 end
 
-                X = obj.boxHdl.XData; Y = obj.boxHdl.YData;
-                [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                obj.boxHdl.XData = nX; obj.boxHdl.YData = nY;
-
+                if abs(diff(obj.TLim)) < eps
+                    X = obj.boxHdl.XData; Y = obj.boxHdl.YData;
+                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.boxHdl.XData = nX; obj.boxHdl.YData = nY;
+                else
+                    NN = max(size(obj.Data));
+                    X = interpDataNaN(obj.boxHdl.XData, NN*20); 
+                    Y = interpDataNaN(obj.boxHdl.YData, NN*20);
+                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.boxHdl.XData = nX; obj.boxHdl.YData = nY;
+                    set(obj.boxHdl, 'Visible','off');
+                end
                 if abs(diff(obj.TLim)) < eps
                     X = obj.frameHdl.XData; Y = obj.frameHdl.YData;
                     [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                     obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
                 else
-                    X = interpDataNaN(obj.frameHdl.XData);
-                    Y = interpDataNaN(obj.frameHdl.YData);
+                    X = interpDataNaN(obj.frameHdl.XData, 10);
+                    Y = interpDataNaN(obj.frameHdl.YData, 10);
                     [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                     obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
-
-                    set(obj.boxHdl, 'Visible','off');
                 end
 
                 X = obj.rowTickHdl.XData; Y = obj.rowTickHdl.YData;
@@ -1897,11 +1903,11 @@ classdef SHeatmap < handle
                 try axis(obj.ax, 'tight'), catch, end
             end
 
-            function nX = interpDataNaN(X)
+            function nX = interpDataNaN(X, N)
                 XX = [X(1:end-1), nan; X(2:end), nan];
                 ind = any(isnan(XX), 1);
                 XX(:, ind) = 1;
-                nX = interp1([0,1], XX, linspace(0,1,10));
+                nX = interp1([0,1], XX, linspace(0,1,N));
                 nX(:, ind) = nan;
                 nX = nX(:).';
             end
