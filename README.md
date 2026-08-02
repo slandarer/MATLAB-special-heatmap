@@ -1829,7 +1829,7 @@ setTextPerpRadial(SHM.textHdl)
 N = size(Data, 2);
 mHdl = gobjects(1, N);
 for i = 1:N
-    x = cos(7*pi/8).*(1 + (i - .5)/N.*1.5) - .08;
+    x = cos(7*pi/8).*(1 + (i - .5)/N.*1.5) - .04;
     y = - sin(7*pi/8).*(1 + (i - .5)/N.*1.5) + .08;
     mHdl(i) = scatter(ax, x, y, 150, [0,0,0], 'filled', 'Marker',markers{i});
 end
