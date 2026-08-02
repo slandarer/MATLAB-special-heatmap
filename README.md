@@ -1792,11 +1792,10 @@ ax = axes('Parent',fig, 'Position',[.1,.1,.8,.8]);
 SHM = SHeatmap(Data, 'Format','sq', 'RowName',rowName, 'ColName',colName, 'TickLength',0).draw();
 SHM.setRowLabelLocation('right')
 SHM.setXYTLim('XLim',[1,2], 'YLim',[0,1], 'TLim',[0, pi]);
+SHM.setBox('Color','k', 'LineWidth',1)
 
 set(SHM.colLabelHdl, 'HorizontalAlignment','center', 'VerticalAlignment','top', 'Rotation',0)
 text(0, -.2, {'Average Temperature'; '2024'}, 'FontWeight','bold', 'FontSize',25, 'HorizontalAlignment','center')
-% Draw the heatmap border (绘制热图轮廓线)
-plot(SHM.boxHdl.XData, SHM.boxHdl.YData, 'Color','k', 'LineWidth',1)
 
 axis([-2, 2, -2, .2])
 colormap("turbo")

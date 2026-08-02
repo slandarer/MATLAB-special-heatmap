@@ -141,6 +141,8 @@ classdef SHeatmap < handle
         %                (strictly lower triangular part) : (严格下三角)
         %     'linkl'  : lower triangle for mantel links  : 适配 mantel 链接的下三角
         %     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
+        %     'row'    : show row labels & ticks only     : 仅显示行标签及行刻度
+        %     'col'    : show col labels & ticks only     : 仅显示列标签及列刻度
 
         TickLength = .1;
         RowLabelLocation = 'left';    % 'left', 'right', 'diag'
@@ -314,6 +316,16 @@ classdef SHeatmap < handle
             obj.ax.YTick = obj.RP;
             obj.ax.XTickLabel = compose('%d', 1:size(obj.Data, 2));
             obj.ax.YTickLabel = compose('%d', 1:size(obj.Data, 1));
+            % if ~isempty(obj.RowName)
+            %     obj.ax.YTickLabel = obj.RowName;
+            % end
+            % if ~isempty(obj.ColName)
+            %     obj.ax.XTickLabel = obj.ColName;
+            % end
+            % if ~isempty(obj.VarName)
+            %     obj.ax.XTickLabel = obj.VarName;
+            %     obj.ax.YTickLabel = obj.VarName;
+            % end
 
             % Adjust figure size if needed (调整初始界面大小)
             fig = obj.ax.Parent;
@@ -340,11 +352,6 @@ classdef SHeatmap < handle
                     obj.GX = [obj.GX; rowX(:); colX(:)];
                     obj.GY = [obj.GY; rowY(:); colY(:)];
                 end
-            end
-            obj.boxHdl = plot(obj.ax, obj.GX, obj.GY, ...
-                'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
-            if isequal(obj.Format, 'sq')
-                set(obj.boxHdl, 'Color', [1, 1, 1, 0]);
             end
 
             % Define base shape coordinates (定义基本形状坐标)
@@ -468,6 +475,12 @@ classdef SHeatmap < handle
             end
 
             % obj.textHdl = gobjects(size(obj.Data, 1), size(obj.Data, 2));
+
+            obj.boxHdl = plot(obj.ax, obj.GX, obj.GY, ...
+                'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
+            if isequal(obj.Format, 'sq')
+                set(obj.boxHdl, 'Visible','off');
+            end
 
             [nanR, nanC] = find(isnan(obj.Data));
             if ~isempty(nanR)
@@ -797,7 +810,7 @@ classdef SHeatmap < handle
 % =========================================================================
         function varargout = setBox(obj, varargin)
             % obj.setBox(varargin) - Set properties for box handle (设置框样式)
-            set(obj.boxHdl,varargin{:})
+            set(obj.boxHdl,'Visible','on', varargin{:})
             if nargout == 1
                 varargout = {obj};
             end
@@ -836,7 +849,7 @@ classdef SHeatmap < handle
                         case {'tril0', 'linkl'}
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M - 1);
                             Y = [1; 1; nan]*obj.RP(2:M);
-                        case 'full'
+                        case {'full','row','col'}
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                     end
@@ -853,7 +866,7 @@ classdef SHeatmap < handle
                             Y = [1; 1; nan]*obj.RP(1:(M - 1));
                         case {'tril0', 'linkl'}
                             X = nan; Y = nan;
-                        case 'full'
+                        case {'full','row','col'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                     end
@@ -888,7 +901,7 @@ classdef SHeatmap < handle
                             X = [1; 1; nan]*obj.CP(2:N);
                         case {'tril0', 'linkl'}
                             X = nan; Y = nan;
-                        case 'full'
+                        case {'full','row','col'}
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                     end
@@ -905,7 +918,7 @@ classdef SHeatmap < handle
                         case {'tril0', 'linkl'}
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N - 1);
                             X = [1; 1; nan]*obj.CP(1:(N - 1));
-                        case 'full'
+                        case {'full','row','col'}
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                     end
@@ -937,6 +950,21 @@ classdef SHeatmap < handle
             catch
             end
 
+            if strcmpi(obj.Type, 'row')
+                for n = 1:size(obj.Data, 2)
+                    set(obj.colLabelHdl(n), 'Visible','off')
+                end
+                set(obj.colTickHdl, 'Visible','off')
+            end
+
+            if strcmpi(obj.Type, 'col')
+                for n = 1:size(obj.Data, 1)
+                    set(obj.rowLabelHdl(n), 'Visible','off')
+                end
+                set(obj.rowTickHdl, 'Visible','off')
+            end
+
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -955,27 +983,52 @@ classdef SHeatmap < handle
             %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
             %   'linkl'  : lower triangle for mantel links     : 适配 mantel 链接的下三角
             %   'linku'  : upper triangle for mantel links     : 适配 mantel 链接的上三角
+            %   'row'    : show row labels & ticks only     : 仅显示行标签及行刻度
+            %   'col'    : show col labels & ticks only     : 仅显示列标签及列刻度
         
             % mustBeAllowedTriType(Type)
+                
 
-            % Only apply if matrix is square (仅当矩阵为方阵时生效)
-            if size(obj.Data, 1) == size(obj.Data, 2) && isequal(obj.RowGroup, obj.ColGroup)
+            if (size(obj.Data, 1) == size(obj.Data, 2) && isequal(obj.RowGroup, obj.ColGroup)) || (strcmpi(Type, 'row') || strcmpi(Type, 'col'))
         
                 obj.Type = Type;
-                
+                if (strcmpi( obj.Type, 'row') || strcmpi(obj.Type, 'col'))
+                    if isempty(obj.RowName)
+                        obj.RowName = compose('%d', 1:size(obj.Data, 1));
+                    end
+                    if isempty(obj.ColName)
+                        obj.ColName = compose('%d', 1:size(obj.Data, 1));
+                    end
+                else
+                    obj.RowName = obj.VarName;
+                    obj.ColName = obj.VarName;
+                end
 
                 % Hide axes labels and adjust axis location (隐藏坐标轴标签，调整轴位置)
                 obj.ax.XColor = 'none';
                 obj.ax.YColor = 'none';
                 obj.ax.YAxisLocation = 'right';
 
-                obj.RowName = obj.VarName;
-                obj.ColName = obj.VarName;
+                
              
                 % Show all row and column labels initially (初始显示所有行/列标签)
                 for n = 1:size(obj.Data, 1)
                     set(obj.rowLabelHdl(n), 'Visible', 'on');
                     set(obj.colLabelHdl(n), 'Visible', 'on');
+                end
+
+                if strcmpi(obj.Type, 'row')
+                    for n = 1:size(obj.Data, 2)
+                        set(obj.colLabelHdl(n), 'Visible','off')
+                    end
+                    set(obj.colTickHdl, 'Visible','off')
+                end
+
+                if strcmpi(obj.Type, 'col')
+                    for n = 1:size(obj.Data, 1)
+                        set(obj.rowLabelHdl(n), 'Visible','off')
+                    end
+                    set(obj.rowTickHdl, 'Visible','off')
                 end
 
                 if strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0')
@@ -993,6 +1046,16 @@ classdef SHeatmap < handle
                 if strcmpi(obj.Type, 'linkl') 
                     obj.RowLabelLocation = 'left';
                     obj.ColLabelLocation = 'bottom';
+                end
+
+                if strcmpi(obj.Type, 'linkl') 
+                    obj.RowLabelLocation = 'left';
+                    obj.ColLabelLocation = 'bottom';
+                end
+
+                if strcmpi( obj.Type, 'row') || strcmpi(obj.Type, 'col')
+                    obj.RowLabelLocation = 'left';
+                    obj.ColLabelLocation = 'top';
                 end
         
                 % Apply specific triangular type (应用特定三角类型)
@@ -1187,7 +1250,9 @@ classdef SHeatmap < handle
                     end
                 end
             end
-            set(obj.boxHdl, 'XData',obj.GX, 'YData',obj.GY)
+            if ~(strcmpi(Type, 'row') || strcmpi(Type, 'col'))
+                set(obj.boxHdl, 'XData',obj.GX, 'YData',obj.GY)
+            end
 
             obj.FX = []; obj.FY = [];
             for gi = 1:max(obj.RowGroup)
@@ -1243,7 +1308,9 @@ classdef SHeatmap < handle
                     end
                 end
             end
-            set(obj.frameHdl, 'XData',obj.FX, 'YData',obj.FY)
+            if ~(strcmpi(Type, 'row') || strcmpi(Type, 'col'))
+                set(obj.frameHdl, 'XData',obj.FX, 'YData',obj.FY)
+            end
             else
                 obj.Type = 'full';
             end

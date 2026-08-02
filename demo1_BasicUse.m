@@ -1,9 +1,9 @@
 %% Basic usage
 
 % Basic usage (基础使用)
-if ~exist('gallery\','dir')
-    mkdir('gallery\')
-end
+% if ~exist('gallery\','dir')
+%     mkdir('gallery\')
+% end
 
 %% Draw positive heatmap (绘制无负数的热图)
 figure()
