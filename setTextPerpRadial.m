@@ -1,4 +1,13 @@
 function setTextPerpRadial(txtHdl, RPos)
+% SETTEXTPERPRADIAL Rotate text objects perpendicular to radial direction.
+%   setTextPerpRadial(txtHdl) rotates the given text handles so that they are
+%   perpendicular to the radial direction from the origin (0,0). 
+%
+%   setTextPerpRadial(txtHdl, RPos) specifies the radial placement:
+%       'inner'  - text is shifted inward (towards origin)
+%       'center' - text centered at the original position (default)
+%       'outer'  - text is shifted outward (away from origin)
+
 if nargin < 2
     RPos = 'center';
 end
