@@ -309,12 +309,12 @@ classdef SMantelLink < handle
 
             bY1 = tPos(2) + 2*tPos(4)/3 + 2*tPos(4)/30;
             bL = 8*tPos(4)/30;
-            [Xmesh, YMesh] = meshgrid([0, 1], linspace(0, 1, size(cmp, 1) + 1));
-            CMesh = zeros([size(Xmesh), 3]);
+            [XMesh, YMesh] = meshgrid([0, 1], linspace(0, 1, size(cmp, 1) + 1));
+            CMesh = zeros([size(XMesh), 3]);
             CMesh(1:end-1, :, 1) = cmp(end:-1:1, [1, 1]);
             CMesh(1:end-1, :, 2) = cmp(end:-1:1, [2, 2]);
             CMesh(1:end-1, :, 3) = cmp(end:-1:1, [3, 3]);
-            surf(obj.ax, tPos(1) + 1.5.*Xmesh.*tPos(3).*(1/5 - 1/32), bY1 + YMesh.*bL, YMesh.*0, ...
+            surf(obj.ax, tPos(1) + 1.5.*XMesh.*tPos(3).*(1/5 - 1/32), bY1 + YMesh.*bL, YMesh.*0, ...
                 'CData',CMesh, 'EdgeColor','none', 'FaceColor','flat');
             fill(obj.ax, [tPos(1), tPos(1) + 1.5.*tPos(3).*(1/5 - 1/32), tPos(1) + 1.5.*tPos(3).*(1/5 - 1/32), tPos(1)], ...
                          [bY1, bY1, bY1 + bL, bY1 + bL], [0,0,0], 'FaceColor','none', ...
