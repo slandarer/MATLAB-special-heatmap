@@ -171,7 +171,7 @@ classdef SDendrogram < handle
             obj.ax.NextPlot = 'add';
 
             tFig = figure(); tAx = axes('Parent',tFig);
-            if isequal(obj.Orientation, 'top')
+            if strcmpi(obj.Orientation, 'top') || strcmpi(obj.Orientation, 'bottom') 
                 obj.Tree = linkage(obj.Data.', obj.Method);
             else
                 obj.Tree = linkage(obj.Data  , obj.Method);
@@ -208,6 +208,18 @@ classdef SDendrogram < handle
                     obj.OXLim = [min(min(obj.X)) - .5, max(max(obj.X)) + .5];
                     obj.W = obj.X; obj.H = obj.Y;
                     obj.OW = obj.OX; obj.OH = obj.OY;
+                case 'bottom'
+                    obj.Y = (obj.Y - minY)./(maxY - minY).*(obj.Height).*(obj.HeightRatio(4) - obj.HeightRatio(3)) ...
+                        + obj.BasePos + obj.Height.*(obj.HeightRatio(3) - 0);
+                    for j = max(obj.Group):-1:2
+                        pos = find(obj.Group == j, 1);
+                        obj.X(obj.X >= pos) = obj.X(obj.X >= pos) + obj.GroupSep;
+                        obj.WPos(obj.WPos >= pos) = obj.WPos(obj.WPos >= pos) + obj.GroupSep;
+                    end
+                    obj.OYLim = sort([obj.BasePos, obj.BasePos + obj.Height]);
+                    obj.OXLim = [min(min(obj.X)) - .5, max(max(obj.X)) + .5];
+                    obj.W = obj.X; obj.H = obj.Y;
+                    obj.OW = obj.OX; obj.OH = obj.OY;
                 case 'left'
                     obj.X = (obj.X - minX)./(maxX - minX).*(- obj.Height).*(obj.HeightRatio(4) - obj.HeightRatio(3)) ...
                         + obj.BasePos - obj.Height.*(obj.HeightRatio(3) - 0);
@@ -217,6 +229,18 @@ classdef SDendrogram < handle
                         obj.WPos(obj.WPos >= pos) = obj.WPos(obj.WPos >= pos) + obj.GroupSep;
                     end
                     obj.OXLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
+                    obj.OYLim = [min(min(obj.Y)) - .5, max(max(obj.Y)) + .5];
+                    obj.W = obj.Y; obj.H = obj.X;
+                    obj.OW = obj.OY; obj.OH = obj.OX;
+                case 'right'
+                    obj.X = (obj.X - minX)./(maxX - minX).*(obj.Height).*(obj.HeightRatio(4) - obj.HeightRatio(3)) ...
+                        + obj.BasePos + obj.Height.*(obj.HeightRatio(3) - 0);
+                    for j = max(obj.Group):-1:2
+                        pos = find(obj.Group == j, 1);
+                        obj.Y(obj.Y >= pos) = obj.Y(obj.Y >= pos) + obj.GroupSep;
+                        obj.WPos(obj.WPos >= pos) = obj.WPos(obj.WPos >= pos) + obj.GroupSep;
+                    end
+                    obj.OXLim = sort([obj.BasePos, obj.BasePos + obj.Height]);
                     obj.OYLim = [min(min(obj.Y)) - .5, max(max(obj.Y)) + .5];
                     obj.W = obj.Y; obj.H = obj.X;
                     obj.OW = obj.OY; obj.OH = obj.OX;
@@ -240,7 +264,11 @@ classdef SDendrogram < handle
             for i = 1:max(obj.GIds)
                 tInd = find(obj.Group == obj.GIds(i));
                 tW = [obj.WPos(tInd(1)) - .5, obj.WPos(tInd(end)) + .5];
-                tO = obj.BasePos - obj.Height.*(obj.HeightRatio(3) - 0);
+                if strcmpi(obj.Orientation, 'top') || strcmpi(obj.Orientation, 'left') 
+                    tO = obj.BasePos - obj.Height.*(obj.HeightRatio(3) - 0);
+                else
+                    tO = obj.BasePos + obj.Height.*(obj.HeightRatio(3) - 0);
+                end
 
                 % Branch highlight patch (树枝高亮面片)
                 obj.BW(i,:) = [linspace(tW(1), tW(2), 50), tW(2).*ones(1,50), ...
@@ -250,19 +278,23 @@ classdef SDendrogram < handle
                               tO.*ones(1,50), linspace(tO, obj.CutH(obj.BIds == obj.GIds(i)), 50)];
 
                 % Group highlight patch (组高亮面片)
-                tH = obj.BasePos - obj.Height.*obj.HeightRatio([1, 2]);
+                if strcmpi(obj.Orientation, 'top') || strcmpi(obj.Orientation, 'left')
+                    tH = obj.BasePos - obj.Height.*obj.HeightRatio([1, 2]);
+                else
+                    tH = obj.BasePos + obj.Height.*obj.HeightRatio([1, 2]);
+                end
                 obj.GH(i,:) = [tH(1).*ones(1,50), linspace(tH(1), tH(2), 50), ...
                                tH(2).*ones(1,50), linspace(tH(2), tH(1), 50)];
             end
             obj.GW = obj.BW;
 
             switch obj.Orientation
-                case 'top'
+                case {'top', 'bottom'}
                     obj.BX = obj.BW;
                     obj.BY = obj.BH;
                     obj.GX = obj.GW;
                     obj.GY = obj.GH;
-                case 'left'
+                case {'left', 'right'}
                     obj.BX = obj.BH;
                     obj.BY = obj.BW;
                     obj.GX = obj.GH;
@@ -306,12 +338,12 @@ classdef SDendrogram < handle
 
             try axis(obj.ax, 'tight'); catch, end
             switch obj.Orientation
-                case 'top'
+                case {'top', 'bottom'}
                     obj.DataLen = size(obj.Data, 2) + (max(obj.Group) - 1).*obj.GroupSep;
                     tLim = [1, obj.DataLen] + [-0.5, 0.5];
                     obj.ax.XLim(1) = min(obj.ax.XLim(1), tLim(1));
                     obj.ax.XLim(2) = max(obj.ax.XLim(2), tLim(2));
-                case 'left'
+                case {'left', 'right'}
                     obj.DataLen = size(obj.Data, 1) + (max(obj.Group) - 1).*obj.GroupSep;
                     tLim = [1, obj.DataLen] + [-0.5, 0.5];
                     obj.ax.YLim(1) = min(obj.ax.YLim(1), tLim(1));

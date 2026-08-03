@@ -128,16 +128,27 @@ classdef SClusterBlock < handle
             end
 
             % Preallocate center coordinates (预分配中心坐标)
-            if isequal(obj.Orientation, 'top')
-                obj.X = zeros(1, length(obj.CC) - 1);
-                obj.Y = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
-                obj.OXLim = [min(obj.CP) - .5, max(obj.CP) + .5];
-                obj.OYLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
-            else
-                obj.X = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
-                obj.Y = zeros(1, length(obj.CC) - 1);
-                obj.OYLim = [min(obj.CP) - .5, max(obj.CP) + .5];
-                obj.OXLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
+            switch obj.Orientation
+                case 'top'
+                    obj.X = zeros(1, length(obj.CC) - 1);
+                    obj.Y = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
+                    obj.OXLim = [min(obj.CP) - .5, max(obj.CP) + .5];
+                    obj.OYLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
+                case 'bottom'
+                    obj.X = zeros(1, length(obj.CC) - 1);
+                    obj.Y = ones(1, length(obj.CC) - 1) .* (obj.BasePos + obj.Height/2);
+                    obj.OXLim = [min(obj.CP) - .5, max(obj.CP) + .5];
+                    obj.OYLim = sort([obj.BasePos, obj.BasePos + obj.Height]);
+                case 'left'
+                    obj.X = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
+                    obj.Y = zeros(1, length(obj.CC) - 1);
+                    obj.OYLim = [min(obj.CP) - .5, max(obj.CP) + .5];
+                    obj.OXLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
+                case 'right'
+                    obj.X = ones(1, length(obj.CC) - 1) .* (obj.BasePos + obj.Height/2);
+                    obj.Y = zeros(1, length(obj.CC) - 1);
+                    obj.OYLim = [min(obj.CP) - .5, max(obj.CP) + .5];
+                    obj.OXLim = sort([obj.BasePos, obj.BasePos + obj.Height]);
             end
             obj.XLim = obj.OXLim;
             obj.YLim = obj.OYLim;
@@ -148,19 +159,33 @@ classdef SClusterBlock < handle
                 CL = [obj.CP(obj.CC(i) + 1), obj.CP(obj.CC(i + 1))];
                 CInd = obj.Class(obj.CC(i) + 1);
 
-                if isequal(obj.Orientation, 'top')
-                    obj.blockHdl(i) = fill(obj.ax, ...
-                        CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-                        [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
-                        obj.ColorList(CInd, :), obj.BlockProp{:});
-                    obj.X(i) = (CL(1) + CL(2)) / 2;
-                else
-                    obj.blockHdl(i) = fill(obj.ax, ...
-                        [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
-                        CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-                        obj.ColorList(CInd, :), obj.BlockProp{:});
-                    obj.ax.YDir = 'reverse';
-                    obj.Y(i) = (CL(1) + CL(2)) / 2;
+                switch obj.Orientation
+                    case 'top'
+                        obj.blockHdl(i) = fill(obj.ax, ...
+                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
+                            [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
+                            obj.ColorList(CInd, :), obj.BlockProp{:});
+                        obj.X(i) = (CL(1) + CL(2)) / 2;
+                    case 'bottom'
+                        obj.blockHdl(i) = fill(obj.ax, ...
+                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
+                            [obj.BasePos, obj.BasePos, obj.BasePos + obj.Height, obj.BasePos + obj.Height], ...
+                            obj.ColorList(CInd, :), obj.BlockProp{:});
+                        obj.X(i) = (CL(1) + CL(2)) / 2;
+                    case 'left'
+                        obj.blockHdl(i) = fill(obj.ax, ...
+                            [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
+                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
+                            obj.ColorList(CInd, :), obj.BlockProp{:});
+                        obj.ax.YDir = 'reverse';
+                        obj.Y(i) = (CL(1) + CL(2)) / 2;
+                    case 'right'
+                        obj.blockHdl(i) = fill(obj.ax, ...
+                            [obj.BasePos, obj.BasePos, obj.BasePos + obj.Height, obj.BasePos + obj.Height], ...
+                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
+                            obj.ColorList(CInd, :), obj.BlockProp{:});
+                        obj.ax.YDir = 'reverse';
+                        obj.Y(i) = (CL(1) + CL(2)) / 2;
                 end
             end
             try axis(obj.ax, 'tight'); catch, end
