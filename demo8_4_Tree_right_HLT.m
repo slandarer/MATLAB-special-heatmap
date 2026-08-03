@@ -14,20 +14,20 @@ colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',
 
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.12,.08,.76,.9]);
-% Draw the left dendrogram (绘制左侧树状图)
-objL = SDendrogram(Data, 'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + .5, 'Height',6);  
-set(objL, 'BranchColor','on', 'BranchHighlight','on', 'GroupHighlight','on' ,'HeightRatio',[0, .15, .15, 1])
-orderL = objL.draw();
+% Draw the right dendrogram (绘制右侧树状图)
+objR = SDendrogram(Data, 'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + .5, 'Height',6);  
+set(objR, 'BranchColor','on', 'BranchHighlight','on', 'GroupHighlight','on' ,'HeightRatio',[0, .15, .15, 1])
+orderR = objR.draw();
 % Draw the top  dendrogram (绘制顶部树状图)
 objT = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5);  
 set(objT, 'BranchColor','on', 'BranchHighlight','on', 'GroupHighlight','on', 'HeightRatio',[0, .15, .15, 1])
 orderT = objT.draw();
 % Exchange data order (交换数据顺序)
-Data = Data(orderL, orderT);
+Data = Data(orderR, orderT);
 % Draw heatmap (绘制热图)
 SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax).draw();
 SHM.setRowLabelLocation('left').setColName(colName(orderT))
-SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderR))
 SHM.setColLabel('Rotation',45).setFrame()
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')

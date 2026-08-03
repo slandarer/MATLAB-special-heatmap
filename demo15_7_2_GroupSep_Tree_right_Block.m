@@ -17,15 +17,15 @@ CList = [.70,.89,.80; .96,.81,.69; .85,.83,.85; .90,.81,.90];
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.12,.08,.76,.9]);
 % Draw tree and block (绘制树状图及分组方块)
-[orderL, groupL] = SDendrogram(Data, 'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + 1.5 + .5*(4 - 1), 'Height',5, 'MaxClust',4, 'GroupSep',.5).draw();  % Draw the left dendrogram (绘制左侧树状图)
+[orderR, groupR] = SDendrogram(Data, 'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + 1.5 + .5*(4 - 1), 'Height',5, 'MaxClust',4, 'GroupSep',.5).draw();  % Draw the left dendrogram (绘制右侧树状图)
 [orderT, groupT] = SDendrogram(Data, 'Orientation','top', 'Parent',ax, 'BasePos',-.5, 'Height',4, 'MaxClust',4, 'GroupSep',.5).draw();  % Draw the top  dendrogram (绘制顶部树状图)
-Data = Data(orderL, orderT);  % Exchange data order (交换数据顺序)
-SClusterBlock(groupL, 'ColorList',CList ,'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + .5 + .5*(4 - 1), 'Group',groupL).draw(); % Draw the left Block (绘制左侧分组方块)
+Data = Data(orderR, orderT);  % Exchange data order (交换数据顺序)
+SClusterBlock(groupR, 'ColorList',CList ,'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + .5 + .5*(4 - 1), 'Group',groupR).draw(); % Draw the left Block (绘制右侧分组方块)
 SClusterBlock(groupT, 'ColorList',CList, 'Orientation','top', 'Parent',ax, 'BasePos',.5, 'Group',groupT).draw(); % Draw the top  Block (绘制顶部分组方块)
 % Draw heatmap (绘制热图)
-SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',groupL, 'ColGroup',groupT).draw();
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',groupR, 'ColGroup',groupT).draw();
 SHM.setRowLabelLocation('left').setColName(colName(orderT))
-SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderR))
 SHM.setColLabel('Rotation',45).setFrame('LineWidth',.8)
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')

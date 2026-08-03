@@ -15,14 +15,14 @@ colName = {'A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','B11','B12','B13',
 fig = figure('Units','normalized', 'Position',[.1,.05,.5,.7]);
 ax = axes('Parent',fig, 'Position',[.12,.08,.76,.9]);
 
-[orderL, groupL] = SDendrogram(Data, 'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + .5 + .5*(4 - 1), 'Height',6, 'MaxClust',4, 'GroupSep',.5).draw();  % Draw the left dendrogram (绘制左侧树状图)
+[orderR, groupR] = SDendrogram(Data, 'Orientation','right', 'Parent',ax, 'BasePos',size(Data, 2) + .5 + .5*(4 - 1), 'Height',6, 'MaxClust',4, 'GroupSep',.5).draw();  % Draw the right dendrogram (绘制右侧树状图)
 [orderT, groupT] = SDendrogram(Data, 'Orientation','top' , 'Parent',ax, 'BasePos',.5, 'Height',5, 'MaxClust',4, 'GroupSep',.5).draw();  % Draw the top  dendrogram (绘制顶部树状图)
 % Exchange data order (交换数据顺序)
-Data = Data(orderL, orderT);
+Data = Data(orderR, orderT);
 % Draw heatmap (绘制热图)
-SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',groupL, 'ColGroup',groupT).draw();
+SHM = SHeatmap(Data, 'Format','sq', 'Parent',ax, 'RowGroup',groupR, 'ColGroup',groupT).draw();
 SHM.setRowLabelLocation('left').setColName(colName(orderT))
-SHM.setColLabelLocation('bottom').setRowName(rowName(orderL))
+SHM.setColLabelLocation('bottom').setRowName(rowName(orderR))
 SHM.setColLabel('Rotation',45).setFrame()
 % Draw colorbar (绘制颜色条)
 axis(ax, 'tight')
