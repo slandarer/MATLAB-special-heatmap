@@ -15,7 +15,7 @@ ax = axes('Parent',fig, 'Position',[.1,.1,.8,.8]);
 
 % Create SVarRowChart object (创建变量行图表对象)
 SVR = SVarRowChart(ax, 'LeftWidth',20, 'RightWidth',20, 'ColSep',3, 'RowHeight',.6);
-SVR.FontProp = {'FontSize',14, 'FontName','Arial'};
+SVR.TitleFontProp = {'FontSize',14, 'FontName','Arial'};
 
 SVR.addRow(T.Age, 'Title','Age')
 SVR.addRow(T.Sex, 'Title','Sex', 'ColorList',[107,174,214; 250,159,181]./255, 'IconColNum',4)
