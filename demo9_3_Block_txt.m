@@ -18,7 +18,7 @@ CList = [204,  61,  36; 243, 197,  88; 109, 174, 144; 48, 180, 204;   0,  79, 12
 % 绘制左侧分组色块 (半透明背景，无边框)
 % Draw left-side group block (semi-transparent, no edge)
 SClusterBlock(ax, rowGroup, 'ColorList',CList , 'Orientation','left', 'BasePos',.5, ...
-    'Height',5, 'BlockProp', {'EdgeColor','none', 'FaceAlpha',.2}).draw();
+    'Height',4, 'BlockProp', {'EdgeColor','none', 'FaceAlpha',.2}).draw();
 
 SHM = SHeatmap(Data, 'Format','sq', 'RowName',rowName, 'ColName',colName, 'TickLength',0);
 SHM.draw();
