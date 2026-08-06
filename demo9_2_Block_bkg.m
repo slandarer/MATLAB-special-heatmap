@@ -3,7 +3,7 @@
 Data = rand([12, 12]) - .5;
 
 
-ax = gca;
+figure(); ax = gca;
 
 CList = [238,243,245; 255,255,255]./255;
 SClusterBlock(ax, mod(1:size(Data, 1), 2), 'ColorList',CList ,...
