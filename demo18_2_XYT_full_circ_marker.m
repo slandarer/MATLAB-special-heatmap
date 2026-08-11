@@ -55,7 +55,7 @@ for i = 1:4
 
     % Mark cells with p < 0.005 (black border)
     % 标记显著性 p < 0.005 的格子 (黑色边框)
-    SHM.setPatch(pval{i} < .005, 'EdgeColor',[0,0,0], 'LineWidth',2)
+    SHM.setPatch(pval{i} < .005, 'EdgeColor',[0,0,0], 'LineWidth',1)
 end
 
 ax.YLim = [-2.4, 2.4];

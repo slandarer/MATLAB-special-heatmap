@@ -9,3 +9,6 @@ SHM.ColName = {'X-1','X-2','X-3','X-4','X-5','X-6','X-7','X-8','X-9','X-10','X-1
 SHM.RowGroup = [1,1,1,1,1,1, 2,2,2,2, 3,3];
 SHM.ColGroup = [1,1,1,1,1, 2,2,2,2,2,2,2];
 SHM.draw().setFrame()
+
+SHM.setRowGroupName({'Group-Low', 'Group-Middle','Group-High'})
+SHM.setColGroupName({'Positive', 'Negitive'})
