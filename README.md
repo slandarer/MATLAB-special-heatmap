@@ -17,7 +17,7 @@ ___
 Zhaoxu Liu / slandarer (2023). special heatmap (https://www.mathworks.com/matlabcentral/fileexchange/125520-special-heatmap), MATLAB Central File Exchange. 检索来源 2023/3/1.
 
 ___
-### 1 Basic use (基础使用)
+### 1 Basic usage (基础使用)
 #### 1.1 Draw positive heatmap (非负矩阵)
 
 ```matlab
