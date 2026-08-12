@@ -33,7 +33,7 @@ for i = 1:GN
 
     % Mark cells with p < 0.001 (black border)
     % 标记显著性 p < 0.001 的格子 (黑色边框)
-    SHM.setPatch(pval(tid, :) < .001, 'EdgeColor',[0,0,0], 'LineWidth',2)
+    SHM.setPatch(pval(tid, :) < .001, 'EdgeColor',[0,0,0], 'LineWidth',1.5)
 
     % Draw group block (绘制分组方块)
     SCB = SClusterBlock(ax, 1, 'Orientation','left', 'ColorList',[1,1,1]);

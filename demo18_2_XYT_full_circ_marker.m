@@ -1,4 +1,4 @@
-%% Full-annular grouped heatmap
+%% Full-annular grouped heatmap with marker
 
 % Inspired by : 《Python绘制花瓣状多组相关性热图》
 %                 yinzhiqiang11 【python+遥感学习日志】

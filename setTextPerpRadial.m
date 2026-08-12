@@ -17,7 +17,7 @@ for i = 1:length(hdls)
     X = hdls(i).Position(1);
     Y = hdls(i).Position(2);
     T = atan2(Y, X); T = T./pi.*180;
-    T = T - 180*((T>0) - .5);
+    T = T - 180*((T > 0) - .5);
     set(hdls(i), 'HorizontalAlignment','center', 'Rotation',-T)
     switch RPos
         case {'center','centre'}

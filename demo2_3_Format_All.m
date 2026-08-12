@@ -4,6 +4,7 @@ if ~exist('gallery\','dir')
     mkdir('gallery\')
 end
 % 'sq'          : square (default)          : 方形(默认)
+% 'rrect        : rounded rectangle         : 圆角矩形
 % 'pie'         : pie chart                 : 饼图
 % 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
 % 'circ'        : circular                  : 圆形
@@ -19,7 +20,7 @@ end
 % 'acirc'       : auto-size circular        ：自带调整大小的圆形
 % 'txt'(text)   : colored text              : 带颜色的文本
 
-Format = {'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc','txt'};
+Format = {'sq','rrect','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc','txt'};
 A = rand(12, 12);
 B = rand(12, 12) - .5;
 

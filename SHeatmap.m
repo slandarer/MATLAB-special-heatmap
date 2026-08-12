@@ -29,6 +29,7 @@ classdef SHeatmap < handle
 %   SHM.draw();
 % 
 %     'sq'          : square (default)          : 方形(默认)
+%     'rrect        : rounded rectangle         : 圆角矩形
 %     'pie'         : pie chart                 : 饼图
 %     'donut'       ：donut chart               : 环形饼图(甜甜圈图)
 %     'circ'        : circle                    : 圆形
@@ -62,28 +63,36 @@ classdef SHeatmap < handle
 %                (strictly lower triangular part) : (严格下三角)
 %     'linkl'  : lower triangle for mantel links  : 适配 mantel 链接的下三角
 %     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
+%     'row'    : show row labels & ticks only     : 仅显示行标签及行刻度
+%     'col'    : show col labels & ticks only     : 仅显示列标签及列刻度
 %
 % Methods: (try: help SHeatmap.setText)
-%   draw                - Render the heatmap object (渲染热图对象)
-%   setType             - Adjust display to show only triangular part of the matrix (仅展示矩阵的三角部分)
-%   setVarName          - Assign variable names to rows and columns (为行和列分配变量名)
-%   setRowName          - Assign variable names to rows (为行分配变量名)
-%   setColName          - Assign variable names to cols (为列分配变量名)
-%   setText             - Show value labels with auto-contrast color, and set properties (显示数值标签并自动调整颜色，设置标签属性)
-%   setTextFormat       - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
-%   showStars           - Overlay significance stars on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
-%   setBox              - Set properties for box handle (设置框样式)
-%   setFrame            - Set properties for frame and tick handle (设置外轮廓样式)
-%   setPatch            - Set properties for all patch objects (为所有填充图形设置属性)
-%   setRowLabel         - Set properties for all row label text objects (设置所有行标签的属性)
-%   setColLabel         - Set properties for all col label text objects (设置所有列标签的属性)
-%   setRowLabelLocation - Move row labels to specified location (设置行标签位置)
-%   setColLabelLocation - Move col labels to specified location (设置列标签位置)
-%   freezeColors        - Permanently assign the current colormap colors to each patch 
-%                         based on its value, decoupling them from both the 
-%                         colormap axis limits (CLim) and the colormap itself
-%                         (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围或颜色映射表的变化而改变)
-%   setXYTLim            - Set X, Y, and Theta limits for the heatmap (设置热图 X轴、 Y轴、角度范围)
+%   draw                     - Render the heatmap object (渲染热图对象)
+%   setType                  - Adjust display to show only triangular part of the matrix (仅展示矩阵的三角部分)
+%   setVarName               - Assign variable names to rows and columns (为行和列分配变量名)
+%   setRowName               - Assign variable names to rows (为行分配变量名)
+%   setColName               - Assign variable names to cols (为列分配变量名)
+%   setRowGroupName          - Assign group names to row-groups (为行分组分配组名)
+%   setColGroupName          - Assign group names to col-groups (为列分组分配组名)
+%   setText                  - Show value labels with auto-contrast color, and set properties (显示数值标签并自动调整颜色，设置标签属性)
+%   setTextFormat            - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
+%   showStars                - Overlay significance stars on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
+%   setBox                   - Set properties for box handle (设置框样式)
+%   setFrame                 - Set properties for frame and tick handle (设置外轮廓样式)
+%   setPatch                 - Set properties for all patch objects (为所有填充图形设置属性)
+%   setRowLabel              - Set properties for all row label text objects (设置所有行标签的属性)
+%   setColLabel              - Set properties for all col label text objects (设置所有列标签的属性)
+%   setRowGroupLabel         - Set properties for all row-group label text objects (设置所有行分组标签的属性)
+%   setColGroupLabel         - Set properties for all col-group label text objects (设置所有列分组标签的属性)
+%   setRowLabelLocation      - Move row labels to specified location (设置行标签位置)
+%   setColLabelLocation      - Move col labels to specified location (设置列标签位置)
+%   setRowGroupLabelLocation - Move row-group labels to specified location (设置行分组标签位置)
+%   setColGroupLabelLocation - Move col-group labels to specified location (设置行分组标签位置)
+%   freezeColors             - Permanently assign the current colormap colors to each patch 
+%                              based on its value, decoupling them from both the 
+%                              colormap axis limits (CLim) and the colormap itself
+%                              (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围或颜色映射表的变化而改变)
+%   setXYTLim                - Set X, Y, and Theta limits for the heatmap (设置热图 X轴、 Y轴、角度范围)
 
 
 % =========================================================================
@@ -105,9 +114,11 @@ classdef SHeatmap < handle
                      'TickLength','TickLabelOffset','GroupLabelOffset', ...
                      'RowGroupName', 'ColGroupName'}
         Data
+        PVal
 
         Format = 'sq'  
         % 'sq'          : square (default)          : 方形(默认)
+        % 'rrect        : rounded rectangle         : 圆角矩形
         % 'pie'         : pie chart                 : 饼图
         % 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
         % 'circ'        : circle                    : 圆形
@@ -127,54 +138,56 @@ classdef SHeatmap < handle
         SData = [.45, .21, .22, .09, .00, -.09, -.22, -.21, -.45, -.21, -.22, -.09, -.00,  .09,  0.22,  .21,   .45
                  .00, .09, .22, .21, .45,  .21,  .22,  .09,  .00, -.09, -.22, -.21, -.45, -.21, -0.22, -.09, -.00];
         Type = 'full';
-        %     'triu'   : upper triangle                   : 上三角部分
-        %     'tril'   : lower triangle                   : 下三角部分
-        %     'triu0'  : upper triangle without diagonal  : 扣除对角线上三角部分
-        %                (strictly upper triangular part) : (严格上三角)
-        %     'tril0'  : lower triangle without diagonal  : 扣除对角线下三角部分
-        %                (strictly lower triangular part) : (严格下三角)
-        %     'linkl'  : lower triangle for mantel links  : 适配 mantel 链接的下三角
-        %     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
+        % 'triu'  : upper triangle                   : 上三角部分
+        % 'tril'  : lower triangle                   : 下三角部分
+        % 'triu0' : upper triangle without diagonal  : 扣除对角线上三角部分
+        %           (strictly upper triangular part) : (严格上三角)
+        % 'tril0' : lower triangle without diagonal  : 扣除对角线下三角部分
+        %           (strictly lower triangular part) : (严格下三角)
+        % 'linkl' : lower triangle for mantel links  : 适配 mantel 链接的下三角
+        % 'linku' : upper triangle for mantel links  : 适配 mantel 链接的上三角
+        % 'row'   : show row labels & ticks only     : 仅显示行标签及行刻度
+        % 'col'   : show col labels & ticks only     : 仅显示列标签及列刻度
 
-        TickLength = .1;
-        TickLabelOffset = .25;
-        GroupLabelOffset = 1.5;
+        TickLength = .1;        % Length of tick marks (刻度线长度)
+        TickLabelOffset = .25;  % Offset distance from tick end to tick label (刻度末端到刻度标签的偏移距离)
+        GroupLabelOffset = 1.5; % Offset distance for group labels (分组标签的偏移距离)
 
         RowLabelLocation = 'left';        % 'left', 'right', 'diag'
         ColLabelLocation = 'bottom';      % 'top', 'bottom', 'diag'
         RowGroupLabelLocation = 'left';   % 'left', 'right', 'diag'
         ColGroupLabelLocation = 'bottom'; % 'top', 'bottom', 'diag'
 
-        Colormap;       % Colormap (颜色映射表)
-        Colorbar;       % Colorbar (颜色条) 
+        Colormap;         % Colormap (颜色映射表)
+        Colorbar;         % Colorbar (颜色条) 
 
         % For a square matrix (e.g., corr(X) or correlation matrix of a single dataset):
-        VarName;        % Variable names for the single dataset (变量名称)
+        VarName;          % Variable names for the single dataset (变量名称)
         % For a rectangular matrix (e.g., corr(X, Y) or cross-correlation between two datasets):
-        RowName;        % Names of variables in dataset X (行变量名称)
-        ColName;        % Names of variables in dataset Y (列变量名称)
-        RowGroup = [];
-        ColGroup = [];
-        GroupSep = .5;
-        RowGroupName
-        ColGroupName
+        RowName;          % Names of variables in dataset X (行变量名称)
+        ColName;          % Names of variables in dataset Y (列变量名称)
+        RowGroup = [];    % Row group assignments (行分组标签)
+        ColGroup = [];    % Column group assignments (列分组标签)
+        GroupSep = .5;    % Separation gap between groups (组间分离间距)
+        RowGroupName      % Names for row groups (行分组名称)
+        ColGroupName      % Names for column groups (列分组名称)
 
-        % For 
+        % X, Y, and Theta limits for the heatmap
         XLim = [], 
         YLim = [], 
         TLim = [0, 0];
 
-        textHdl;        % Text (data value) handle (文本句柄)
-        boxHdl;         % Outline handle (边框句柄)
-        patchHdl;       % Patch handle (填充图形句柄)
-        pieHdl;         % Pie chart handle (饼图句柄)
-        rowLabelHdl;    % Row label handle (行标签句柄)
-        colLabelHdl;    % Column label handle (列标签句柄)
-        frameHdl;       % Frame (outline) handle (外轮廓句柄)
-        rowTickHdl;     % Row tick handle (行刻度句柄)
-        colTickHdl;     % Col tick handle (列刻度句柄)
-        rowGroupLabelHdl 
-        colGroupLabelHdl
+        textHdl;          % Text (data value) handle (文本句柄)
+        boxHdl;           % Outline handle (边框句柄)
+        patchHdl;         % Patch handle (填充图形句柄)
+        pieHdl;           % Pie chart handle (饼图句柄)
+        rowLabelHdl;      % Row label handle (行标签句柄)
+        colLabelHdl;      % Column label handle (列标签句柄)
+        frameHdl;         % Frame (outline) handle (外轮廓句柄)
+        rowTickHdl;       % Row tick handle (行刻度句柄)
+        colTickHdl;       % Col tick handle (列刻度句柄)
+        rowGroupLabelHdl  % Row-group label handle (行分组标签句柄)
+        colGroupLabelHdl  % Col-group label handle (列分组标签句柄)
     end
 
     properties (Hidden)
@@ -298,7 +311,9 @@ classdef SHeatmap < handle
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > .5) = .5;
             obj.TickLabelOffset(obj.TickLabelOffset <= 1e-4) = 1e-4;
-            obj.TickLabelOffset(obj.TickLabelOffset > .5) = .5;
+            obj.TickLabelOffset(obj.TickLabelOffset > 1) = 1;
+            obj.GroupLabelOffset(obj.GroupLabelOffset <= 1e-4) = 1e-4;
+            obj.GroupLabelOffset(obj.GroupLabelOffset > 10) = 10;
 
 
             if isempty(obj.RowGroup) || length(obj.RowGroup) < size(obj.Data, 1)
@@ -370,6 +385,10 @@ classdef SHeatmap < handle
             hexT  = linspace(0, 2*pi, 7).';
             starT = linspace(0, 2*pi, 11).' + pi/10;
             thetaMat = [1, 1; -1, 1].*sqrt(2)./2;
+            T4 = [linspace(0, pi/2, 20), linspace(pi/2, pi, 20), linspace(pi, 3*pi/2, 20), linspace(3*pi/2, 2*pi, 20)].';
+            X4 = [ones(1, 20)*.7, - ones(1, 20)*.7, - ones(1, 20)*.7, ones(1, 20)*.7].';
+            Y4 = [ones(1, 20)*.7, ones(1, 20)*.7, - ones(1, 20)*.7, - ones(1, 20)*.7].';
+
             [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
 
             rows = reshape(obj.RP(rows), 1, []);
@@ -387,6 +406,11 @@ classdef SHeatmap < handle
                 case 'asq'
                     obj.PatchX = repmat([-.5; .5; .5; -.5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(cols, [4, 1]);
                     obj.PatchY = repmat([-.5; -.5; .5; .5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(rows, [4, 1]);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = reshape(obj.patchHdl, sz);
+                case 'rrect'
+                    obj.PatchX = repmat((X4 + cos(T4).*.3).*.46, [1, mn]) + repmat(cols, [80, 1]);
+                    obj.PatchY = repmat((Y4 + sin(T4).*.3).*.46, [1, mn]) + repmat(rows, [80, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'pie'
@@ -489,7 +513,7 @@ classdef SHeatmap < handle
 
             obj.boxHdl = plot(obj.ax, obj.GX, obj.GY, ...
                 'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
-            if isequal(obj.Format, 'sq')
+            if isequal(obj.Format, 'sq')||isequal(obj.Format, 'rrect')
                 set(obj.boxHdl, 'Visible','off');
             end
 
@@ -698,6 +722,7 @@ classdef SHeatmap < handle
             cmp = get(obj.ax, 'Colormap');
             graymap = mean(cmp, 2);
             climit  = get(obj.ax, 'CLim');
+            values = linspace(climit(1), climit(2), size(cmp, 1) + 1);
         
             % Loop over all cells (遍历所有单元格)
             for row = 1:size(obj.Data, 1)
@@ -705,11 +730,19 @@ classdef SHeatmap < handle
                     % Determine text color (black if background bright, white if dark)
                     % (根据背景亮度决定文字颜色：亮底黑字，暗底白字)
                     if strcmpi(obj.Format, 'txt') || strcmpi(obj.Format, 'text')
-                        textColor = interp1(linspace(climit(1), climit(2), size(cmp, 1)), ...
-                            cmp, obj.Data(row, col));
+                        % textColor = interp1(linspace(climit(1), climit(2), size(cmp, 1)), ...
+                        %     cmp, obj.Data(row, col));
+                        tind = sum(obj.Data(row, col) >= values);
+                        tind(tind <= 0) = 1;
+                        tind(tind > size(cmp, 1)) = size(cmp, 1);
+                        textColor = cmp(tind, :);
                     else
-                        bgBrightness = interp1(linspace(climit(1), climit(2), size(graymap, 1)), ...
-                            graymap, obj.Data(row, col));
+                        % bgBrightness = interp1(linspace(climit(1), climit(2), size(graymap, 1)), ...
+                        %     graymap, obj.Data(row, col));
+                        tind = sum(obj.Data(row, col) >= values);
+                        tind(tind <= 0) = 1;
+                        tind(tind > size(cmp, 1)) = size(cmp, 1);
+                        bgBrightness = graymap(tind);
                         if bgBrightness < 0.5
                             textColor = [1, 1, 1];   % white (白色)
                         else
@@ -1655,6 +1688,8 @@ classdef SHeatmap < handle
             if ~strcmpi(obj.RowGroupLabelLocation, loc)
                 obj.RowGroupLabelLocation = loc;
             end
+            obj.GroupLabelOffset(obj.GroupLabelOffset <= 1e-4) = 1e-4;
+            obj.GroupLabelOffset(obj.GroupLabelOffset > 10) = 10;
 
             for n = 1:max(obj.RowGroup)
                 switch lower(loc)
@@ -1700,6 +1735,27 @@ classdef SHeatmap < handle
                 end
             end
 
+            switch lower(loc)
+                case 'left'
+                    switch lower(obj.Type)
+                        case {'tril0','linkl'}
+                            obj.rowGroupLabelHdl(1).Position(2) = obj.rowGroupLabelHdl(1).Position(2) + .5;
+                            obj.RGLST(1, [2, 4]) = obj.RGLST(1, [2, 4]) + .5;
+                        case {'triu0','linku'}
+                            obj.rowGroupLabelHdl(end).Position(2) = obj.rowGroupLabelHdl(end).Position(2) - .5;
+                            obj.RGLST(end, [2, 4]) = obj.RGLST(end, [2, 4]) - .5;
+                    end
+                case 'right'
+                    switch lower(obj.Type)
+                        case {'tril0','linkl'}
+                            obj.rowGroupLabelHdl(1).Position(2) = obj.rowGroupLabelHdl(1).Position(2) + .5;
+                            obj.RGLST(1, [2, 4]) = obj.RGLST(1, [2, 4]) + .5;
+                        case {'triu0','linku'}
+                            obj.rowGroupLabelHdl(end).Position(2) = obj.rowGroupLabelHdl(end).Position(2) - .5;
+                            obj.RGLST(end, [2, 4]) = obj.RGLST(end, [2, 4]) - .5;
+                    end
+            end
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -1717,6 +1773,8 @@ classdef SHeatmap < handle
             if ~strcmpi(obj.ColGroupLabelLocation, loc)
                 obj.ColGroupLabelLocation = loc;
             end
+            obj.GroupLabelOffset(obj.GroupLabelOffset <= 1e-4) = 1e-4;
+            obj.GroupLabelOffset(obj.GroupLabelOffset > 10) = 10;
 
             for n = 1:max(obj.ColGroup)
                 switch lower(loc)
@@ -1762,6 +1820,27 @@ classdef SHeatmap < handle
                 end
             end
 
+            switch lower(loc)
+                case 'top'
+                    switch lower(obj.Type)
+                        case {'tril0','linkl'}
+                            obj.colGroupLabelHdl(end).Position(1) = obj.colGroupLabelHdl(end).Position(1) - .5;
+                            obj.CGLST(end, [1, 3]) = obj.CGLST(end, [1, 3]) - .5;
+                        case {'triu0','linku'}
+                            obj.colGroupLabelHdl(1).Position(1) = obj.colGroupLabelHdl(1).Position(1) + .5;
+                            obj.CGLST(1, [1, 3]) = obj.CGLST(1, [1, 3]) + .5;
+                    end
+                case 'bottom'
+                    switch lower(obj.Type)
+                        case {'tril0','linkl'}
+                            obj.colGroupLabelHdl(end).Position(1) = obj.colGroupLabelHdl(end).Position(1) - .5;
+                            obj.CGLST(end, [1, 3]) = obj.CGLST(end, [1, 3]) - .5;
+                        case {'triu0','linku'}
+                            obj.colGroupLabelHdl(1).Position(1) = obj.colGroupLabelHdl(1).Position(1) + .5;
+                            obj.CGLST(1, [1, 3]) = obj.CGLST(1, [1, 3]) + .5;
+                    end
+            end
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -1781,7 +1860,11 @@ classdef SHeatmap < handle
             for row = 1:size(obj.Data, 1)
                 for col = 1:size(obj.Data, 2)
                     if ~isnan(obj.Data(row, col))
-                        tStr = func(obj.Data(row, col));
+                        if nargin(func) ~= 1
+                            tStr = func(obj.Data(row, col), obj.PVal(row, col));
+                        else
+                            tStr = func(obj.Data(row, col));
+                        end
                         set(obj.textHdl(row, col), 'String', tStr);
                     end
                 end
@@ -1946,7 +2029,8 @@ classdef SHeatmap < handle
                     strcmpi(obj.Format, 'acirc') || ...
                     strcmpi(obj.Format, 'bcirc') || ...
                     strcmpi(obj.Format, 'cust') || ...
-                    strcmpi(obj.Format, 'acust'))) || ...
+                    strcmpi(obj.Format, 'acust') || ...
+                    strcmpi(obj.Format, 'rrect'))) || ...
                     (strcmpi(obj.Type, 'full') && strcmpi(obj.Format, 'sq'))
 
                 if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
@@ -2180,6 +2264,35 @@ classdef SHeatmap < handle
                             end
                         end
                     end
+                end
+
+
+                [nX, nY] = getNewXY(obj.RGLST(:, [1, 3]), obj.RGLST(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                for n = 1:size(nX, 1)
+                    nV = [nX(n, 2) - nX(n, 1); nY(n, 2) - nY(n, 1)];
+                    nL = sqrt(nV(1).^2 + nV(2).^2);
+                    nV = nV./[nL; nL];
+                    nT = atan2(nV(2), nV(1)); nT = nT./pi.*180;
+                    nT = nT - 180*((nT > 0) - .5);
+                    set(obj.rowGroupLabelHdl(n), 'Position', ...
+                        [nX(n, 1) + nV(1).*obj.GroupLabelOffset.*tLen, ...
+                         nY(n, 1) + nV(2).*obj.GroupLabelOffset.*tLen, 0], ...
+                         'HorizontalAlignment','center', 'Rotation',-nT);
+
+                end
+
+                [nX, nY] = getNewXY(obj.CGLST(:, [1, 3]), obj.CGLST(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                for n = 1:size(nX, 1)
+                    nV = [nX(n, 2) - nX(n, 1); nY(n, 2) - nY(n, 1)];
+                    nL = sqrt(nV(1).^2 + nV(2).^2);
+                    nV = nV./[nL; nL];
+                    nT = atan2(nV(2), nV(1)); nT = nT./pi.*180;
+                    nT = nT - 180*((nT > 0) - .5);
+                    set(obj.colGroupLabelHdl(n), 'Position', ...
+                        [nX(n, 1) + nV(1).*obj.GroupLabelOffset.*tLen, ...
+                         nY(n, 1) + nV(2).*obj.GroupLabelOffset.*tLen, 0], ...
+                        'HorizontalAlignment','center', 'Rotation',-nT);
+
                 end
 
                 try axis(obj.ax, 'tight'), catch, end

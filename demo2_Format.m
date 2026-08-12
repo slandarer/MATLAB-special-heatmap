@@ -16,6 +16,7 @@ SHM_B.draw()
 
 
 % 'sq'          : square (default)          : 方形(默认)
+% 'rrect        : rounded rectangle         : 圆角矩形
 % 'pie'         : pie chart                 : 饼图
 % 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
 % 'circ'        : circular                  : 圆形
