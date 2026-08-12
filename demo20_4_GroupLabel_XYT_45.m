@@ -1,7 +1,7 @@
 %% Rotated triangular heatmap with GroupLabel
 
 % Rotation without deformation is currently supported only for the following formats: 
-% 'sq', 'asq', 'circ', 'acirc', and 'bcirc'.
+% 'sq', 'asq', 'circ', 'acirc', 'bcirc', 'cust', 'rrect', 'acust', 'c2rect', and 'arrect'
 
 % Made up some data casually (随便捏造了点数据)
 X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
@@ -10,7 +10,7 @@ Data = corr(X);
 Data([107, 200]) = nan;
 
 figure()
-SHM = SHeatmap(Data, 'Format','rrect', 'GroupLabelOffset',.5);
+SHM = SHeatmap(Data, 'Format','c2rect', 'GroupLabelOffset',.5);
 SHM.RowGroup = [1,1,1,1,1,1,2,2,2,2,2,3,3,3,3];
 SHM.ColGroup = [1,1,1,1,1,1,2,2,2,2,2,3,3,3,3];
 SHM.draw();

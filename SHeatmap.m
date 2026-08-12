@@ -28,21 +28,25 @@ classdef SHeatmap < handle
 %   SHM = SHeatmap(Data, 'Format','donut');
 %   SHM.draw();
 % 
-%     'sq'          : square (default)          : 方形(默认)
-%     'rrect        : rounded rectangle         : 圆角矩形
+%     'sq'          : square (default)          : 方形 (默认)
+%     'shade'       : Square (neg-values shaded): 方形 (负数部分阴影填充)
+%     'rrect'       : rounded rectangle         : 圆角矩形
+%     'c2rect'      : circle to rectangle       : 圆形到矩形过度
 %     'pie'         : pie chart                 : 饼图
-%     'donut'       ：donut chart               : 环形饼图(甜甜圈图)
+%     'donut'       ：donut chart               : 环形饼图 (甜甜圈图)
 %     'circ'        : circle                    : 圆形
 %     'bcirc'       : circle with box           : 有边框的圆形
 %     'oval'        : oval                      : 椭圆形
 %     'hex'         : hexagon                   ：六边形
 %     'star'        : star                      : 五角星
+%     'arrow'       : arrow                     : 箭头
 %     'trill'(tril) : lower left triangle       : 下三角
 %     'triur'(triu) : upper right triangle      : 上三角
 %     'trilr'       : lower right triangle      : 右下三角
 %     'triul'       : upper left triangle       : 左上三角
 %     'asq'         : auto-size square          ：自带调整大小的方形
 %     'acirc'       : auto-size circular        ：自带调整大小的圆形
+%     'arrect'      : auto-size rounded rect    : 自带调整大小的圆角矩形
 %     'txt'(text)   : colored text              : 带颜色的文本
 %     'cust'        : custom shape              : 自定义形状
 %     'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
@@ -117,21 +121,25 @@ classdef SHeatmap < handle
         PVal
 
         Format = 'sq'  
-        % 'sq'          : square (default)          : 方形(默认)
-        % 'rrect        : rounded rectangle         : 圆角矩形
+        % 'sq'          : square (default)          : 方形 (默认)
+        % 'shade'       : Square (neg-values shaded): 方形 (负数部分阴影填充)
+        % 'rrect'       : rounded rectangle         : 圆角矩形
+        % 'c2rect'      : circle to rectangle       : 圆形到矩形过度
         % 'pie'         : pie chart                 : 饼图
-        % 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
+        % 'donut'       ：donut chart               : 环形饼图 (甜甜圈图)
         % 'circ'        : circle                    : 圆形
         % 'bcirc'       : circle with box           : 有边框的圆形
         % 'oval'        : oval                      : 椭圆形
         % 'hex'         : hexagon                   ：六边形
         % 'star'        : star                      : 五角星
+        % 'arrow'       : arrow                     : 箭头
         % 'trill'(tril) : lower left triangle       : 下三角
         % 'triur'(triu) : upper right triangle      : 上三角
         % 'trilr'       : lower right triangle      : 右下三角
         % 'triul'       : upper left triangle       : 左上三角
         % 'asq'         : auto-size square          ：自带调整大小的方形
         % 'acirc'       : auto-size circular        ：自带调整大小的圆形
+        % 'arrect'      : auto-size rounded rect    : 自带调整大小的圆角矩形
         % 'txt'(text)   : colored text              : 带颜色的文本
         % 'cust'        : custom shape              : 自定义形状
         % 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
@@ -386,8 +394,10 @@ classdef SHeatmap < handle
             starT = linspace(0, 2*pi, 11).' + pi/10;
             thetaMat = [1, 1; -1, 1].*sqrt(2)./2;
             T4 = [linspace(0, pi/2, 20), linspace(pi/2, pi, 20), linspace(pi, 3*pi/2, 20), linspace(3*pi/2, 2*pi, 20)].';
-            X4 = [ones(1, 20)*.7, - ones(1, 20)*.7, - ones(1, 20)*.7, ones(1, 20)*.7].';
-            Y4 = [ones(1, 20)*.7, ones(1, 20)*.7, - ones(1, 20)*.7, - ones(1, 20)*.7].';
+            X4 = [ones(1, 20), - ones(1, 20), - ones(1, 20), ones(1, 20)].';
+            Y4 = [ones(1, 20), ones(1, 20), - ones(1, 20), - ones(1, 20)].';
+            XA = [0; .5; .2; .2; -.2; -.2; -.5];
+            YA = [.5; 0; 0; -.5; -.5; 0; 0];
 
             [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
 
@@ -409,10 +419,24 @@ classdef SHeatmap < handle
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'rrect'
-                    obj.PatchX = repmat((X4 + cos(T4).*.3).*.46, [1, mn]) + repmat(cols, [80, 1]);
-                    obj.PatchY = repmat((Y4 + sin(T4).*.3).*.46, [1, mn]) + repmat(rows, [80, 1]);
+                    obj.PatchX = repmat((X4.*.7 + cos(T4).*.3).*.46, [1, mn]) + repmat(cols, [80, 1]);
+                    obj.PatchY = repmat((Y4.*.7 + sin(T4).*.3).*.46, [1, mn]) + repmat(rows, [80, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
+                case 'c2rect'
+                    obj.PatchX = (repmat(X4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(cols, [80, 1]);
+                    obj.PatchY = (repmat(Y4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(rows, [80, 1]);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = reshape(obj.patchHdl, sz);
+                case 'shade'
+                    obj.PatchX = repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
+                    obj.PatchY = repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = reshape(obj.patchHdl, sz);
+                    obj.PieX = repmat([.49; .01; nan; .49; -.49; nan; -.01; -.49; nan], [1, mn]) + repmat(cols, [9, 1]);
+                    obj.PieY = repmat([-.01; -.49; nan; .49; -.49; nan; .49; .01; nan], [1, mn]) + repmat(rows, [9, 1]);
+                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, datas, 'EdgeColor',[1,1,1], 'LineWidth',1, 'LineJoin','chamfer', 'EdgeAlpha',.7);
+                    obj.pieHdl = reshape(obj.pieHdl, sz);
                 case 'pie'
                     obj.PieX = repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
                     obj.PieY = repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
@@ -433,6 +457,12 @@ classdef SHeatmap < handle
                     obj.PatchX = repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
                     obj.PatchY = repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = reshape(obj.patchHdl, sz);
+                case 'arrect'
+                    tRatio2 = max(0, 4*(tRatio - 0.75));
+                    obj.PatchX = (repmat(X4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(cols, [80, 1]);
+                    obj.PatchY = (repmat(Y4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(rows, [80, 1]);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'oval'
                     tValue = datas./obj.maxV;
@@ -456,6 +486,12 @@ classdef SHeatmap < handle
                     obj.PatchX = repmat(cos(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(cols, [length(starT), 1]);
                     obj.PatchY = -repmat(sin(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(rows, [length(starT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = reshape(obj.patchHdl, sz);
+                case 'arrow'
+                    tValue = 2.*((datas < 0) - .5);
+                    obj.PatchX = repmat(XA.*.8, [1, mn]) + repmat(cols, [7, 1]);
+                    obj.PatchY = repmat(YA.*.8, [1, mn]).*repmat(tValue, [7, 1]) + repmat(rows, [7, 1]);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case {'tril', 'trill'}
                     obj.PatchX = repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
@@ -513,8 +549,23 @@ classdef SHeatmap < handle
 
             obj.boxHdl = plot(obj.ax, obj.GX, obj.GY, ...
                 'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
-            if isequal(obj.Format, 'sq')||isequal(obj.Format, 'rrect')
+            if strcmpi(obj.Format, 'sq') || ...
+               strcmpi(obj.Format, 'rrect') || ...
+               strcmpi(obj.Format, 'shade') || ...
+               strcmpi(obj.Format, 'c2rect')
                 set(obj.boxHdl, 'Visible','off');
+            end
+
+            if strcmpi(obj.Format, 'shade')
+                [posR, posC] = find(obj.Data >= 0);
+                if ~isempty(posR)
+                    for i = 1:length(posR)
+                        row = posR(i); col = posC(i);
+                        set(obj.pieHdl(row, col), 'XData', [0;0;0;0;0;0;0;0;0], ...
+                            'YData', [0;0;0;0;0;0;0;0;0], ...
+                            'Visible','off')
+                    end
+                end
             end
 
             [nanR, nanC] = find(isnan(obj.Data));
@@ -729,6 +780,7 @@ classdef SHeatmap < handle
                 for col = 1:size(obj.Data, 2)
                     % Determine text color (black if background bright, white if dark)
                     % (根据背景亮度决定文字颜色：亮底黑字，暗底白字)
+                    if ~isnan(obj.Data(row, col))
                     if strcmpi(obj.Format, 'txt') || strcmpi(obj.Format, 'text')
                         % textColor = interp1(linspace(climit(1), climit(2), size(cmp, 1)), ...
                         %     cmp, obj.Data(row, col));
@@ -749,7 +801,9 @@ classdef SHeatmap < handle
                             textColor = [0, 0, 0];   % black (黑色)
                         end
                     end
-                    set(obj.textHdl(row, col), 'Visible','on', 'Color',textColor, varargin{:});
+                        set(obj.textHdl(row, col), 'Color',textColor)
+                    end
+                    set(obj.textHdl(row, col), 'Visible','on', varargin{:});
                 end
             end
             switch lower(obj.Type)
@@ -818,9 +872,10 @@ classdef SHeatmap < handle
                 for i = 1:length(M)
                     m = M(i); n = N(i);
                     set(obj.patchHdl(m, n), varargin{2:end});
-                    if isequal(obj.Format, 'pie') || ...
-                       isequal(obj.Format, 'donut') || ...
-                       isequal(obj.Format, 'bcirc')
+                    if strcmpi(obj.Format, 'pie') || ...
+                       strcmpi(obj.Format, 'donut') || ...
+                       strcmpi(obj.Format, 'bcirc') || ...
+                       strcmpi(obj.Format, 'shade')
                         set(obj.pieHdl(m, n), varargin{2:end});
                     end
                 end
@@ -830,9 +885,10 @@ classdef SHeatmap < handle
                     for i = 1:length(M)
                         m = M(i); n = N(i);
                         set(obj.patchHdl(m, n), varargin{3:end});
-                        if isequal(obj.Format, 'pie') || ...
-                           isequal(obj.Format, 'donut') || ...
-                           isequal(obj.Format, 'bcirc')
+                        if strcmpi(obj.Format, 'pie') || ...
+                           strcmpi(obj.Format, 'donut') || ...
+                           strcmpi(obj.Format, 'bcirc') || ...
+                           strcmpi(obj.Format, 'shade')
                             set(obj.pieHdl(m, n), varargin{3:end});
                         end
                     end
@@ -843,9 +899,10 @@ classdef SHeatmap < handle
                         for j = 1:length(N)
                             m = M(i); n = N(j);
                             set(obj.patchHdl(m, n), varargin{3:end});
-                            if isequal(obj.Format, 'pie') || ...
-                               isequal(obj.Format, 'donut') || ...
-                               isequal(obj.Format, 'bcirc')
+                            if strcmpi(obj.Format, 'pie') || ...
+                               strcmpi(obj.Format, 'donut') || ...
+                               strcmpi(obj.Format, 'bcirc') || ...
+                               strcmpi(obj.Format, 'shade')
                                 set(obj.pieHdl(m, n), varargin{3:end});
                             end
                         end
@@ -858,9 +915,10 @@ classdef SHeatmap < handle
                         set(obj.patchHdl(row, col), varargin{:});
                         % For pie/donut/bcirc formats, also set the pie background handle
                         % (对于 pie/donut/bcirc 格式，同时设置饼图背景句柄)
-                        if isequal(obj.Format, 'pie') || ...
-                           isequal(obj.Format, 'donut') || ...
-                           isequal(obj.Format, 'bcirc')
+                        if strcmpi(obj.Format, 'pie') || ...
+                           strcmpi(obj.Format, 'donut') || ...
+                           strcmpi(obj.Format, 'bcirc') || ...
+                           strcmpi(obj.Format, 'shade')
                             set(obj.pieHdl(row, col), varargin{:});
                         end
                     end
@@ -1146,7 +1204,8 @@ classdef SHeatmap < handle
                                 end
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc')
+                                   strcmpi(obj.Format, 'bcirc') || ...
+                                   strcmpi(obj.Format, 'shade')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1163,7 +1222,8 @@ classdef SHeatmap < handle
                                 end
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc')
+                                   strcmpi(obj.Format, 'bcirc') || ...
+                                   strcmpi(obj.Format, 'shade')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1180,7 +1240,8 @@ classdef SHeatmap < handle
                                 end
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc')
+                                   strcmpi(obj.Format, 'bcirc') || ...
+                                   strcmpi(obj.Format, 'shade')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1199,7 +1260,8 @@ classdef SHeatmap < handle
                                 end
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc')
+                                   strcmpi(obj.Format, 'bcirc') || ...
+                                   strcmpi(obj.Format, 'shade')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -2030,6 +2092,8 @@ classdef SHeatmap < handle
                     strcmpi(obj.Format, 'bcirc') || ...
                     strcmpi(obj.Format, 'cust') || ...
                     strcmpi(obj.Format, 'acust') || ...
+                    strcmpi(obj.Format, 'c2rect') || ...
+                    strcmpi(obj.Format, 'arrect') || ...
                     strcmpi(obj.Format, 'rrect'))) || ...
                     (strcmpi(obj.Type, 'full') && strcmpi(obj.Format, 'sq'))
 

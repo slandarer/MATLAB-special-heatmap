@@ -15,7 +15,7 @@ SHM.setText().setType('tril');
 
 
 SHM.PVal = pval;
-SHM.setTextFormat(@(x, p) [sprintf('%0.2f', x), SPval2Stars(p)])
+SHM.setTextFormat(@(x, p) [sprintf('%0.2f', x),' ', SPval2Stars(p)])
 
 
 

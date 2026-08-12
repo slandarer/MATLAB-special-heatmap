@@ -47,7 +47,8 @@ ax.XLim(2) = ax.XLim(2) + 1;
 
 
 %% show upper triangle of all formats (展示所有样式的上三角化)
-Format = {'sq','rrect','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc'};
+Format = {'sq','shade','rrect','c2rect','pie','donut','circ','bcirc','oval', ...
+    'hex','star','arrow','tril','triu','trilr','triul','asq','acirc','arrect','txt','cust','acust'};
 for i = 1:length(Format)
     figure()
     SHeatmap(Data, 'Format',Format{i}).draw().setType('triu');

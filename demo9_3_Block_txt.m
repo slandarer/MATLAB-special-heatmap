@@ -7,8 +7,6 @@ rowName = {'Cod','Flounder','Haddock','Sea Bass', ...
 rowGroup = [1,1,1,1, 2,2,2,2,2, 3,3,3, 4,4];
 colName = {'SUNSSX','LUUZX','MZM','SMYFRY','YGTD'};
 
-
-
 Data = randi([0, 100], [14, 5]);
 
 figure(); ax = gca;
