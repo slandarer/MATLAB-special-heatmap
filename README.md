@@ -336,7 +336,7 @@ SHM.setFrame('LineWidth',2)
 ___
 ### 5 Partial decoration (局部修饰)
 + obj.setText(m, n, ___)
-+ setPatch(m, n, ___)
++ obj.setPatch(m, n, ___)
 
 Set the attributes of the object in row m and column n: for example, change the text with a value greater than 0.9 into an asterisk, frame it in red, and adapt the color at NaN. 
 
