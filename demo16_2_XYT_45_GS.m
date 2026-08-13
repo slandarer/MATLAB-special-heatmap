@@ -13,7 +13,7 @@ figure()
 SHM = SHeatmap(Data, 'Format','circ');
 SHM.RowGroup = [1,1,1,1,1,1,2,2,2,2,2,3,3,3,3];
 SHM.ColGroup = [1,1,1,1,1,1,2,2,2,2,2,3,3,3,3];
-SHM.draw();
+SHM.draw().setText()
 SHM.setType('triu0');
 
 % Set theta limits: TLim(1) == TLim(2) -> rotation only, no deformation (rotate by 45°)

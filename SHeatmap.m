@@ -2200,7 +2200,7 @@ classdef SHeatmap < handle
                     end
                 end
 
-                if ~isempty(obj.nanTextHdl)
+                if ~isempty(obj.nanTextHdl)&&isempty(obj.textHdl)
                     for i = 1:length(obj.nanTextHdl)
                         X = obj.nanTextHdl(i).Position(1); Y = obj.nanTextHdl(i).Position(2);
                         [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
