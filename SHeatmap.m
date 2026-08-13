@@ -966,12 +966,12 @@ classdef SHeatmap < handle
                 case 'left'
                     switch lower(obj.Type)
                         case 'triu'
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case 'tril'
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'triu0', 'linku'}
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case {'tril0', 'linkl'}
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M - 1);
                             Y = [1; 1; nan]*obj.RP(2:M);
@@ -986,12 +986,12 @@ classdef SHeatmap < handle
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case 'tril'
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case {'triu0', 'linku'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M - 1);
                             Y = [1; 1; nan]*obj.RP(1:(M - 1));
                         case {'tril0', 'linkl'}
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case {'full','row','col'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
@@ -1021,12 +1021,12 @@ classdef SHeatmap < handle
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case 'tril'
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case {'triu0', 'linku'}
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N - 1);
                             X = [1; 1; nan]*obj.CP(2:N);
                         case {'tril0', 'linkl'}
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case {'full','row','col'}
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
@@ -1035,12 +1035,12 @@ classdef SHeatmap < handle
                 case 'bottom'
                     switch lower(obj.Type)
                         case 'triu'
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case 'tril'
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'triu0', 'linku'}
-                            X = nan; Y = nan;
+                            X = nan(3, 1); Y = nan(3, 1);
                         case {'tril0', 'linkl'}
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N - 1);
                             X = [1; 1; nan]*obj.CP(1:(N - 1));

@@ -1,6 +1,6 @@
 %% Triangular heatmap with Rotated dendrogram
 
-rng(1)
+rng(2)
 % Made up some data casually (随便捏造了点数据)
 X = randn(20, 20) + [(linspace(-1, 2.5, 20)').*ones(1, 8), ...
     (linspace(.5, -.7, 20)').*ones(1, 5),...
