@@ -1,7 +1,7 @@
 % Sector heatmap
 
 % Inspired by : https://blogs.mathworks.com/graphics-and-apps/2025/09/30/polar-plots-with-patches-and-surfaces-r2025a/
-%              https://github.com/MATLAB-Graphics-and-App-Building/matlab-gaab-blog-2025/blob/main/PolarPatchesAndSurfaces/
+%               https://github.com/MATLAB-Graphics-and-App-Building/matlab-gaab-blog-2025/blob/main/PolarPatchesAndSurfaces/
 % Data source : https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/statewide/mapping
 
 T = load('avgT2024.mat');

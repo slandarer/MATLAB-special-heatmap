@@ -82,6 +82,7 @@ classdef SHeatmap < handle
 %   setTextFormat            - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
 %   showStars                - Overlay significance stars on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
 %   setBox                   - Set properties for box handle (设置框样式)
+%   setGrid                  - Set properties for grid handle (设置网格样式)
 %   setFrame                 - Set properties for frame and tick handle (设置外轮廓样式)
 %   setPatch                 - Set properties for all patch objects (为所有填充图形设置属性)
 %   setRowLabel              - Set properties for all row label text objects (设置所有行标签的属性)
@@ -185,15 +186,17 @@ classdef SHeatmap < handle
         YLim = [], 
         TLim = [0, 0];
 
+        
+        gridHdl           % Grid handle (网格线句柄)
+        pieHdl;           % Pie chart handle (饼图句柄)
+        patchHdl;         % Patch handle (填充图形句柄)
         textHdl;          % Text (data value) handle (文本句柄)
         boxHdl;           % Outline handle (边框句柄)
-        patchHdl;         % Patch handle (填充图形句柄)
-        pieHdl;           % Pie chart handle (饼图句柄)
-        rowLabelHdl;      % Row label handle (行标签句柄)
-        colLabelHdl;      % Column label handle (列标签句柄)
         frameHdl;         % Frame (outline) handle (外轮廓句柄)
         rowTickHdl;       % Row tick handle (行刻度句柄)
         colTickHdl;       % Col tick handle (列刻度句柄)
+        rowLabelHdl;      % Row label handle (行标签句柄)
+        colLabelHdl;      % Column label handle (列标签句柄)
         rowGroupLabelHdl  % Row-group label handle (行分组标签句柄)
         colGroupLabelHdl  % Col-group label handle (列分组标签句柄)
     end
@@ -222,7 +225,9 @@ classdef SHeatmap < handle
                        .47, .79, .65; .39, .75, .65; .32, .67, .68;
                        .26, .60, .71; .20, .53, .74; .26, .45, .70;
                        .31, .38, .67; .37, .31, .64];
-        RP; CP; FX; FY; GX; GY; TxtShown = false; 
+        RP; CP; FX; FY; BX; BY; GX; GY;
+        TxtShown = false; 
+        XYTReset = false;
         RGP; CGP; RGLST; CGLST;
         PatchX; PatchY; PieX; PieY; nanTextHdl
     end
@@ -372,21 +377,10 @@ classdef SHeatmap < handle
             end
 
             % Draw grid lines (绘制网格线)
-            obj.GX = []; obj.GY = [];
-            for gi = 1:max(obj.RowGroup)
-                for gj = 1:max(obj.ColGroup)
-                    posi = obj.RP(obj.RowGroup == gi);
-                    posj = obj.CP(obj.ColGroup == gj);
-                    rowY = unique([posi - .5, posi + .5]);
-                    rowX = [posj(1) - .5; posj(end) + .5; nan]*ones(size(rowY));
-                    rowY = [1; 1; nan]*rowY;
-                    colX = unique([posj - .5, posj + .5]);  
-                    colY = [posi(1) - .5; posi(end) + .5; nan]*ones(size(colX));
-                    colX = [1; 1; nan]*colX;
-                    obj.GX = [obj.GX; rowX(:); colX(:)];
-                    obj.GY = [obj.GY; rowY(:); colY(:)];
-                end
-            end
+            obj.GX = nan; obj.GY = nan;
+            obj.gridHdl = plot(obj.ax, obj.GX, obj.GY, ...
+                'LineWidth', 0.8, 'Color', [0,0,0], 'LineStyle','--');
+            
 
             % Define base shape coordinates (定义基本形状坐标)
             baseT = linspace(0, 2*pi, 100).';
@@ -546,9 +540,25 @@ classdef SHeatmap < handle
             end
 
             % obj.textHdl = gobjects(size(obj.Data, 1), size(obj.Data, 2));
-
-            obj.boxHdl = plot(obj.ax, obj.GX, obj.GY, ...
+            % Draw box lines (绘制小框线)
+            obj.BX = []; obj.BY = [];
+            for gi = 1:max(obj.RowGroup)
+                for gj = 1:max(obj.ColGroup)
+                    posi = obj.RP(obj.RowGroup == gi);
+                    posj = obj.CP(obj.ColGroup == gj);
+                    rowY = unique([posi - .5, posi + .5]);
+                    rowX = [posj(1) - .5; posj(end) + .5; nan]*ones(size(rowY));
+                    rowY = [1; 1; nan]*rowY;
+                    colX = unique([posj - .5, posj + .5]);  
+                    colY = [posi(1) - .5; posi(end) + .5; nan]*ones(size(colX));
+                    colX = [1; 1; nan]*colX;
+                    obj.BX = [obj.BX; rowX(:); colX(:)];
+                    obj.BY = [obj.BY; rowY(:); colY(:)];
+                end
+            end
+            obj.boxHdl = plot(obj.ax, obj.BX, obj.BY, ...
                 'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
+
             if strcmpi(obj.Format, 'sq') || ...
                strcmpi(obj.Format, 'rrect') || ...
                strcmpi(obj.Format, 'shade') || ...
@@ -929,7 +939,116 @@ classdef SHeatmap < handle
                 varargout = {obj};
             end
         end
-        
+% =========================================================================
+% Set properties for grid handle (设置网格样式)
+% =========================================================================  
+        function varargout = setGrid(obj, varargin)
+            % obj.setGrid(varargin) - Set properties for grid handle (设置网格样式)
+
+            obj.GX = []; obj.GY = [];
+            for gi = 1:max(obj.RowGroup)
+                for gj = 1:max(obj.ColGroup)
+                    posi = obj.RP(obj.RowGroup == gi);
+                    posj = obj.CP(obj.ColGroup == gj);
+                    M = length(posi);
+                    N = length(posj);
+                    switch lower(obj.Type)
+                        case {'full', 'row', 'col'}
+                            posi = obj.RP(obj.RowGroup == gi);
+                            posj = obj.CP(obj.ColGroup == gj);
+                            rowY = posi;
+                            rowX = [posj(1); posj(end); nan]*ones(size(rowY));
+                            rowY = [1; 1; nan]*rowY;
+                            colX = posj;
+                            colY = [posi(1); posi(end); nan]*ones(size(colX));
+                            colX = [1; 1; nan]*colX;
+                            obj.GX = [obj.GX; rowX(:); colX(:)];
+                            obj.GY = [obj.GY; rowY(:); colY(:)];
+
+                        case {'triu0', 'linku'}
+                            if gi == gj && length(posi) > 1
+                                gX1 = [1; 1; nan]*posj(2:end);
+                                gY1 = [posi(1).*ones(1, N - 1);
+                                    posi(1:(end - 1));
+                                    nan(1, N - 1)];
+                                gX2 = [posj(end).*ones(1, N - 1);
+                                    posj(2:end);
+                                    nan(1, N - 1)];
+                                gY2 = [1; 1; nan]*posj(1:(end - 1));
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            elseif gj > gi
+                                gX1 = [1; 1; nan]*posj;
+                                gY1 = [posi(1); posi(end); nan]*ones(1, N);
+                                gX2 = [posj(1); posj(end); nan]*ones(1, M);
+                                gY2 = [1; 1; nan]*posi;
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            end
+
+                        case {'tril0', 'linkl'}
+                            if gi == gj && length(posi) > 1
+                                gX1 = [1; 1; nan]*posj(1:(end - 1));
+                                gY1 = [posi(end).*ones(1, N - 1);
+                                    posi(2:end);
+                                    nan(1, N - 1)];
+                                gX2 = [posj(1).*ones(1, N - 1);
+                                    posj(1:(end - 1));
+                                    nan(1, N - 1)];
+                                gY2 = [1; 1; nan]*posj(2:end);
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            elseif gj < gi
+                                gX1 = [1; 1; nan]*posj;
+                                gY1 = [posi(1); posi(end); nan]*ones(1, N);
+                                gX2 = [posj(1); posj(end); nan]*ones(1, M);
+                                gY2 = [1; 1; nan]*posi;
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            end
+
+                        case  'triu'
+                            if gi == gj
+                                gX1 = [1; 1; nan]*posj;
+                                gY1 = [posi(1).*ones(1, N); posi; nan(1, N)];
+                                gX2 = [posj(end).*ones(1, N); posj; nan(1, N)];
+                                gY2 = [1; 1; nan]*posi;
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            elseif gj > gi
+                                gX1 = [1; 1; nan]*posj;
+                                gY1 = [posi(1); posi(end); nan]*ones(1, N);
+                                gX2 = [posj(1); posj(end); nan]*ones(1, M);
+                                gY2 = [1; 1; nan]*posi;
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            end
+
+                        case  'tril'
+                            if gi == gj
+                                gX1 = [1; 1; nan]*posj;
+                                gY1 = [posi; posi(end).*ones(1, N); nan(1, N)];
+                                gX2 = [posj(1).*ones(1, N); posj; nan(1, N)];
+                                gY2 = [1; 1; nan]*posi;
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            elseif gj < gi
+                                gX1 = [1; 1; nan]*posj;
+                                gY1 = [posi(1); posi(end); nan]*ones(1, N);
+                                gX2 = [posj(1); posj(end); nan]*ones(1, M);
+                                gY2 = [1; 1; nan]*posi;
+                                obj.GX = [obj.GX; gX1(:); gX2(:)];
+                                obj.GY = [obj.GY; gY1(:); gY2(:)];
+                            end
+
+                    end
+                end
+            end
+            set(obj.gridHdl, 'XData',obj.GX, 'YData',obj.GY, varargin{:})
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
 
 % =========================================================================
 % Set properties for box handle (设置框样式)
@@ -946,6 +1065,9 @@ classdef SHeatmap < handle
 % =========================================================================
         function varargout = setFrame(obj, varargin)
             % obj.setFrame(varargin) - Set properties for frame and tick handle (设置外轮廓样式)
+            if obj.XYTReset
+                set(obj.frameHdl, 'Visible','on', varargin{:})
+            else 
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > .5) = .5;
 
@@ -1088,6 +1210,7 @@ classdef SHeatmap < handle
                     set(obj.rowLabelHdl(n), 'Visible','off')
                 end
                 set(obj.rowTickHdl, 'Visible','off')
+            end
             end
 
 
@@ -1289,7 +1412,7 @@ classdef SHeatmap < handle
             obj.setRowLabelLocation(obj.RowLabelLocation);
             obj.setColLabelLocation(obj.ColLabelLocation);
 
-            obj.GX = []; obj.GY = [];
+            obj.BX = []; obj.BY = [];
             for gi = 1:max(obj.RowGroup)
                 for gj = 1:max(obj.ColGroup)
                     posi = obj.RP(obj.RowGroup == gi);
@@ -1307,15 +1430,15 @@ classdef SHeatmap < handle
                                         posj(1) - .5, posj - .5;
                                         nan(1, N + 1)];
                                 bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             elseif gj > gi
                                 bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
                                 bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
                                 bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
                                 bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             end
                         case 'tril'
                             if gi == gj
@@ -1327,15 +1450,15 @@ classdef SHeatmap < handle
                                         posj + .5, posj(end) + .5;
                                         nan(1, N + 1)];
                                 bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             elseif gj < gi
                                 bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
                                 bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
                                 bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
                                 bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             end
                         case {'triu0', 'linku'}
                             if gi == gj && length(posi) > 1
@@ -1347,15 +1470,15 @@ classdef SHeatmap < handle
                                         posj(1) + .5, posj(2:end) - .5;
                                         nan(1, N)];
                                 bY2 = [1; 1; nan]*(posj - .5);
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             elseif gj > gi
                                 bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
                                 bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
                                 bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
                                 bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             end
                         case {'tril0', 'linkl'}
                             if gi == gj && length(posi) > 1
@@ -1367,21 +1490,21 @@ classdef SHeatmap < handle
                                         posj(1:(end - 1)) + .5, posj(end) - .5;
                                         nan(1, N)];
                                 bY2 = [1; 1; nan]*(posi + .5);
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             elseif gj < gi
                                 bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
                                 bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
                                 bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
                                 bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.GX = [obj.GX; bX1(:); bX2(:)];
-                                obj.GY = [obj.GY; bY1(:); bY2(:)];
+                                obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                obj.BY = [obj.BY; bY1(:); bY2(:)];
                             end
                     end
                 end
             end
             if ~(strcmpi(Type, 'row') || strcmpi(Type, 'col') || strcmpi(Type, 'full'))
-                set(obj.boxHdl, 'XData',obj.GX, 'YData',obj.GY)
+                set(obj.boxHdl, 'XData',obj.BX, 'YData',obj.BY)
             end
 
             obj.FX = []; obj.FY = [];
@@ -1443,6 +1566,9 @@ classdef SHeatmap < handle
             end
             else
                 obj.Type = 'full';
+            end
+            if ~all(isnan(obj.GX))
+                obj.setGrid();
             end
             if nargout == 1
                 varargout = {obj};
@@ -2100,7 +2226,8 @@ classdef SHeatmap < handle
                 if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
                     obj.ax.DataAspectRatio = [1,1,1];
                 end
-
+                obj.XYTReset = true;
+                
                 tLen = max(1./diff(OXLim).*diff(obj.XLim), 1./diff(OYLim).*diff(obj.YLim));
 
                 obj.XLim = sort(obj.XLim);
@@ -2135,6 +2262,19 @@ classdef SHeatmap < handle
                     Y = interpDataNaN(obj.frameHdl.YData, 10);
                     [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                     obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
+                end
+
+                if ~all(isnan(obj.GX))
+                    if abs(diff(obj.TLim)) < eps
+                        X = obj.GX; Y = obj.GY;
+                        [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                        obj.gridHdl.XData = nX; obj.gridHdl.YData = nY;
+                    else
+                        X = interpDataNaN(obj.GX, 10);
+                        Y = interpDataNaN(obj.GY, 10);
+                        [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                        obj.gridHdl.XData = nX; obj.gridHdl.YData = nY;
+                    end
                 end
 
                 X = obj.rowTickHdl.XData; Y = obj.rowTickHdl.YData;

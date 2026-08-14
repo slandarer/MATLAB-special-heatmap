@@ -57,7 +57,7 @@ CB.Location = 'southoutside';
 ```
 ![](gallery/Basic_colorbar_location.png)
 
-#### 1.5 Draw heat map with NaN (绘制有 NaN 热图)
+#### 1.5 Draw heatmap with NaN (绘制有 NaN 热图)
 ```matlab
 figure()
 Data = rand(12, 12) - .5;
@@ -67,7 +67,7 @@ SHM5.draw();
 ```
 ![](gallery/Basic_with_NaN.png)
 
-#### 1.6 Draw heat map with value text (绘制有文本热图)
+#### 1.6 Draw heatmap with value text (绘制有文本热图)
 Use the `obj.setText()` method to display text: \
 使用 `obj.setText()` 方法显示文字：
 ```matlab
