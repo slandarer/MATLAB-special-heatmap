@@ -69,6 +69,10 @@ classdef SHeatmap < handle
 %     'linku'  : upper triangle for mantel links  : 适配 mantel 链接的上三角
 %     'row'    : show row labels & ticks only     : 仅显示行标签及行刻度
 %     'col'    : show col labels & ticks only     : 仅显示列标签及列刻度
+%     'varu'   : upper triangle with diagonal     : 上三角部分
+%                cells replaced by variable names : 对角线使用变量名标签替换
+%     'varl'   : lower triangle with diagonal     : 下三角部分
+%                cells replaced by variable names : 对角线使用变量名标签替换
 %
 % Methods: (try: help SHeatmap.setText)
 %   draw                     - Render the heatmap object (渲染热图对象)
@@ -80,6 +84,7 @@ classdef SHeatmap < handle
 %   setColGroupName          - Assign group names to col-groups (为列分组分配组名)
 %   setText                  - Show value labels with auto-contrast color, and set properties (显示数值标签并自动调整颜色，设置标签属性)
 %   setTextFormat            - Apply a custom formatting function to all value labels (对数值标签应用自定义格式化函数)
+%   setFontName              - Set the font name of all existing labels (设置所有已绘制标签的字体名称)
 %   showStars                - Overlay significance stars on value labels based on p-values (根据 p 值在数值标签上叠加显著性星标)
 %   setBox                   - Set properties for box handle (设置框样式)
 %   setGrid                  - Set properties for grid handle (设置网格样式)
@@ -117,7 +122,7 @@ classdef SHeatmap < handle
                      'VarName', 'RowName', 'ColName', ...
                      'GroupSep', 'RowGroup', 'ColGroup', ...
                      'TickLength','TickLabelOffset','GroupLabelOffset', ...
-                     'RowGroupName', 'ColGroupName'}
+                     'RowGroupName', 'ColGroupName', 'ShapeFlipX', 'ShapeFlipY'}
         Data
         PVal
 
@@ -146,6 +151,9 @@ classdef SHeatmap < handle
         % 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
         SData = [.45, .21, .22, .09, .00, -.09, -.22, -.21, -.45, -.21, -.22, -.09, -.00,  .09,  0.22,  .21,   .45
                  .00, .09, .22, .21, .45,  .21,  .22,  .09,  .00, -.09, -.22, -.21, -.45, -.21, -0.22, -.09, -.00];
+        ShapeFlipX = 'off';  % Horizontal flip of cell shapes (水平翻转单元格形状), 'on'/'off'
+        ShapeFlipY = 'off';  % Vertical flip of cell shapes   (垂直翻转单元格形状), 'on'/'off'
+
         Type = 'full';
         % 'triu'  : upper triangle                   : 上三角部分
         % 'tril'  : lower triangle                   : 下三角部分
@@ -157,6 +165,10 @@ classdef SHeatmap < handle
         % 'linku' : upper triangle for mantel links  : 适配 mantel 链接的上三角
         % 'row'   : show row labels & ticks only     : 仅显示行标签及行刻度
         % 'col'   : show col labels & ticks only     : 仅显示列标签及列刻度
+        % 'varu'  : upper triangle with diagonal     : 上三角部分
+        %           cells replaced by variable names : 对角线使用变量名标签替换
+        % 'varl'  : lower triangle with diagonal     : 下三角部分
+        %           cells replaced by variable names : 对角线使用变量名标签替换
 
         TickLength = .1;        % Length of tick marks (刻度线长度)
         TickLabelOffset = .25;  % Offset distance from tick end to tick label (刻度末端到刻度标签的偏移距离)
@@ -225,7 +237,8 @@ classdef SHeatmap < handle
                        .47, .79, .65; .39, .75, .65; .32, .67, .68;
                        .26, .60, .71; .20, .53, .74; .26, .45, .70;
                        .31, .38, .67; .37, .31, .64];
-        RP; CP; FX; FY; BX; BY; GX; GY;
+        RP; CP; FX; FY; BX; BY; GX; GY; 
+        SX = 1; SY = 1;
         TxtShown = false; 
         XYTReset = false;
         RGP; CGP; RGLST; CGLST;
@@ -392,6 +405,12 @@ classdef SHeatmap < handle
             Y4 = [ones(1, 20), ones(1, 20), - ones(1, 20), - ones(1, 20)].';
             XA = [0; .5; .2; .2; -.2; -.2; -.5];
             YA = [.5; 0; 0; -.5; -.5; 0; 0];
+            if strcmpi(obj.ShapeFlipX, 'on')
+                obj.SX = -1;
+            end
+            if strcmpi(obj.ShapeFlipY, 'on')
+                obj.SY = -1;
+            end
 
             [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
 
@@ -403,59 +422,59 @@ classdef SHeatmap < handle
 
             switch lower(obj.Format)
                 case 'sq'
-                    obj.PatchX = repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
-                    obj.PatchY = repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
+                    obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'asq'
-                    obj.PatchX = repmat([-.5; .5; .5; -.5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(cols, [4, 1]);
-                    obj.PatchY = repmat([-.5; -.5; .5; .5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(rows, [4, 1]);
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(cols, [4, 1]);
+                    obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(rows, [4, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'rrect'
-                    obj.PatchX = repmat((X4.*.7 + cos(T4).*.3).*.46, [1, mn]) + repmat(cols, [80, 1]);
-                    obj.PatchY = repmat((Y4.*.7 + sin(T4).*.3).*.46, [1, mn]) + repmat(rows, [80, 1]);
+                    obj.PatchX = obj.SX.*repmat((X4.*.7 + cos(T4).*.3).*.46, [1, mn]) + repmat(cols, [80, 1]);
+                    obj.PatchY = obj.SY.*repmat((Y4.*.7 + sin(T4).*.3).*.46, [1, mn]) + repmat(rows, [80, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'c2rect'
-                    obj.PatchX = (repmat(X4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(cols, [80, 1]);
-                    obj.PatchY = (repmat(Y4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(rows, [80, 1]);
+                    obj.PatchX = obj.SX.*(repmat(X4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(cols, [80, 1]);
+                    obj.PatchY = obj.SY.*(repmat(Y4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(rows, [80, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'shade'
-                    obj.PatchX = repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
-                    obj.PatchY = repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
+                    obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
-                    obj.PieX = repmat([.49; .01; nan; .49; -.49; nan; -.01; -.49; nan], [1, mn]) + repmat(cols, [9, 1]);
-                    obj.PieY = repmat([-.01; -.49; nan; .49; -.49; nan; .49; .01; nan], [1, mn]) + repmat(rows, [9, 1]);
+                    obj.PieX = obj.SX.*repmat([.49; .01; nan; .49; -.49; nan; -.01; -.49; nan], [1, mn]) + repmat(cols, [9, 1]);
+                    obj.PieY = obj.SY.*repmat([-.01; -.49; nan; .49; -.49; nan; .49; .01; nan], [1, mn]) + repmat(rows, [9, 1]);
                     obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, datas, 'EdgeColor',[1,1,1], 'LineWidth',1, 'LineJoin','chamfer', 'EdgeAlpha',.7);
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                 case 'pie'
-                    obj.PieX = repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
-                    obj.PieY = repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
+                    obj.PieX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
+                    obj.PieY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
                     obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, [1,1,1], 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                     tMesh = repmat(linspace(0, 1, 100).', 1, mn);
                     tTheta = pi/2 + tMesh.*repmat(datas./obj.maxV.*2.*pi, 100, 1);
-                    obj.PatchX = [zeros(1, mn); cos(tTheta).*.92.*.5] + repmat(cols, [101, 1]);
-                    obj.PatchY = [zeros(1, mn);-sin(tTheta).*.92.*.5] + repmat(rows, [101, 1]);
+                    obj.PatchX = obj.SX.*[zeros(1, mn); cos(tTheta).*.92.*.5] + repmat(cols, [101, 1]);
+                    obj.PatchY = obj.SY.*[zeros(1, mn);-sin(tTheta).*.92.*.5] + repmat(rows, [101, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'circ'
-                    obj.PatchX = repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
-                    obj.PatchY = repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
+                    obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
+                    obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'acirc'
-                    obj.PatchX = repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
-                    obj.PatchY = repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
+                    obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
+                    obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'arrect'
                     tRatio2 = max(0, 4*(tRatio - 0.75));
-                    obj.PatchX = (repmat(X4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(cols, [80, 1]);
-                    obj.PatchY = (repmat(Y4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(rows, [80, 1]);
+                    obj.PatchX = obj.SX.*(repmat(X4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(cols, [80, 1]);
+                    obj.PatchY = obj.SY.*(repmat(Y4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(rows, [80, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'oval'
@@ -465,76 +484,76 @@ classdef SHeatmap < handle
                     baseOvalX = repmat(cos(baseT).*.98.*.5, [1, mn]).*repmat(baseA, [length(baseT), 1]);
                     baseOvalY = repmat(sin(baseT).*.98.*.5, [1, mn]).*repmat(baseB, [length(baseT), 1]);
                     baseOvalXY = [baseOvalX(:), baseOvalY(:)]*thetaMat;
-                    obj.PatchX = reshape(baseOvalXY(:,1), [length(baseT), mn]) + repmat(cols, [length(baseT), 1]);
-                    obj.PatchY = -reshape(baseOvalXY(:,2), [length(baseT), mn]) + repmat(rows, [length(baseT), 1]);
+                    obj.PatchX = obj.SX.*reshape(baseOvalXY(:,1), [length(baseT), mn]) + repmat(cols, [length(baseT), 1]);
+                    obj.PatchY = -obj.SY.*reshape(baseOvalXY(:,2), [length(baseT), mn]) + repmat(rows, [length(baseT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'hex'
-                    obj.PatchX = repmat(cos(hexT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(hexT), 1]) + repmat(cols, [length(hexT), 1]);
-                    obj.PatchY = repmat(sin(hexT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(hexT), 1]) + repmat(rows, [length(hexT), 1]);
+                    obj.PatchX = obj.SX.*repmat(cos(hexT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(hexT), 1]) + repmat(cols, [length(hexT), 1]);
+                    obj.PatchY = obj.SY.*repmat(sin(hexT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(hexT), 1]) + repmat(rows, [length(hexT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'star'
                     tValue = datas./obj.maxV;
                     tR = [1;.5;1;.5;1;.5;1;.5;1;.5;1];
-                    obj.PatchX = repmat(cos(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(cols, [length(starT), 1]);
-                    obj.PatchY = -repmat(sin(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(rows, [length(starT), 1]);
+                    obj.PatchX = obj.SX.*repmat(cos(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(cols, [length(starT), 1]);
+                    obj.PatchY = -obj.SY.*repmat(sin(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(rows, [length(starT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'arrow'
                     tValue = 2.*((datas < 0) - .5);
-                    obj.PatchX = repmat(XA.*.8, [1, mn]) + repmat(cols, [7, 1]);
-                    obj.PatchY = repmat(YA.*.8, [1, mn]).*repmat(tValue, [7, 1]) + repmat(rows, [7, 1]);
+                    obj.PatchX = obj.SX.*repmat(XA.*.8, [1, mn]) + repmat(cols, [7, 1]);
+                    obj.PatchY = obj.SY.*repmat(YA.*.8, [1, mn]).*repmat(tValue, [7, 1]) + repmat(rows, [7, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case {'tril', 'trill'}
-                    obj.PatchX = repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
-                    obj.PatchY = repmat([.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
+                    obj.PatchY = obj.SY.*repmat([.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case {'triu', 'triur'}
-                    obj.PatchX = repmat([-.5; .5; .5].*.98, [1, mn]) + repmat(cols, [3, 1]);
-                    obj.PatchY = repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; .5].*.98, [1, mn]) + repmat(cols, [3, 1]);
+                    obj.PatchY = obj.SY.*repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'triul'
-                    obj.PatchX = repmat([.5; -.5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
-                    obj.PatchY = repmat([-.5; -.5; .5].*.98, [1, mn]) + repmat(rows, [3, 1]);
+                    obj.PatchX = obj.SX.*repmat([.5; -.5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
+                    obj.PatchY = obj.SY.*repmat([-.5; -.5; .5].*.98, [1, mn]) + repmat(rows, [3, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'trilr'
-                    obj.PatchX = repmat([-.5; .5; .5].*.98, [1, mn]) + repmat(cols, [3, 1]);
-                    obj.PatchY = repmat([.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; .5].*.98, [1, mn]) + repmat(cols, [3, 1]);
+                    obj.PatchY = obj.SY.*repmat([.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'donut'
-                    obj.PieX = repmat([cos(baseT - pi/2).*.92.*.5; cos(baseT(end:-1:1, :) - pi/2).*.92.*.25], [1, mn]) + repmat(cols, [2*length(baseT), 1]);
-                    obj.PieY = repmat([sin(baseT - pi/2).*.92.*.5; sin(baseT(end:-1:1, :) - pi/2).*.92.*.25], [1, mn]) + repmat(rows, [2*length(baseT), 1]);
+                    obj.PieX = obj.SX.*repmat([cos(baseT - pi/2).*.92.*.5; cos(baseT(end:-1:1, :) - pi/2).*.92.*.25], [1, mn]) + repmat(cols, [2*length(baseT), 1]);
+                    obj.PieY = obj.SY.*repmat([sin(baseT - pi/2).*.92.*.5; sin(baseT(end:-1:1, :) - pi/2).*.92.*.25], [1, mn]) + repmat(rows, [2*length(baseT), 1]);
                     obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, [1,1,1], 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                     tMesh = repmat(linspace(0, 1, 50).', 1, mn);
                     tTheta = pi/2 + tMesh.*repmat(datas./obj.maxV.*2.*pi, 50, 1);
-                    obj.PatchX = [cos(tTheta).*.92.*.5; cos(tTheta(end:-1:1, :)).*.92.*.25] + repmat(cols, [100, 1]);
-                    obj.PatchY = -[sin(tTheta).*.92.*.5; sin(tTheta(end:-1:1, :)).*.92.*.25] + repmat(rows, [100, 1]);
+                    obj.PatchX = obj.SX.*[cos(tTheta).*.92.*.5; cos(tTheta(end:-1:1, :)).*.92.*.25] + repmat(cols, [100, 1]);
+                    obj.PatchY = -obj.SY.*[sin(tTheta).*.92.*.5; sin(tTheta(end:-1:1, :)).*.92.*.25] + repmat(rows, [100, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'cust'
-                    obj.PatchX = repmat(obj.SData(1,:).', [1, mn]) + repmat(cols, [length(obj.SData(1,:)), 1]);
-                    obj.PatchY = repmat(-obj.SData(2,:).', [1, mn]) + repmat(rows, [length(obj.SData(2,:)), 1]);
+                    obj.PatchX = obj.SX.*repmat(obj.SData(1,:).', [1, mn]) + repmat(cols, [length(obj.SData(1,:)), 1]);
+                    obj.PatchY = obj.SY.*repmat(-obj.SData(2,:).', [1, mn]) + repmat(rows, [length(obj.SData(2,:)), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'acust'
-                    obj.PatchX = repmat(obj.SData(1,:).', [1, mn]).*repmat(tRatio, [length(obj.SData(1,:)), 1]) + repmat(cols, [length(obj.SData(1,:)), 1]);
-                    obj.PatchY = repmat(-obj.SData(2,:).', [1, mn]).*repmat(tRatio, [length(obj.SData(2,:)), 1]) + repmat(rows, [length(obj.SData(2,:)), 1]);
+                    obj.PatchX = obj.SX.*repmat(obj.SData(1,:).', [1, mn]).*repmat(tRatio, [length(obj.SData(1,:)), 1]) + repmat(cols, [length(obj.SData(1,:)), 1]);
+                    obj.PatchY = obj.SY.*repmat(-obj.SData(2,:).', [1, mn]).*repmat(tRatio, [length(obj.SData(2,:)), 1]) + repmat(rows, [length(obj.SData(2,:)), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'bcirc'
-                    obj.PieX = repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
-                    obj.PieY = repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
+                    obj.PieX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
+                    obj.PieY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
                     obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, [1,1,1], 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.pieHdl = reshape(obj.pieHdl, sz);
-                    obj.PatchX = repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
-                    obj.PatchY = repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
+                    obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
+                    obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
             end
@@ -829,13 +848,13 @@ classdef SHeatmap < handle
                             set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case {'triu0', 'linku'}     % upper triangle without diagonal (扣除对角线，上三角不含对角线)
+                case {'triu0', 'linku', 'varu'}     % upper triangle without diagonal (扣除对角线，上三角不含对角线)
                     for row = 1:size(obj.Data, 1)
                         for col = 1:(row)
                             set(obj.textHdl(row, col), 'Visible','off');
                         end
                     end
-                case {'tril0', 'linkl'}      % lower triangle without diagonal (扣除对角线，下三角不含对角线)
+                case {'tril0', 'linkl', 'varl'}      % lower triangle without diagonal (扣除对角线，下三角不含对角线)
                     for col = 1:size(obj.Data, 2)
                         for row = 1:(col)
                             set(obj.textHdl(row, col), 'Visible','off');
@@ -965,7 +984,7 @@ classdef SHeatmap < handle
                             obj.GX = [obj.GX; rowX(:); colX(:)];
                             obj.GY = [obj.GY; rowY(:); colY(:)];
 
-                        case {'triu0', 'linku'}
+                        case {'triu0', 'linku', 'varu'}
                             if gi == gj && length(posi) > 1
                                 gX1 = [1; 1; nan]*posj(2:end);
                                 gY1 = [posi(1).*ones(1, N - 1);
@@ -986,7 +1005,7 @@ classdef SHeatmap < handle
                                 obj.GY = [obj.GY; gY1(:); gY2(:)];
                             end
 
-                        case {'tril0', 'linkl'}
+                        case {'tril0', 'linkl', 'varl'}
                             if gi == gj && length(posi) > 1
                                 gX1 = [1; 1; nan]*posj(1:(end - 1));
                                 gY1 = [posi(end).*ones(1, N - 1);
@@ -1049,6 +1068,34 @@ classdef SHeatmap < handle
                 varargout = {obj};
             end
         end
+% =========================================================================
+% Set font name for all labels (设置全部标签字体)
+% =========================================================================
+        function varargout = setFontName(obj, fname)
+            % obj.setFontName(fname) - Set the font name of all existing labels (设置所有已绘制标签的字体名称)
+            set(obj.ax, 'FontName',fname)
+            if ~isempty(obj.nanTextHdl)
+                set(obj.nanTextHdl, 'FontName',fname)
+            end
+            if ~isempty(obj.textHdl)
+                set(obj.textHdl, 'FontName',fname)
+            end
+            if ~isempty(obj.rowLabelHdl)
+                set(obj.rowLabelHdl, 'FontName',fname)
+            end
+            if ~isempty(obj.colLabelHdl)
+                set(obj.colLabelHdl, 'FontName',fname)
+            end
+            if ~isempty(obj.rowGroupLabelHdl)
+                set(obj.rowGroupLabelHdl, 'FontName',fname)
+            end
+            if ~isempty(obj.colGroupLabelHdl)
+                set(obj.colGroupLabelHdl, 'FontName',fname)
+            end
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
 
 % =========================================================================
 % Set properties for box handle (设置框样式)
@@ -1087,9 +1134,9 @@ classdef SHeatmap < handle
             switch obj.RowLabelLocation
                 case 'left'
                     switch lower(obj.Type)
-                        case 'triu'
+                        case {'triu', 'varu'}
                             X = nan(3, 1); Y = nan(3, 1);
-                        case 'tril'
+                        case {'tril', 'varl'}
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'triu0', 'linku'}
@@ -1104,10 +1151,10 @@ classdef SHeatmap < handle
                     set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
                 case 'right'
                     switch lower(obj.Type)
-                        case 'triu'
+                        case {'triu', 'varu'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
-                        case 'tril'
+                        case {'tril', 'varl'}
                             X = nan(3, 1); Y = nan(3, 1);
                         case {'triu0', 'linku'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M - 1);
@@ -1133,16 +1180,18 @@ classdef SHeatmap < handle
                         case {'tril0', 'linkl'}
                             X = [obj.CP(1:(M - 1)) + .5; obj.CP(1:(M - 1)) + .5 + obj.TickLength; nan(1, M - 1)];
                             Y = [1; 1; nan]*obj.RP(2:M);
+                        case {'varu', 'varl'}
+                            X = nan(3, 1); Y = nan(3, 1);
                     end
                     set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
             end
             switch obj.ColLabelLocation
                 case 'top'
                     switch lower(obj.Type)
-                        case 'triu'
+                        case {'triu', 'varu'}
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
-                        case 'tril'
+                        case {'tril', 'varl'}
                             X = nan(3, 1); Y = nan(3, 1);
                         case {'triu0', 'linku'}
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N - 1);
@@ -1156,9 +1205,9 @@ classdef SHeatmap < handle
                     set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
                 case 'bottom'
                     switch lower(obj.Type)
-                        case 'triu'
+                        case {'triu', 'varu'}
                             X = nan(3, 1); Y = nan(3, 1);
-                        case 'tril'
+                        case {'tril', 'varl'}
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'triu0', 'linku'}
@@ -1185,6 +1234,8 @@ classdef SHeatmap < handle
                         case {'tril0', 'linkl'}
                             Y = [obj.RP(2:N) - .5; obj.RP(2:N) - .5 - obj.TickLength; nan(1, N - 1)];
                             X = [1; 1; nan]*obj.CP(1:(N - 1));
+                        case {'varu', 'varl'}
+                            X = nan(3, 1); Y = nan(3, 1);
                     end
                     set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
             end
@@ -1198,7 +1249,7 @@ classdef SHeatmap < handle
             catch
             end
 
-            if strcmpi(obj.Type, 'row')
+            if strcmpi(obj.Type, 'row') || strcmpi(obj.Type, 'varu') || strcmpi(obj.Type, 'varl')
                 for n = 1:size(obj.Data, 2)
                     set(obj.colLabelHdl(n), 'Visible','off')
                 end
@@ -1226,14 +1277,16 @@ classdef SHeatmap < handle
             % (根据类型调整显示，仅展示矩阵的三角部分)
             %
             % Type:
-            %   'triu'   : upper triangle (including diagonal) : 上三角部分 (含对角线)
-            %   'tril'   : lower triangle (including diagonal) : 下三角部分 (含对角线)
-            %   'triu0'  : upper triangle without diagonal     : 扣除对角线上三角部分 (不含对角线)
-            %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
-            %   'linkl'  : lower triangle for mantel links     : 适配 mantel 链接的下三角
-            %   'linku'  : upper triangle for mantel links     : 适配 mantel 链接的上三角
-            %   'row'    : show row labels & ticks only     : 仅显示行标签及行刻度
-            %   'col'    : show col labels & ticks only     : 仅显示列标签及列刻度
+            %   'triu'   : upper triangle (including diagonal)  : 上三角部分 (含对角线)
+            %   'tril'   : lower triangle (including diagonal)  : 下三角部分 (含对角线)
+            %   'triu0'  : upper triangle without diagonal      : 扣除对角线上三角部分 (不含对角线)
+            %   'tril0'  : lower triangle without diagonal      : 扣除对角线下三角部分 (不含对角线)
+            %   'linkl'  : lower triangle for mantel links      : 适配 mantel 链接的下三角
+            %   'linku'  : upper triangle for mantel links      : 适配 mantel 链接的上三角
+            %   'row'    : show row labels & ticks only         : 仅显示行标签及行刻度
+            %   'col'    : show col labels & ticks only         : 仅显示列标签及列刻度
+            %   'varu'   : upper triangle (var-labels diagonal) : 上三角部分 (变量名对角线)
+            %   'varl'   : lower triangle (var-labels diagonal) : 下三角部分 (变量名对角线)
         
             % mustBeAllowedTriType(Type)
                 
@@ -1263,6 +1316,8 @@ classdef SHeatmap < handle
                 % Show all row and column labels initially (初始显示所有行/列标签)
                 for n = 1:size(obj.Data, 1)
                     set(obj.rowLabelHdl(n), 'Visible', 'on');
+                end
+                for n = 1:size(obj.Data, 2)
                     set(obj.colLabelHdl(n), 'Visible', 'on');
                 end
 
@@ -1271,6 +1326,16 @@ classdef SHeatmap < handle
                         set(obj.colLabelHdl(n), 'Visible','off')
                     end
                     set(obj.colTickHdl, 'Visible','off')
+                end
+
+                if strcmpi(obj.Type, 'varu') || strcmpi(obj.Type, 'varl')
+                    for n = 1:size(obj.Data, 2)
+                        set(obj.colLabelHdl(n), 'Visible','off')
+                    end
+                    set(obj.colTickHdl, 'Visible','off')
+                    set(obj.rowTickHdl, 'Visible','off')
+                    obj.RowLabelLocation = 'diag';
+                    obj.ColLabelLocation = 'diag';
                 end
 
                 if strcmpi(obj.Type, 'col')
@@ -1308,12 +1373,16 @@ classdef SHeatmap < handle
                 end
         
                 % Apply specific triangular type (应用特定三角类型)
-                %   'triu'   : upper triangle (including diagonal) : 上三角部分 (含对角线)
-                %   'tril'   : lower triangle (including diagonal) : 下三角部分 (含对角线)
-                %   'triu0'  : upper triangle without diagonal     : 扣除对角线上三角部分 (不含对角线)
-                %   'tril0'  : lower triangle without diagonal     : 扣除对角线下三角部分 (不含对角线)
-                %   'linkl'  : lower triangle for mantel links     : 适配 mantel 链接的下三角
-                %   'linku'  : upper triangle for mantel links     : 适配 mantel 链接的上三角
+                %   'triu'   : upper triangle (including diagonal)  : 上三角部分 (含对角线)
+                %   'tril'   : lower triangle (including diagonal)  : 下三角部分 (含对角线)
+                %   'triu0'  : upper triangle without diagonal      : 扣除对角线上三角部分 (不含对角线)
+                %   'tril0'  : lower triangle without diagonal      : 扣除对角线下三角部分 (不含对角线)
+                %   'linkl'  : lower triangle for mantel links      : 适配 mantel 链接的下三角
+                %   'linku'  : upper triangle for mantel links      : 适配 mantel 链接的上三角
+                %   'row'    : show row labels & ticks only         : 仅显示行标签及行刻度
+                %   'col'    : show col labels & ticks only         : 仅显示列标签及列刻度
+                %   'varu'   : upper triangle (var-labels diagonal) : 上三角部分 (变量名对角线)
+                %   'varl'   : lower triangle (var-labels diagonal) : 下三角部分 (变量名对角线)
                 switch lower(obj.Type)
                     case 'triu'   % upper triangle (including diagonal) (上三角含对角线)
                         % Hide lower-left patches/texts (隐藏左下部分图形和文本)
@@ -1351,7 +1420,7 @@ classdef SHeatmap < handle
                                 end
                             end
                         end
-                    case {'triu0', 'linku'}  % upper triangle without diagonal (扣除对角线，上三角不含对角线)
+                    case {'triu0', 'linku', 'varu'}  % upper triangle without diagonal (扣除对角线，上三角不含对角线)
                         % Hide diagonal and lower-left patches/texts (隐藏对角线及左下部分)
                         for row = 1:size(obj.Data, 1)
                             for col = 1:(row)
@@ -1371,7 +1440,7 @@ classdef SHeatmap < handle
                         end
                         set(obj.colLabelHdl(1), 'Visible', 'off');
                         set(obj.rowLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
-                    case {'tril0', 'linkl'}  % lower triangle without diagonal (扣除对角线，下三角不含对角线)
+                    case {'tril0', 'linkl', 'varl'}  % lower triangle without diagonal (扣除对角线，下三角不含对角线)
                         % Hide diagonal and upper-right patches/texts (隐藏对角线及右上部分)
                         for col = 1:size(obj.Data, 2)
                             for row = 1:(col)
@@ -1409,6 +1478,15 @@ classdef SHeatmap < handle
                 end
                 delete(obj.Colorbar)
             end
+
+            if strcmpi(obj.Type, 'varl') || strcmpi(obj.Type, 'varu')
+                for n = 1:size(obj.Data, 1)
+                    set(obj.rowLabelHdl(n), 'Visible', 'on');
+                end
+                for n = 1:size(obj.Data, 2)
+                    set(obj.colLabelHdl(n), 'Visible', 'off');
+                end
+            end
             obj.setRowLabelLocation(obj.RowLabelLocation);
             obj.setColLabelLocation(obj.ColLabelLocation);
 
@@ -1420,7 +1498,7 @@ classdef SHeatmap < handle
                     M = length(posi);
                     N = length(posj);
                     switch lower(obj.Type)
-                        case 'triu'
+                        case {'triu', 'varu'}
                             if gi == gj
                                 bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
                                 bY1 = [(posi(1) - .5).*ones(1, N + 1);
@@ -1440,7 +1518,7 @@ classdef SHeatmap < handle
                                 obj.BX = [obj.BX; bX1(:); bX2(:)];
                                 obj.BY = [obj.BY; bY1(:); bY2(:)];
                             end
-                        case 'tril'
+                        case {'tril', 'varl'}
                             if gi == gj
                                 bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
                                 bY1 = [(posi(end) + .5).*ones(1, N + 1);
@@ -1517,7 +1595,7 @@ classdef SHeatmap < handle
                     X2 = reshape([1; 1]*(posj - 1), 1, []);
                     Y2 = reshape([1; 1]*(posi - 1), 1, []);
                     switch lower(obj.Type)
-                        case 'triu'
+                        case {'triu', 'varu'}
                             if gi == gj
                                 X = [X2, N, N, n, n] + .5;
                                 Y = [Y2(2:end), M, M, m, m, m + 1] +.5;
@@ -1527,7 +1605,7 @@ classdef SHeatmap < handle
                                 Y = [m, m, M, M, m, m] + .5;
                                 obj.FX = [obj.FX, X, nan]; obj.FY = [obj.FY, Y, nan];
                             end
-                        case 'tril'
+                        case {'tril', 'varl'}
                             if gi == gj
                                 X = [X2(2:end), N, N, n, n, n + 1] + .5;
                                 Y = [Y2, M, M, m, m] + .5;
@@ -1714,6 +1792,8 @@ classdef SHeatmap < handle
                                 if strcmpi(obj.rowTickHdl.Visible, 'on')
                                     set(obj.rowLabelHdl(n), 'Position',[-.5 - obj.TickLabelOffset + obj.CP(min(n + 1, length(obj.CP))) - obj.TickLength, obj.RP(n), 0])
                                 end
+                            case {'varu', 'varl'}
+                                set(obj.rowLabelHdl(n), 'Position',[obj.RP(n), obj.CP(n), 0], 'HorizontalAlignment','center')
                         end
                 end
             end
@@ -1791,6 +1871,8 @@ classdef SHeatmap < handle
                             if strcmpi(obj.colTickHdl.Visible, 'on')
                                 set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(max(1, n - 1)) + .5 + obj.TickLabelOffset + obj.TickLength, 0])
                             end
+                        case {'varu', 'varl'}
+                            set(obj.colLabelHdl(n), 'Position',[obj.RP(n), obj.CP(n), 0], 'HorizontalAlignment','center')
                     end
             end
             end
@@ -2467,6 +2549,15 @@ classdef SHeatmap < handle
                                 set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','right')
                             end
                         end
+                    end
+                end
+
+                if strcmpi(obj.Type, 'varl') || strcmpi(obj.Type, 'varu')
+                    for n = 1:size(obj.Data, 1)
+                        set(obj.rowLabelHdl(n), 'HorizontalAlignment','center', 'Rotation',0)
+                    end
+                    for n = 1:size(obj.Data, 2)
+                        set(obj.colLabelHdl(n), 'HorizontalAlignment','center', 'Rotation',0)
                     end
                 end
 

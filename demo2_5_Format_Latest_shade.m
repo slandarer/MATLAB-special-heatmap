@@ -9,7 +9,7 @@ X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*
 % Get the correlation matrix (求相关系数矩阵)
 Data = corr(X);
 
-SHM = SHeatmap(Data, 'Format','shade');
+SHM = SHeatmap(Data, 'Format','shade', 'ShapeFlipX','on');
 SHM.draw();
 SHM.setType('triu')
 SHM.setFrame()
