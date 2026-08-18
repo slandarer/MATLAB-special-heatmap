@@ -48,6 +48,7 @@ classdef SHeatmap < handle
 %     'acirc'       : auto-size circular        ：自带调整大小的圆形
 %     'arrect'      : auto-size rounded rect    : 自带调整大小的圆角矩形
 %     'txt'(text)   : colored text              : 带颜色的文本
+%     '3d'          : 3D bar                    : 三维柱状图
 %     'cust'        : custom shape              : 自定义形状
 %     'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
 % 
@@ -122,7 +123,8 @@ classdef SHeatmap < handle
                      'VarName', 'RowName', 'ColName', ...
                      'GroupSep', 'RowGroup', 'ColGroup', ...
                      'TickLength','TickLabelOffset','GroupLabelOffset', ...
-                     'RowGroupName', 'ColGroupName', 'ShapeFlipX', 'ShapeFlipY'}
+                     'RowGroupName', 'ColGroupName', 'ShapeFlipX', 'ShapeFlipY', ...
+                     'Format3DHeight', 'Format3DTheta'}
         Data
         PVal
 
@@ -147,12 +149,15 @@ classdef SHeatmap < handle
         % 'acirc'       : auto-size circular        ：自带调整大小的圆形
         % 'arrect'      : auto-size rounded rect    : 自带调整大小的圆角矩形
         % 'txt'(text)   : colored text              : 带颜色的文本
+        % '3d'          : 3D bar                    : 三维柱状图
         % 'cust'        : custom shape              : 自定义形状
         % 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
         SData = [.45, .21, .22, .09, .00, -.09, -.22, -.21, -.45, -.21, -.22, -.09, -.00,  .09,  0.22,  .21,   .45
                  .00, .09, .22, .21, .45,  .21,  .22,  .09,  .00, -.09, -.22, -.21, -.45, -.21, -0.22, -.09, -.00];
         ShapeFlipX = 'off';  % Horizontal flip of cell shapes (水平翻转单元格形状), 'on'/'off'
         ShapeFlipY = 'off';  % Vertical flip of cell shapes   (垂直翻转单元格形状), 'on'/'off'
+
+        
 
         Type = 'full';
         % 'triu'  : upper triangle                   : 上三角部分
@@ -243,6 +248,9 @@ classdef SHeatmap < handle
         XYTReset = false;
         RGP; CGP; RGLST; CGLST;
         PatchX; PatchY; PieX; PieY; nanTextHdl
+
+        Format3DHeight = 2
+        Format3DTheta = pi/3.5
     end
 
     methods
@@ -405,6 +413,7 @@ classdef SHeatmap < handle
             Y4 = [ones(1, 20), ones(1, 20), - ones(1, 20), - ones(1, 20)].';
             XA = [0; .5; .2; .2; -.2; -.2; -.5];
             YA = [.5; 0; 0; -.5; -.5; 0; 0];
+            
             if strcmpi(obj.ShapeFlipX, 'on')
                 obj.SX = -1;
             end
@@ -556,6 +565,11 @@ classdef SHeatmap < handle
                     obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
+                case '3d'
+                    obj.PieX = repmat([-.5; .5; .5; -.5].*.94, [1, mn]) + repmat(cols, [4, 1]);
+                    obj.PieY = repmat([-.5; -.5; .5; .5].*.94, [1, mn]) + repmat(rows, [4, 1]);
+                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, [0,0,0], 'EdgeColor','none', 'FaceColor',[.9,.9,.9]);
+                    obj.pieHdl = reshape(obj.pieHdl, sz);
             end
 
             % obj.textHdl = gobjects(size(obj.Data, 1), size(obj.Data, 2));
@@ -578,10 +592,40 @@ classdef SHeatmap < handle
             obj.boxHdl = plot(obj.ax, obj.BX, obj.BY, ...
                 'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
 
+            obj.FX = []; obj.FY = [];
+            for gi = 1:max(obj.RowGroup)
+                for gj = 1:max(obj.ColGroup)
+                    posi = obj.RP(obj.RowGroup == gi);
+                    posj = obj.CP(obj.ColGroup == gj);
+                    numY = round(max(posi) - min(posi) + 2);
+                    obj.FX = [obj.FX, [0, ones(1, numY), zeros(1, numY), 1, nan].*(max(posj) - min(posj) + 1) + min(posj) - .5];
+                    obj.FY = [obj.FY, [0, linspace(0, 1, numY), linspace(1, 0, numY), 0, nan].*(max(posi) - min(posi) + 1) + min(posi) - .5];
+                end
+            end
+            obj.frameHdl = plot(obj.ax, obj.FX, obj.FY, 'Color','k', 'LineWidth',1, 'LineJoin','miter', 'Visible','off');
+            obj.rowTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
+            obj.colTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
+
+            if obj.Format3DHeight < 1, obj.Format3DHeight = 1; end
+            if obj.Format3DTheta < 0, obj.Format3DTheta = 0; end
+            if obj.Format3DTheta > pi/2, obj.Format3DTheta = pi/2; end
+
+            if strcmpi(obj.Format, '3d')
+                X3 = (repmat([-.32; .32; -.32; .32], [1, mn]) + [0; 0; 1; 1]*tRatio.*obj.Format3DHeight.*cos(obj.Format3DTheta)) + repmat(cols, [4, 1]);
+                Y3 = (repmat([-.32; .32; -.32; .32], [1, mn]) - [0; 0; 1; 1]*tRatio.*obj.Format3DHeight.*sin(obj.Format3DTheta)) + repmat(rows, [4, 1]);
+                obj.PatchX = X3([1; 2; 4; 4; 3; 1; 1; 3; 3; 3; 4; 3], :);
+                obj.PatchY = Y3([2; 2; 4; 3; 3; 1; 2; 4; 3; 4; 4; 4], :);
+                indFlip = reshape(1:mn, size(obj.Data)); 
+                indFlip = reshape(indFlip(:, end:-1:1), [1, mn]);
+                obj.patchHdl = fill(obj.ax, obj.PatchX(:, indFlip), obj.PatchY(:, indFlip), datas(indFlip), 'EdgeColor',[0,0,0], 'LineWidth',.8, 'LineJoin','chamfer');
+                obj.patchHdl = fliplr(reshape(obj.patchHdl, sz));
+            end
+
             if strcmpi(obj.Format, 'sq') || ...
                strcmpi(obj.Format, 'rrect') || ...
                strcmpi(obj.Format, 'shade') || ...
-               strcmpi(obj.Format, 'c2rect')
+               strcmpi(obj.Format, 'c2rect') || ...
+               strcmpi(obj.Format, '3d')
                 set(obj.boxHdl, 'Visible','off');
             end
 
@@ -599,8 +643,14 @@ classdef SHeatmap < handle
 
             [nanR, nanC] = find(isnan(obj.Data));
             if ~isempty(nanR)
-                obj.nanTextHdl = text(obj.ax, obj.CP(nanC), obj.RP(nanR), ...
-                    '×', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
+                if strcmpi(obj.Format, '3d')
+                    obj.nanTextHdl = text(obj.ax, obj.CP(nanC), obj.RP(nanR), ...
+                        ' ', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
+
+                else
+                    obj.nanTextHdl = text(obj.ax, obj.CP(nanC), obj.RP(nanR), ...
+                        '×', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
+                end
 
                 tind = sub2ind(sz, nanR, nanC);
                 if ~isempty(obj.PatchX)
@@ -612,9 +662,16 @@ classdef SHeatmap < handle
                     obj.PatchY(:, tind) = nan;
                     for i = 1:length(nanR)
                         row = nanR(i); col = nanC(i);
-                        set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5].*.98 + obj.CP(col), ...
-                                                    'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
-                                                    'FaceColor', [.8,.8,.8], 'EdgeColor','none');
+                        if strcmpi(obj.Format, '3d')
+                            set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5].*.98 + obj.CP(col), ...
+                                'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
+                                'FaceColor', [.9,.9,.9], 'EdgeColor','none');
+
+                        else
+                            set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5].*.98 + obj.CP(col), ...
+                                'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
+                                'FaceColor', [.8,.8,.8], 'EdgeColor','none');
+                        end
                         obj.PatchX(1:4, tind(i)) = [-.5;.5;.5;-.5].*.98 + obj.CP(col);
                         obj.PatchY(1:4, tind(i)) = [-.5,-.5,.5,.5].*.98 + obj.RP(row);
                     end
@@ -636,19 +693,7 @@ classdef SHeatmap < handle
                 obj.setText()
             end
 
-            obj.FX = []; obj.FY = [];
-            for gi = 1:max(obj.RowGroup)
-                for gj = 1:max(obj.ColGroup)
-                    posi = obj.RP(obj.RowGroup == gi);
-                    posj = obj.CP(obj.ColGroup == gj);
-                    numY = round(max(posi) - min(posi) + 2);
-                    obj.FX = [obj.FX, [0, ones(1, numY), zeros(1, numY), 1, nan].*(max(posj) - min(posj) + 1) + min(posj) - .5];
-                    obj.FY = [obj.FY, [0, linspace(0, 1, numY), linspace(1, 0, numY), 0, nan].*(max(posi) - min(posi) + 1) + min(posi) - .5];
-                end
-            end
-            obj.frameHdl = plot(obj.ax, obj.FX, obj.FY, 'Color','k', 'LineWidth',1, 'LineJoin','miter', 'Visible','off');
-            obj.rowTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
-            obj.colTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
+            
 
             if isempty(obj.VarName)
                 % Create default variable names (生成默认变量名)
@@ -718,6 +763,11 @@ classdef SHeatmap < handle
                 obj.setColName(obj.ColName);
             end
 
+            if strcmpi(obj.Format, '3d')
+                axis(obj.ax, 'tight')
+                obj.setFrame();
+            end
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -762,10 +812,19 @@ classdef SHeatmap < handle
                 strCell(valid) = cellstr(num2str(dataVec(valid), '%.2f'));
                 strCell(~valid) = {''};
 
-                hAll = text(obj.ax, cols(:), rows(:), strCell, ...
-                    'FontName', 'Times New Roman', ...
-                    'HorizontalAlignment', 'center', ...
-                    'Visible', 'off');
+                tRatio = abs(dataVec)./obj.maxV;
+                if strcmpi(obj.Format, '3d')
+                    hAll = text(obj.ax, cols(:) + cos(obj.Format3DTheta).*tRatio.*obj.Format3DHeight, ...
+                         rows(:) - sin(obj.Format3DTheta).*tRatio.*obj.Format3DHeight, strCell, ...
+                        'FontName', 'Times New Roman', ...
+                        'HorizontalAlignment', 'center', ...
+                        'Visible', 'off');
+                else
+                    hAll = text(obj.ax, cols(:), rows(:), strCell, ...
+                        'FontName', 'Times New Roman', ...
+                        'HorizontalAlignment', 'center', ...
+                        'Visible', 'off');
+                end
                 hAll(~valid) = obj.nanTextHdl;
                 obj.textHdl = reshape(hAll, size(obj.Data));
                 obj.TxtShown = true;
@@ -1397,7 +1456,8 @@ classdef SHeatmap < handle
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
                                    strcmpi(obj.Format, 'bcirc') || ...
-                                   strcmpi(obj.Format, 'shade')
+                                   strcmpi(obj.Format, 'shade') || ...
+                                   strcmpi(obj.Format, '3d')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1415,7 +1475,8 @@ classdef SHeatmap < handle
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
                                    strcmpi(obj.Format, 'bcirc') || ...
-                                   strcmpi(obj.Format, 'shade')
+                                   strcmpi(obj.Format, 'shade') || ...
+                                   strcmpi(obj.Format, '3d')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1433,7 +1494,8 @@ classdef SHeatmap < handle
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
                                    strcmpi(obj.Format, 'bcirc') || ...
-                                   strcmpi(obj.Format, 'shade')
+                                   strcmpi(obj.Format, 'shade') || ...
+                                   strcmpi(obj.Format, '3d')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1453,7 +1515,8 @@ classdef SHeatmap < handle
                                 if strcmpi(obj.Format, 'pie') || ...
                                    strcmpi(obj.Format, 'donut') || ...
                                    strcmpi(obj.Format, 'bcirc') || ...
-                                   strcmpi(obj.Format, 'shade')
+                                   strcmpi(obj.Format, 'shade') || ...
+                                   strcmpi(obj.Format, '3d')
                                     set(obj.pieHdl(row, col), 'Visible', 'off');
                                 end
                             end
@@ -1647,6 +1710,9 @@ classdef SHeatmap < handle
             end
             if ~all(isnan(obj.GX))
                 obj.setGrid();
+            end
+            if strcmpi(obj.Format, '3d')
+                obj.setFrame();
             end
             if nargout == 1
                 varargout = {obj};
@@ -1889,7 +1955,6 @@ classdef SHeatmap < handle
                             case 'triu'
                                 obj.ax.YLim(2) = max(obj.ax.YLim(2), obj.RP(end) + .5 + obj.TickLength);
                         end
-
                 end
             end
             if nargout == 1
