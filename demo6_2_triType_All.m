@@ -48,13 +48,14 @@ ax.XLim(2) = ax.XLim(2) + 1;
 
 %% show upper triangle of all formats (展示所有样式的上三角化)
 Format = {'sq','shade','rrect','c2rect','pie','donut','circ','bcirc','oval', ...
-    'hex','star','arrow','tril','triu','trilr','triul','asq','acirc','arrect','txt','cust','acust'};
+    'hex','star','moon','arrow','teardrop','bar','barh','tril','triu','trilr','triul', ...
+    'asq','acirc','arrect','txt','3d','cust','acust'};
 for i = 1:length(Format)
     figure()
     SHeatmap(Data, 'Format',Format{i}).draw().setType('triu');
 
     drawnow
-    % exportgraphics(gca,['gallery\Type_triu_',Format{i},'.png'])
+    exportgraphics(gca,['gallery\Type_triu_',Format{i},'.png'])
 end
 
 %% Set Font (设置标签字体)

@@ -46,7 +46,7 @@ classdef SClusterBlock < handle
         Orientation = 'top';              % 'top'/'left' (方块位置/方向)               
         BasePos     = 0;                  % Base position for block placement (方块放置的基准位置)
         Height      = 1;                  % Height of blocks (方块高度)
-        BlockProp   = {'LineWidth', 0.8}; % Cell array of patch properties (用于设置方块属性的元胞数组)
+        BlockProp   = {'LineWidth', 1};   % Cell array of patch properties (用于设置方块属性的元胞数组)
         ColorList   = [0.55, 0.83, 0.78; 1.00, 1.00, 0.70; 0.75, 0.73, 0.85;
             0.98, 0.50, 0.45; 0.50, 0.69, 0.83; 0.99, 0.71, 0.38;
             0.70, 0.87, 0.41; 0.99, 0.80, 0.90; 0.85, 0.85, 0.85;

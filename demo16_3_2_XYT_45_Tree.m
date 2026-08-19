@@ -23,7 +23,7 @@ SHM.draw()
 SHM.setType('tril0')
 SHM.setColLabelLocation('bottom')
 SHM.setXYTLim('TLim', [pi/2, pi/2])
-
+SHM.setRowLabel('Rotation',45, 'HorizontalAlignment','right')
 
 SHM.ax.YLim(2) = 1;
 SHM.Colorbar.Location = 'southoutside';

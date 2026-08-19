@@ -23,7 +23,7 @@ YName1 = {'A_{SHM}S','A_{SHM}L','A_{SHM}A','A_{SHM}N','A_{SHM}D','A_{SHM}A_2','A
 YName2 = {'B_{SHM}S','B_{SHM}L','B_{SHM}A','B_{SHM}N','B_{SHM}D','B_{SHM}A_2','B_{SHM}R','B_{SHM}E'};
 YName3 = {'C_{SHM}S','C_{SHM}L','C_{SHM}A','C_{SHM}N','C_{SHM}D','C_{SHM}A_2','C_{SHM}R','C_{SHM}E'};
 YName4 = {'D_{SHM}S','D_{SHM}L','D_{SHM}A','D_{SHM}N','D_{SHM}D','D_{SHM}A_2','D_{SHM}R','D_{SHM}E'};
-XName = {'SAAAS','SK2L','SNV','N-HMN','MATSL','MATPY','MATJA','MAR', 'SHMS2','BMH'};
+XName  = {'SAAAS','SK2L','SNV','N-HMN','MATSL','MATPY','MATJA','MAR', 'SHMS2','BMH'};
 
 CList = [204,  61,  36; 243, 197,  88; 109, 174, 144; 48, 180, 204]./255;
 Data = {Data1, Data2, Data3, Data4};
