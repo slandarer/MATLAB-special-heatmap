@@ -29,6 +29,7 @@ classdef SHeatmap < handle
 %   SHM.draw();
 % 
 %     'sq'          : square (default)          : 方形 (默认)
+%     'sqfull'      : square (full-size)        : 方形 (满格)
 %     'shade'       : Square (neg-values shaded): 方形 (负数部分阴影填充)
 %     'rrect'       : rounded rectangle         : 圆角矩形
 %     'c2rect'      : circle to rectangle       : 圆形到矩形过度
@@ -134,6 +135,7 @@ classdef SHeatmap < handle
 
         Format = 'sq'  
         % 'sq'          : square (default)          : 方形 (默认)
+        % 'sqfull'      : square (full-size)        : 方形 (满格)
         % 'shade'       : Square (neg-values shaded): 方形 (负数部分阴影填充)
         % 'rrect'       : rounded rectangle         : 圆角矩形
         % 'c2rect'      : circle to rectangle       : 圆形到矩形过度
@@ -451,6 +453,11 @@ classdef SHeatmap < handle
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
+                case 'sqfull'
+                    obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5], [1, mn]) + repmat(cols, [4, 1]);
+                    obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5], [1, mn]) + repmat(rows, [4, 1]);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'asq'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(rows, [4, 1]);
@@ -676,7 +683,8 @@ classdef SHeatmap < handle
                strcmpi(obj.Format, 'rrect') || ...
                strcmpi(obj.Format, 'shade') || ...
                strcmpi(obj.Format, 'c2rect') || ...
-               strcmpi(obj.Format, '3d')
+               strcmpi(obj.Format, '3d') || ...
+               strcmpi(obj.Format, 'sqfull')
                 set(obj.boxHdl, 'Visible','off');
             end
 
@@ -724,6 +732,10 @@ classdef SHeatmap < handle
                                 'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
                                 'FaceColor', [.9,.9,.9], 'EdgeColor','none');
 
+                        elseif strcmpi(obj.Format, 'sqfull')
+                            set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5] + obj.CP(col), ...
+                                'YData', [-.5,-.5,.5,.5] + obj.RP(row), ...
+                                'FaceColor', [.8,.8,.8], 'EdgeColor','none');
                         else
                             set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5].*.98 + obj.CP(col), ...
                                 'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
@@ -2430,7 +2442,9 @@ classdef SHeatmap < handle
                     strcmpi(obj.Format, 'c2rect') || ...
                     strcmpi(obj.Format, 'arrect') || ...
                     strcmpi(obj.Format, 'rrect'))) || ...
-                    (strcmpi(obj.Type, 'full') && (strcmpi(obj.Format, 'sq') || strcmpi(obj.Format, 'barh')))
+                    (strcmpi(obj.Type, 'full') && (strcmpi(obj.Format, 'sq') || ...
+                    strcmpi(obj.Format, 'barh') || ...
+                    strcmpi(obj.Format, 'sqfull')))
 
                 if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
                     obj.ax.DataAspectRatio = [1,1,1];

@@ -1,7 +1,7 @@
 %% Circular heatmap with GroupSep
 
 % Circular heatmap is currently supported only for 
-% SHeatmap with 'sq' Format and 'full' Type.
+% SHeatmap with 'sq'/'sqfull'/'barh' Format and 'full' Type.
 
 rng(1)
 Data = randn(50, 10);

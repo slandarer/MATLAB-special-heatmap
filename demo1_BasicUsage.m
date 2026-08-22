@@ -15,7 +15,7 @@ drawnow
 
 %% Contains negative numbers (绘制有负数热图)
 figure()
-Data = rand(15,15) - .5;
+Data = rand(15, 15) - .5;
 SHM2 = SHeatmap(Data, 'Format','sq');
 SHM2.draw();
 
@@ -31,7 +31,7 @@ drawnow
 
 %% Adjust the colorbar Location (调整colorbar位置)
 figure()
-Data = rand(3,12);
+Data = rand(3, 12);
 SHM4 = SHeatmap(Data, 'Format','sq');
 SHM4.draw();
 CB = colorbar;

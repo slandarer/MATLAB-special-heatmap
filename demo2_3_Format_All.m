@@ -4,6 +4,7 @@ if ~exist('gallery\','dir')
     mkdir('gallery\')
 end
 % 'sq'          : square (default)          : 方形 (默认)
+% 'sqfull'      : square (full-size)        : 方形 (满格)
 % 'shade'       : Square (neg-values shaded): 方形 (负数部分阴影填充)
 % 'rrect'       : rounded rectangle         : 圆角矩形
 % 'c2rect'      : circle to rectangle       : 圆形到矩形过度
@@ -31,7 +32,7 @@ end
 % 'cust'        : custom shape              : 自定义形状
 % 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
 
-Format = {'sq','shade','rrect','c2rect','pie','donut','circ','bcirc','oval', ...
+Format = {'sq','sqfull','shade','rrect','c2rect','pie','donut','circ','bcirc','oval', ...
     'hex','star','moon','arrow','teardrop','bar','barh','tril','triu','trilr','triul', ...
     'asq','acirc','arrect','txt','3d','cust','acust'};
 A = rand(12, 12);
