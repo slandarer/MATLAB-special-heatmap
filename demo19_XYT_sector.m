@@ -14,7 +14,7 @@ fig = figure('Units','normalized', 'Position',[.2,.1,.6,.8]);
 ax = axes('Parent',fig, 'Position',[.1,.1,.8,.8]);
 
 % Draw sector heatmap (绘制扇形热图)
-SHM = SHeatmap(Data, 'Format','sq', 'RowName',rowName, 'ColName',colName, 'TickLength',0, 'TickLabelOffset',.1).draw();
+SHM = SHeatmap(Data, 'Format','sqfull', 'RowName',rowName, 'ColName',colName, 'TickLength',0, 'TickLabelOffset',.1).draw();
 SHM.setRowLabelLocation('right')
 SHM.setXYTLim('XLim',[1,2], 'YLim',[0,1], 'TLim',[0, pi]);
 SHM.setBox('Color','k', 'LineWidth',1)

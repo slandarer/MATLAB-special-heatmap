@@ -22,7 +22,6 @@ SCB_L = SClusterBlock(ax, rowGroup, 'Orientation','left', 'ColorList',rowColor, 
 SCB_L.draw(); SCB_L.setXYTLim('XLim',[.85,.95], 'YLim',[0, 1], 'TLim',[-3*pi/2, 0]);
 SCB_T = SClusterBlock(ax, colGroup, 'Orientation','top' , 'ColorList',colColor, 'Group',colGroup);
 SCB_T.draw(); SCB_T.setXYTLim('XLim',[1,2], 'YLim',[-.05, -.15])
-
 % Draw circular heatmap (绘制环形热图)
 SHM = SHeatmap(ax, Data, 'Format','sq', 'RowGroup',rowGroup, 'ColGroup',colGroup);
 SHM.TickLength = .3;

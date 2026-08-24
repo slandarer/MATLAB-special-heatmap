@@ -61,10 +61,11 @@ classdef SClusterBlock < handle
         TLim = [0, 0];
 
         blockHdl
+        boxHdl
     end
 
     properties (Hidden)
-        CC; CP; OXLim; OYLim
+        CC; CP; OXLim; OYLim; BX; BY
     end
 
     methods
@@ -157,6 +158,7 @@ classdef SClusterBlock < handle
             obj.blockHdl = gobjects(1, length(obj.CC) - 1);
             for i = 1:length(obj.CC) - 1
                 CL = [obj.CP(obj.CC(i) + 1), obj.CP(obj.CC(i + 1))];
+                CFL = obj.CP((obj.CC(i) + 1) : obj.CC(i + 1));
                 CInd = obj.Class(obj.CC(i) + 1);
 
                 switch obj.Orientation
@@ -166,12 +168,24 @@ classdef SClusterBlock < handle
                             [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
                             obj.ColorList(CInd, :), obj.BlockProp{:});
                         obj.X(i) = (CL(1) + CL(2)) / 2;
+                        tX1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
+                        tY1 = [obj.BasePos; obj.BasePos - obj.Height; nan]*ones(1, length(CFL) + 1);
+                        tX2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
+                        tY2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos - obj.Height; obj.BasePos - obj.Height; nan]*ones(1, length(CFL));
+                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
+                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
                     case 'bottom'
                         obj.blockHdl(i) = fill(obj.ax, ...
                             CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
                             [obj.BasePos, obj.BasePos, obj.BasePos + obj.Height, obj.BasePos + obj.Height], ...
                             obj.ColorList(CInd, :), obj.BlockProp{:});
                         obj.X(i) = (CL(1) + CL(2)) / 2;
+                        tX1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
+                        tY1 = [obj.BasePos; obj.BasePos + obj.Height; nan]*ones(1, length(CFL) + 1);
+                        tX2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
+                        tY2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos + obj.Height; obj.BasePos + obj.Height; nan]*ones(1, length(CFL));
+                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
+                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
                     case 'left'
                         obj.blockHdl(i) = fill(obj.ax, ...
                             [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
@@ -179,6 +193,12 @@ classdef SClusterBlock < handle
                             obj.ColorList(CInd, :), obj.BlockProp{:});
                         obj.ax.YDir = 'reverse';
                         obj.Y(i) = (CL(1) + CL(2)) / 2;
+                        tY1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
+                        tX1 = [obj.BasePos; obj.BasePos - obj.Height; nan]*ones(1, length(CFL) + 1);
+                        tY2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
+                        tX2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos - obj.Height; obj.BasePos - obj.Height; nan]*ones(1, length(CFL));
+                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
+                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
                     case 'right'
                         obj.blockHdl(i) = fill(obj.ax, ...
                             [obj.BasePos, obj.BasePos, obj.BasePos + obj.Height, obj.BasePos + obj.Height], ...
@@ -186,8 +206,17 @@ classdef SClusterBlock < handle
                             obj.ColorList(CInd, :), obj.BlockProp{:});
                         obj.ax.YDir = 'reverse';
                         obj.Y(i) = (CL(1) + CL(2)) / 2;
+                        tY1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
+                        tX1 = [obj.BasePos; obj.BasePos + obj.Height; nan]*ones(1, length(CFL) + 1);
+                        tY2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
+                        tX2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos + obj.Height; obj.BasePos + obj.Height; nan]*ones(1, length(CFL));
+                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
+                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
                 end
             end
+
+            obj.boxHdl = plot(obj.ax, obj.BX, obj.BY, 'LineWidth',1, 'Color','k', 'Visible','off');
+            
             try axis(obj.ax, 'tight'); catch, end
 
             if nargout == 1
@@ -197,6 +226,16 @@ classdef SClusterBlock < handle
             end
         end
 
+
+        function varargout = setBox(obj, varargin)
+            set(obj.boxHdl, 'Visible','on', varargin{:})
+            for i = 1:length(obj.blockHdl)
+                set(obj.blockHdl(i), 'EdgeColor','none')
+            end
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
         function varargout = setXYTLim(obj, varargin)
             % obj.setXYTLim(varargin) - Set X, Y, and Theta limits for the group block (设置分组方块 X轴、 Y轴、角度范围)
             %   obj.setXYTLim('XLim', [xmin, xmax], 'YLim', [ymin, ymax], 'TLim', [tmin, tmax])
@@ -219,15 +258,23 @@ classdef SClusterBlock < handle
                     [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
                     set(obj.blockHdl(i), 'XData',nX, 'YData',nY);
                 end
+                tX = obj.BX;
+                tY = obj.BY;
+                [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
+                set(obj.boxHdl, 'XData',nX, 'YData',nY);
             else
                 for i = 1:length(obj.blockHdl)
                     tX = obj.blockHdl(i).XData;
                     tY = obj.blockHdl(i).YData;
-                    tXX = [linspace(tX(1), tX(2), 30), linspace(tX(2), tX(3), 30), linspace(tX(3), tX(4), 30), linspace(tX(4), tX(1), 30)];
-                    tYY = [linspace(tY(1), tY(2), 30), linspace(tY(2), tY(3), 30), linspace(tY(3), tY(4), 30), linspace(tY(4), tY(1), 30)];
+                    tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), linspace(tX(3), tX(4), 50), linspace(tX(4), tX(1), 50)];
+                    tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), linspace(tY(3), tY(4), 50), linspace(tY(4), tY(1), 50)];
                     [nX, nY] = getNewXY(tXX, tYY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
                     set(obj.blockHdl(i), 'XData',nX, 'YData',nY);
                 end
+                tX = interpDataNaN(obj.BX, 10);
+                tY = interpDataNaN(obj.BY, 10);
+                [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
+                set(obj.boxHdl, 'XData',nX, 'YData',nY);
             end
             
             [obj.X, obj.Y] = getNewXY(obj.X, obj.Y, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
@@ -251,6 +298,15 @@ classdef SClusterBlock < handle
                     nX = cos(TArr).*RArr;
                     nY = sin(TArr).*RArr;
                 end
+            end
+
+            function nX = interpDataNaN(X, N)
+                XX = [X(1:end-1), nan; X(2:end), nan];
+                ind = any(isnan(XX), 1);
+                XX(:, ind) = 1;
+                nX = interp1([0,1], XX, linspace(0,1,N));
+                nX(:, ind) = nan;
+                nX = nX(:).';
             end
 
             if nargout == 1
