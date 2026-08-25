@@ -2,7 +2,7 @@
 
 rng(7)
 %% Load data (加载数据)
-load('lichenData.mat')                      % Load pre-saved data package (加载预存的数据包)
+load('.\data_example\lichenData.mat')       % Load pre-saved data package (加载预存的数据包)
 Data1 = varechem.Variables;                 % Environmental matrix (环境因子矩阵)
 Data2 = varespec.Variables;                 % Species composition matrix (物种组成矩阵)
 labels = varechem.Properties.VariableNames; % Environmental variable names (环境变量名称)

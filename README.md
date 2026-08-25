@@ -154,92 +154,6 @@ SHM2 = SHeatmap(Data, 'Format','acust', 'SData',SData);
 SHM2.draw();
 ```
 ![](gallery/Format_acust.png)
-#### 2.4 Latest Format rrect (最新形状圆角矩形)
-```matlab
-fig = figure('Units','normalized', 'Position',[.1,.2,.7,.6]);
-axT = axes('Parent',fig, 'Position',[.15, .55, .75, .4]);
-axB = axes('Parent',fig, 'Position',[.15, .15, .75, .4]);
-
-% Define column group assignment (定义列分组标签)
-group = [1,1,1,1,1,1,1,1, 2,2,2,2,2,2,2,2];
-% Row and column names (行列名称)
-rowName = {'RL-SL','RL2SSX','RL3XX-DYH','RL4GTXYKN'};
-colName = {'CLAS','CLALXXX','CLAA','CLAN','CLAD','CLAA2', ...
-    'CLBS','CLBLXYZT','CLBACLASS','CLBNMNSZ', ...
-    'CLCS','CLCL','CLCA','CLCN-5126','CLCD-C-131','CLCA2-C-137'};
-DataT = rand([4, 16]) - .5;
-DataB = rand([4, 16]) - .5;
-
-% Top heatmap (上方热图)
-SHM_T = SHeatmap(axT, DataT, 'Format','rrect', 'ColGroup',group, 'GroupLabelOffset',.5);
-SHM_T.draw()
-SHM_T.setType('row')
-SHM_T.setFrame('Visible','off')
-SHM_T.setRowName(rowName)
-SHM_T.setColGroupName({'Group-L', 'Group-R'})
-SHM_T.setColGroupLabelLocation('top')
-cmapT = interp1([0,.5,1], [60,81,91; 255,255,255; 79,148,204]./255, linspace(0,1,32));
-colormap(axT, cmapT)
-
-% Bottom heatmap (下方热图)
-SHM_B = SHeatmap(axB, DataB, 'Format','rrect', 'ColGroup',group);
-SHM_B.draw()
-SHM_B.setFrame('Visible','off')
-SHM_B.setColName(colName)
-SHM_B.setRowName(rowName)
-cmapB = interp1([0,.5,1], [173,208,53; 255,255,255; 252,137,180]./255, linspace(0,1,32));
-colormap(axB, cmapB)
-
-% Synchronize axes and colorbar positions (同步坐标轴和颜色条位置)
-SHM_T.ax.YLim = SHM_B.ax.YLim;
-SHM_T.Colorbar.Position = [.92, .585, .02, .34];
-SHM_B.Colorbar.Position = [.92, .185, .02, .34];
-```
-![](gallery/FormatLatest_rrect.png)
-#### 2.5 Latest Format shade (最新形状负数阴影方形)
-```matlab
-figure()
-rng(6)
-% Made up some data casually (随便捏造了点数据)
-X = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
-% Get the correlation matrix (求相关系数矩阵)
-Data = corr(X);
-
-SHM = SHeatmap(Data, 'Format','shade');
-SHM.draw();
-SHM.setType('triu')
-SHM.setFrame()
-
-colormap(slanCM(141, 32))
-```
-![](gallery/FormatLatest_shade.png)
-
-#### 2.6 Latest Format c2rect (最新形状圆形到矩形渐变)
-```matlab
-figure()
-Data = rand(12,12) - .5;
-SHM = SHeatmap(Data, 'Format','c2rect');
-SHM.draw();
-SHM.setFrame('Visible','off')
-
-
-cmap = interp1([0,.5,1], [173,208,53; 255,255,255; 252,137,180]./255, linspace(0,1,32));
-colormap(SHM.ax, cmap)
-```
-![](gallery/FormatLatest_c2rect.png)
-#### 2.7 Latest Format arrow (最新形状箭头)
-```matlab
-figure()
-Data = rand(12,12) - .5;
-SHM = SHeatmap(Data, 'Format','arrow');
-SHM.draw();
-SHM.setFrame('Visible','off')
-
-
-cmap = interp1([0,.5,1], [0,163,88; 255,255,255; 224,44,71]./255, linspace(0,1,32));
-colormap(SHM.ax, cmap)
-```
-![](gallery/FormatLatest_arrow.png)
 ___
 ### 3 Adjust colormap (调整 colormap)
 #### 3.1 Adjust clim (调整 clim)
@@ -767,7 +681,7 @@ ___
 ```matlab
 rng(7)
 %% Load data (加载数据)
-load('lichenData.mat')                      % Load pre-saved data package (加载预存的数据包)
+load('.\data_example\lichenData.mat')       % Load pre-saved data package (加载预存的数据包)
 Data1 = varechem.Variables;                 % Environmental matrix (环境因子矩阵)
 Data2 = varespec.Variables;                 % Species composition matrix (物种组成矩阵)
 labels = varechem.Properties.VariableNames; % Environmental variable names (环境变量名称)
@@ -805,7 +719,7 @@ objML.draw()
 ```matlab
 rng(7)
 %% Load data
-load('lichenData.mat')
+load('.\data_example\lichenData.mat')
 Data1 = varechem.Variables;
 Data2 = varespec.Variables;
 labels = varechem.Properties.VariableNames;
@@ -1864,7 +1778,7 @@ ___
 %           https://github.com/MATLAB-Graphics-and-App-Building/matlab-gaab-blog-2025/blob/main/PolarPatchesAndSurfaces/
 % Data source: https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/statewide/mapping
 
-T = load('avgT2024.mat');
+T = load('.\data_example\avgT2024.mat');
 % Isolate the average, high, and low data
 Data = T.Data{:, [6 2 5]};
 rowName = T.Data{:, 1};

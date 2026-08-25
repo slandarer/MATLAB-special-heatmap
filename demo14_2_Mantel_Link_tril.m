@@ -2,7 +2,7 @@
 
 rng(7)
 %% Load data
-load('lichenData.mat')
+load('.\data_example\lichenData.mat')
 Data1 = varechem.Variables;
 Data2 = varespec.Variables;
 labels = varechem.Properties.VariableNames;

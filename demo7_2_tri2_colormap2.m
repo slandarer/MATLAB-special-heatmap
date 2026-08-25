@@ -1,6 +1,7 @@
 %% Merge two triangle heatmaps with two colormaps
 % 合并两个三角热图且使用不同 colormap
 
+rng(1)
 % Made up some data casually (随便捏造了点数据)
 X1 = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 X2 = randn(20,15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
