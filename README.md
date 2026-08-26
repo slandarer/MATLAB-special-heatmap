@@ -1840,4 +1840,6 @@ legend(mHdl, colName, 'FontSize',15, 'FontName','Times New Roman', 'Location','n
 ___
 
 # See the testing folder for future features (最新功能/特性见 testing 文件夹)
-![](testing/var_row3.png)
+![](testing_SColorbar/scbar_demo2_7.png)
+![](testing_SVarRowChart/var_row3.png)
+
