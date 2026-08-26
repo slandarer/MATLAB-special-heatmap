@@ -1,4 +1,4 @@
-%% Heatmap with 2 colormaps (circ2_2)
+%% Heatmap with more than 2 colormaps (circ2_2)
 addpath('..\')
 
 

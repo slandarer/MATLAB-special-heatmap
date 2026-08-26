@@ -1,5 +1,6 @@
 %% Heatmap with highlighted dendrogram (right)
 addpath('..\')
+
 rng(1)
 % Made up some data casually (随便捏造了点数据)
 X1 = randn(20, 20) + [(linspace(-1,2.5,20)').*ones(1,  8), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 7)];

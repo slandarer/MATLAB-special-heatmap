@@ -1,4 +1,6 @@
 %% Block for bkg 
+addpath('..\')
+
 
 Data = rand([12, 12]) - .5;
 
