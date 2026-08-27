@@ -95,20 +95,34 @@ ___
 ### 2 Various Format of heatmaps (各类型热图绘制)
 
 ```matlab
-% 'sq'          : square (default)          : 方形(默认)
+% 'sq'          : square (default)          : 方形 (默认)
+% 'sqfull'      : square (full-size)        : 方形 (满格)
+% 'shade'       : Square (neg-values shaded): 方形 (负数部分阴影填充)
+% 'rrect'       : rounded rectangle         : 圆角矩形
+% 'c2rect'      : circle to rectangle       : 圆形到矩形过度
 % 'pie'         : pie chart                 : 饼图
-% 'donut'       ：donut chart               : 环形饼图(甜甜圈图)
-% 'circ'        : circular                  : 圆形
+% 'donut'       : donut chart               : 环形饼图 (甜甜圈图)
+% 'circ'        : circle                    : 圆形
 % 'bcirc'       : circle with box           : 有边框的圆形
 % 'oval'        : oval                      : 椭圆形
 % 'hex'         : hexagon                   ：六边形
 % 'star'        : star                      : 五角星
+% 'moon'        : moon                      : 月亮
+% 'arrow'       : arrow                     : 箭头
+% 'teardrop'    : teardrop                  : 水滴状
+% 'bar'         : bar graph                 : 柱状图
+% 'barh'        : Horizontal bar graph      : 水平柱状图
 % 'trill'(tril) : lower left triangle       : 下三角
 % 'triur'(triu) : upper right triangle      : 上三角
 % 'trilr'       : lower right triangle      : 右下三角
 % 'triul'       : upper left triangle       : 左上三角
 % 'asq'         : auto-size square          ：自带调整大小的方形
 % 'acirc'       : auto-size circular        ：自带调整大小的圆形
+% 'arrect'      : auto-size rounded rect    : 自带调整大小的圆角矩形
+% 'txt'(text)   : colored text              : 带颜色的文本
+% '3d'          : 3D bar                    : 三维柱状图
+% 'cust'        : custom shape              : 自定义形状
+% 'acust'       : auto-size custom shape    : 自带调整大小的自定义形状
 
 A = rand(12, 12);
 B = rand(12, 12) - .5;
@@ -360,13 +374,19 @@ X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').
 % Get the correlation matrix (求相关系数矩阵)
 Data = corr(X);
 
-Format = {'sq','pie','donut','circ','bcirc','oval','hex','star','tril','triu','trilr','triul','asq','acirc'};
+Format = {'sq','sqfull','shade','rrect','c2rect','pie','donut','circ','bcirc','oval', ...
+    'hex','star','moon','arrow','teardrop','bar','barh','tril','triu','trilr','triul', ...
+    'asq','acirc','arrect','txt','3d','cust','acust'};
 for i = 1:length(Format)
     figure()
     SHeatmap(Data, 'Format',Format{i}).draw().setType('triu');
 end
 ```
 ![](gallery/Type_triu_sq.png)
+![](gallery/Type_triu_sqfill.png)
+![](gallery/Type_triu_shade.png)
+![](gallery/Type_triu_rrect.png)
+![](gallery/Type_triu_c2rect.png)
 ![](gallery/Type_triu_pie.png)
 ![](gallery/Type_triu_donut.png)
 ![](gallery/Type_triu_circ.png)
@@ -374,12 +394,22 @@ end
 ![](gallery/Type_triu_oval.png)
 ![](gallery/Type_triu_hex.png)
 ![](gallery/Type_triu_star.png)
+![](gallery/Type_triu_moon.png)
+![](gallery/Type_triu_arrow.png)
+![](gallery/Type_triu_teardrop.png)
+![](gallery/Type_triu_bar.png)
+![](gallery/Type_triu_barh.png)
 ![](gallery/Type_triu_tril.png)
 ![](gallery/Type_triu_triu.png)
 ![](gallery/Type_triu_trilr.png)
 ![](gallery/Type_triu_triul.png)
 ![](gallery/Type_triu_asq.png)
 ![](gallery/Type_triu_acirc.png)
+![](gallery/Type_triu_arrect.png)
+![](gallery/Type_triu_txt.png)
+![](gallery/Type_triu_3d.png)
+![](gallery/Type_triu_cust.png)
+![](gallery/Type_triu_acust.png)
 
 #### 6.5 Set Label Font (设置标签字体)
 ```matlab

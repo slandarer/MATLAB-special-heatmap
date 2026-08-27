@@ -52,7 +52,8 @@ classdef SColorbar < handle
         % Parameter name list for parsing (参数名称列表，用于解析输入)
         arginList = {'TickDir', 'TickLength', 'Location', 'CDir', ...
             'Tick', 'TickLabel', 'TickLabelOffset', 'BasePos', 'Width', ...
-            'Color', 'LineWidth', 'TitleLocation', 'TitleLabelOffset'}
+            'Color', 'LineWidth', 'TitleLocation', 'TitleLabelOffset', ...
+            'TickVisible'}
 
         CLim                      % Color limits (颜色范围)
         Colormap                  % Colormap (颜色映射表)
@@ -95,6 +96,8 @@ classdef SColorbar < handle
         TY                        % Tick Y positions (刻度 Y 位置)
         LX                        % Label X positions (标签 X 位置)
         LY                        % Label Y positions (标签 Y 位置)
+        TickExist = true
+        labelProp
     end
 
 
@@ -116,6 +119,10 @@ classdef SColorbar < handle
                 if any(tid)
                     obj.(obj.arginList{tid}) = varargin{i + 1};
                 end
+            end
+
+            if ismember('tick', lower(varargin(1:2:(length(varargin) - 1)))) && isempty(obj.Tick)
+                obj.TickExist = false;
             end
         end
 
@@ -373,12 +380,14 @@ classdef SColorbar < handle
                 [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.OXLim, obj.OYLim, obj.TLim);
                 set(obj.frameHdl, 'XData',nX, 'YData',nY)
 
+                if ~isempty(obj.tickHdl)
                 tX = obj.tickHdl.XData;
                 tY = obj.tickHdl.YData;
                 [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.OXLim, obj.OYLim, obj.TLim);
                 set(obj.tickHdl, 'XData',nX, 'YData',nY)
+                end
 
-
+                if ~isempty(obj.labelHdl)
                 for i = 1:length(obj.labelHdl)
                     tX = obj.labelHdl(i).Position(1);
                     tY = obj.labelHdl(i).Position(2);
@@ -396,6 +405,7 @@ classdef SColorbar < handle
                         set(obj.labelHdl(i), 'Rotation',-nT, 'HorizontalAlignment','left')
                         
                     end
+                end
                 end
 
 
@@ -429,6 +439,11 @@ classdef SColorbar < handle
         function varargout = setTick(obj, ticks)
             % obj.setTick(ticks) - Set tick positions (设置刻度)
             obj.Tick = ticks;
+            if isempty(obj.Tick)
+                obj.TickExist = false;
+            else
+                obj.TickExist = true;
+            end
             obj.refreshLabelPos()
 
             if nargout == 1
@@ -521,7 +536,7 @@ classdef SColorbar < handle
             end
             obj.Tick(obj.Tick < obj.CLim(1)) = [];
             obj.Tick(obj.Tick > obj.CLim(2)) = [];
-            if isempty(obj.Tick)
+            if isempty(obj.Tick) && obj.TickExist
                 if obj.CLim(1).*obj.CLim(2) <= 0
                     obj.Tick = unique([0:(-ts):obj.CLim(1), 0:ts:obj.CLim(2)]);
                 elseif all(obj.CLim > 0)
@@ -533,6 +548,7 @@ classdef SColorbar < handle
             obj.Tick(obj.Tick < obj.CLim(1)) = [];
             obj.Tick(obj.Tick > obj.CLim(2)) = [];
 
+            if ~isempty(obj.Tick)
             switch lower(obj.Location)
                 case 'north'
                     obj.TX = obj.OXLim(1) + (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OXLim);
@@ -607,35 +623,41 @@ classdef SColorbar < handle
                             obj.LX = (obj.OXLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
                     end
             end
+            
 
             obj.TickLabel = {};
             for i = 1:length(obj.Tick)
                 obj.TickLabel{i} = obj.TickLabelFormat(obj.Tick(i));
             end
+            end
 
             delete(obj.tickHdl)
-            obj.tickHdl = plot(obj.ax, obj.TX(:), obj.TY(:), 'Color',obj.Color, 'LineWidth',obj.LineWidth);
+            if ~isempty(obj.Tick)
+                obj.tickHdl = plot(obj.ax, obj.TX(:), obj.TY(:), 'Color',obj.Color, 'LineWidth',obj.LineWidth);
+            end
 
             if ~isempty(obj.labelHdl)
-                labelProp = {'FontSize', obj.labelHdl(1).FontSize, ...
+                obj.labelProp = {'FontSize', obj.labelHdl(1).FontSize, ...
                              'FontName', obj.labelHdl(1).FontName, ...
                              'FontWeight', obj.labelHdl(1).FontWeight, ...
                              'Color', obj.labelHdl(1).Color};
             else
-                labelProp = {'FontSize',12, 'FontName','Times New Roman'};
+                obj.labelProp = {'FontSize',12, 'FontName','Times New Roman'};
             end
+
             delete(obj.labelHdl)
+            if ~isempty(obj.Tick)
             switch lower(obj.Location)
                 case 'north'
-                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'Rotation',30, 'HorizontalAlignment','left', labelProp{:});
+                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'Rotation',30, 'HorizontalAlignment','left', obj.labelProp{:});
                 case 'south'
-                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'Rotation',30, 'HorizontalAlignment','right', labelProp{:});
+                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'Rotation',30, 'HorizontalAlignment','right', obj.labelProp{:});
                 case {'east', 'northeast', 'southeast'}
-                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'HorizontalAlignment','left', labelProp{:});
+                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'HorizontalAlignment','left', obj.labelProp{:});
                 case {'west', 'northwest', 'southwest'}
-                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'HorizontalAlignment','right', labelProp{:});
+                    obj.labelHdl = text(obj.ax, obj.LX, obj.LY, obj.TickLabel, 'HorizontalAlignment','right', obj.labelProp{:});
             end
-            
+            end
 
         end
     end

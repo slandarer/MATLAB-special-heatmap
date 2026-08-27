@@ -1,4 +1,4 @@
-%% Heatmap with more than 2 colormaps (table)
+%% Heatmap with more than 2 colormaps (table_1)
 addpath('..\')
 
 
