@@ -16,8 +16,9 @@ SHM_ax1.setText();
 % subplot2 adjust clim
 ax2 = axes('Parent',fig, 'Position',[21/40, 0, 9/20, 1]);
 SHM_ax2 = SHeatmap(Data, 'Format','sq', 'Parent',ax2).draw();
-clim([-.8, .8])
 SHM_ax2.setText();
+clim([-.8, .8])
+
 
 
 %% Use the built-in colormap in MATLAB (使用 MATLAB 自带 colormap)

@@ -5,12 +5,12 @@ B = rand(12, 12) - .5;
 
 % Draw heatmap with all number positive (绘制纯正数热图)
 figure();
-SHM_A = SHeatmap(A, 'Format','bcirc');
+SHM_A = SHeatmap(A, 'Format','c2rect');
 SHM_A.draw()
 
 % Draw heatmap with negative number (绘制含负数热图)
 figure();
-SHM_B = SHeatmap(B, 'Format','txt');
+SHM_B = SHeatmap(B, 'Format','shade');
 SHM_B.draw()
 
 % 'sq'          : square (default)          : 方形 (默认)

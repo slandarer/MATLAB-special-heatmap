@@ -122,7 +122,7 @@ classdef SHeatmap < handle
 
 
     properties
-        ax, 
+        ax, fig
         Parent = [];
         arginList = {'Parent', 'Format', 'SData', 'Type', ...
                      'VarName', 'RowName', 'ColName', ...
@@ -254,8 +254,10 @@ classdef SHeatmap < handle
                        .31, .38, .67; .37, .31, .64];
         RP; CP; FX; FY; BX; BY; GX; GY; 
         SX = 1; SY = 1;
-        TxtShown = false; 
+        txtShown = false; 
         XYTReset = false;
+        isFrozen = false;
+        txtFixed = false;
         RGP; CGP; RGLST; CGLST;
         PatchX; PatchY; PieX; PieY; nanTextHdl
 
@@ -333,6 +335,12 @@ classdef SHeatmap < handle
             obj.ax.YLim           = [0.5, size(obj.Data, 1) + 0.5];
             obj.ax.YTick          = 1:size(obj.Data, 1);
             obj.ax.XTick          = 1:size(obj.Data, 2);
+
+            if isa(obj.ax.Parent, 'matlab.graphics.layout.TiledChartLayout')
+                obj.fig = obj.ax.Parent.Parent;
+            else
+                obj.fig = obj.ax.Parent;
+            end
            
 
             % Apply colormap and colorbar (应用颜色映射和颜色条)
@@ -398,12 +406,12 @@ classdef SHeatmap < handle
             % end
 
             % Adjust figure size if needed (调整初始界面大小)
-            fig = obj.ax.Parent;
-            if strcmp(get(fig, 'Type'), 'figure')
-                fig.Color = [1, 1, 1];
-                if max(fig.Position(3:4)) < 600 && strcmp(fig.Units, 'pixels')
-                    fig.Position(3:4) = [1.6, 1.8] .* fig.Position(3:4);
-                    fig.Position(1:2) = fig.Position(1:2) ./ 4;
+            % fig = obj.ax.Parent;
+            if strcmp(get(obj.fig, 'Type'), 'figure')
+                obj.fig.Color = [1, 1, 1];
+                if max(obj.fig.Position(3:4)) < 600 && strcmp(obj.fig.Units, 'pixels')
+                    obj.fig.Position(3:4) = [1.6, 1.8] .* obj.fig.Position(3:4);
+                    obj.fig.Position(1:2) = obj.fig.Position(1:2) ./ 4;
                 end
             end
 
@@ -837,9 +845,19 @@ classdef SHeatmap < handle
                 obj.setFrame();
             end
 
+            addlistener(obj.fig, 'Colormap', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
+            addlistener(obj.ax, 'Colormap', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
+            addlistener(obj.ax, 'CLim', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
+
 
             if nargout == 1
                 varargout = {obj};
+            end
+        end
+
+        function refreshTxtColor(obj, ~, ~)
+            if obj.txtShown && (~obj.isFrozen) && (~obj.txtFixed)
+                obj.setText();
             end
         end
 
@@ -872,7 +890,7 @@ classdef SHeatmap < handle
             %   obj.setText(Bool, ___); Set properties for value labels
             %   where the logical matrix Bool is true.
 
-            if ~obj.TxtShown
+            if ~obj.txtShown
                 [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
                 rows = obj.RP(rows);
                 cols = obj.CP(cols);
@@ -897,7 +915,7 @@ classdef SHeatmap < handle
                 end
                 hAll(~valid) = obj.nanTextHdl;
                 obj.textHdl = reshape(hAll, size(obj.Data));
-                obj.TxtShown = true;
+                obj.txtShown = true;
             end
 
             if isempty(varargin)
@@ -964,6 +982,11 @@ classdef SHeatmap < handle
                     set(obj.textHdl(row, col), 'Visible','on', varargin{:});
                 end
             end
+
+            if ismember('color', lower(varargin(1:2:(length(varargin) - 1))))
+                obj.txtFixed = true;
+            end
+
             switch lower(obj.Type)
                 case 'triu'      % upper triangle (including diagonal) (上三角，含对角线)
                     for row = 1:size(obj.Data, 1)
@@ -2309,13 +2332,16 @@ classdef SHeatmap < handle
                 end
             end
         
-            % Update colorbar to reflect the fixed colormap and limits
-            % (更新颜色条以反映固定的颜色映射和范围)
-            obj.Colorbar.Colormap = cmap;
-            obj.Colorbar.Limits   = climit;
-            % Slightly shift colorbar position to avoid overlap (微调颜色条位置避免重叠)
-            obj.Colorbar.Position = obj.Colorbar.Position + [0.03, 0, 0, 0];
+            if isvalid(obj.Colorbar)
+                % Update colorbar to reflect the fixed colormap and limits
+                % (更新颜色条以反映固定的颜色映射和范围)
+                obj.Colorbar.Colormap = cmap;
+                obj.Colorbar.Limits   = climit;
+                % Slightly shift colorbar position to avoid overlap (微调颜色条位置避免重叠)
+                obj.Colorbar.Position = obj.Colorbar.Position + [0.03, 0, 0, 0];
+            end
 
+            obj.isFrozen = true;
             if nargout == 1
                 varargout = {obj};
             end
@@ -2404,6 +2430,8 @@ classdef SHeatmap < handle
             stars = repmat('*', 1, sum(pval < levels));
         end
     end
+
+
 % =========================================================================
 % Set XLim YLim and TLim (设置 X,Y,Theta 范围)
 % =========================================================================
