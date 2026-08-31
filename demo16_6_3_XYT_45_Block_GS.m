@@ -24,6 +24,7 @@ SHM = SHeatmap(ax, Data, 'Format','sq', 'VarName',labels, 'RowGroup',group, 'Col
     'RowGroupName', gnames, 'ColGroupName',gnames, 'GroupLabelOffset',1.3);
 SHM.draw();
 SHM.setType('triu').setFrame('LineWidth',2)
+SHM.setColTickIndices([]) % Set col-labels and col-ticks ('visible', 'off')
 SHM.setRowGroupLabelLocation('right')
 SHM.setColGroupLabelLocation('top')
 SHM.setText().showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
@@ -32,8 +33,7 @@ SHM.setRowGroupLabel('FontSize',25, 'Rotation',0)
 SHM.setColGroupLabel('FontSize',25, 'Rotation',0)
 
 SHM.Colorbar.Location = 'southoutside';
-SHM.ax.YLim(2) = 1;
-set(SHM.colLabelHdl, 'Visible','off')
-set(SHM.colTickHdl, 'Visible','off')
+SHM.ax.YLim(2) = 1.5;
+
 set(SHM.rowGroupLabelHdl(1), 'Visible','off')
 set(SHM.colGroupLabelHdl(2), 'Visible','off')

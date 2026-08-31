@@ -27,3 +27,5 @@ SHM.setFrame('Visible','off')
 SHM.Colorbar.Location = 'southoutside';
 SHM.ax.YLim(2) = .5;
 colormap(slanCM(97, 32))
+
+

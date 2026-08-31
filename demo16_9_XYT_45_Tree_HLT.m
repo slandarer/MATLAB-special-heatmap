@@ -23,9 +23,9 @@ SHM = SHeatmap(ax, Data, 'Format','sq', 'VarName',labels(order));
 SHM.draw();
 SHM.setType('triu');
 SHM.setRowLabelLocation('right')
+SHM.setColTickIndices([])
 SHM.setXYTLim('TLim',[pi/4, pi/4]);
 
 SHM.Colorbar.Location = 'southoutside';
-set(SHM.colLabelHdl, 'Visible','off')
-set(SHM.colTickHdl, 'Visible','off')
+
 

@@ -1,6 +1,7 @@
 %% Displaying significance
 % 显示显著性
 
+rng(1)
 % Made up some data casually (随便捏造了点数据)
 X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
@@ -19,3 +20,4 @@ SHM12.showStars(pval, 'Levels', [0.05, 0.01, 0.001])
 
 SHM12.showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
 % exportgraphics(gca,'gallery\Significance2.png')
+

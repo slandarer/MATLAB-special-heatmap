@@ -229,7 +229,7 @@ classdef SHeatmap < handle
     end
 
     properties (Hidden)
-        maxV
+        maxV; Mask
         defaultCmp1 = [.97, .99, .94; .95, .98, .92; .92, .97, .90;
                        .90, .96, .88; .88, .95, .86; .86, .94, .83; 
                        .84, .94, .81; .82, .93, .79; .79, .92, .77; 
@@ -252,14 +252,27 @@ classdef SHeatmap < handle
                        .47, .79, .65; .39, .75, .65; .32, .67, .68;
                        .26, .60, .71; .20, .53, .74; .26, .45, .70;
                        .31, .38, .67; .37, .31, .64];
-        RP; CP; FX; FY; BX; BY; GX; GY; 
+        RP; CP; FX; FY; BX; BY; 
+        GX = nan; GY = nan; 
         SX = 1; SY = 1;
         txtShown = false; 
+        rowShown = false;
+        colShown = false;
         XYTReset = false;
         isFrozen = false;
         txtFixed = false;
-        RGP; CGP; RGLST; CGLST;
-        PatchX; PatchY; PieX; PieY; nanTextHdl
+        RGP; CGP; RGLDir; CGLDir;
+        PatchX; PatchY; PieX; PieY; 
+        
+        TxtXY; TxtNaNXY; newTxtXY; nanTextHdl
+
+        
+        RTX; RTY; CTX; CTY; RTLDir; CTLDir
+        newRTX; newRTY; newCTX; newCTY
+
+        tickConfigured = false;
+        RowTickIndices = [];   % Indices of row ticks to display (要显示的行刻度索引)
+        ColTickIndices = [];   % Indices of column ticks to display (要显示的列刻度索引)
 
         Format3DHeight = 2
         Format3DTheta = pi/3.5
@@ -281,8 +294,7 @@ classdef SHeatmap < handle
             end
 
             % Store data (存储数据)
-            obj.Data = varargin{1};
-            varargin(1) = [];
+            obj.Data = varargin{1}; varargin(1) = [];
             obj.maxV = max(max(abs(obj.Data)));
 
             % Parse optional arguments (解析可选参数)
@@ -299,6 +311,10 @@ classdef SHeatmap < handle
             else
                 obj.Colormap = obj.defaultCmp1(end:-1:1, :);
             end
+
+            obj.Mask = zeros(size(obj.Data)) == 1;
+            obj.RowTickIndices = 1:size(obj.Data, 1);
+            obj.ColTickIndices = 1:size(obj.Data, 2);
         end
 
 % =========================================================================
@@ -331,22 +347,7 @@ classdef SHeatmap < handle
             obj.ax.TickLength     = [0.002, 0.002];
             obj.ax.DataAspectRatio = [1, 1, 1];
 
-            obj.ax.XLim           = [0.5, size(obj.Data, 2) + 0.5];
-            obj.ax.YLim           = [0.5, size(obj.Data, 1) + 0.5];
-            obj.ax.YTick          = 1:size(obj.Data, 1);
-            obj.ax.XTick          = 1:size(obj.Data, 2);
-
-            if isa(obj.ax.Parent, 'matlab.graphics.layout.TiledChartLayout')
-                obj.fig = obj.ax.Parent.Parent;
-            else
-                obj.fig = obj.ax.Parent;
-            end
-           
-
-            % Apply colormap and colorbar (应用颜色映射和颜色条)
-            colormap(obj.ax, obj.Colormap);
-            obj.Colorbar = colorbar(obj.ax);
-
+            
             % Set color axis limits (设置颜色轴范围)
             if any(any(obj.Data < 0))
                 try caxis(obj.ax, obj.maxV .* [-1, 1]), catch, end
@@ -356,10 +357,8 @@ classdef SHeatmap < handle
                 try clim(obj.ax,  obj.maxV .* [0, 1]),  catch, end
             end
             
-
             obj.GroupSep(obj.GroupSep < 0) = 0;
             obj.GroupSep(obj.GroupSep > 10) = 10;
-
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > .5) = .5;
             obj.TickLabelOffset(obj.TickLabelOffset <= 1e-4) = 1e-4;
@@ -380,33 +379,28 @@ classdef SHeatmap < handle
             obj.ColGroup = cumsum([1, diff(obj.ColGroup(:).') ~= 0]);
             obj.RP = (1:size(obj.Data, 1)) + (obj.RowGroup - 1).*obj.GroupSep;
             obj.CP = (1:size(obj.Data, 2)) + (obj.ColGroup - 1).*obj.GroupSep;
-
             obj.RGP = accumarray(obj.RowGroup(:), obj.RP(:), [], @mean);
             obj.CGP = accumarray(obj.ColGroup(:), obj.CP(:), [], @mean);
 
             obj.XLim = [obj.CP(1) - .5, obj.CP(end) + .5];
             obj.YLim = [obj.RP(1) - .5, obj.RP(end) + .5];
-
-
-            obj.ax.XLim = [0.5, obj.CP(end) + 0.5];
-            obj.ax.YLim = [0.5, obj.RP(end) + 0.5];
+            obj.ax.XLim = obj.XLim;
+            obj.ax.YLim = obj.YLim;
             obj.ax.XTick = obj.CP;
             obj.ax.YTick = obj.RP;
             obj.ax.XTickLabel = compose('%d', 1:size(obj.Data, 2));
             obj.ax.YTickLabel = compose('%d', 1:size(obj.Data, 1));
-            % if ~isempty(obj.RowName)
-            %     obj.ax.YTickLabel = obj.RowName;
-            % end
-            % if ~isempty(obj.ColName)
-            %     obj.ax.XTickLabel = obj.ColName;
-            % end
-            % if ~isempty(obj.VarName)
-            %     obj.ax.XTickLabel = obj.VarName;
-            %     obj.ax.YTickLabel = obj.VarName;
-            % end
+
+            % Apply colormap and colorbar (应用颜色映射和颜色条)
+            colormap(obj.ax, obj.Colormap);
+            obj.Colorbar = colorbar(obj.ax);
 
             % Adjust figure size if needed (调整初始界面大小)
-            % fig = obj.ax.Parent;
+            if isa(obj.ax.Parent, 'matlab.graphics.layout.TiledChartLayout')
+                obj.fig = obj.ax.Parent.Parent;
+            else
+                obj.fig = obj.ax.Parent;
+            end
             if strcmp(get(obj.fig, 'Type'), 'figure')
                 obj.fig.Color = [1, 1, 1];
                 if max(obj.fig.Position(3:4)) < 600 && strcmp(obj.fig.Units, 'pixels')
@@ -416,9 +410,7 @@ classdef SHeatmap < handle
             end
 
             % Draw grid lines (绘制网格线)
-            obj.GX = nan; obj.GY = nan;
-            obj.gridHdl = plot(obj.ax, obj.GX, obj.GY, ...
-                'LineWidth', 0.8, 'Color', [0,0,0], 'LineStyle','--');
+            obj.gridHdl = plot(obj.ax, nan, nan, 'LineWidth', 0.8, 'Color', [0,0,0], 'LineStyle','--');
             
 
             % Define base shape coordinates (定义基本形状坐标)
@@ -440,19 +432,14 @@ classdef SHeatmap < handle
             XT = XT.*.5.*.75./XT_max;
             YT = - cos(TT).*.5.*.94;
             
-            if strcmpi(obj.ShapeFlipX, 'on')
-                obj.SX = -1;
-            end
-            if strcmpi(obj.ShapeFlipY, 'on')
-                obj.SY = -1;
-            end
+            if strcmpi(obj.ShapeFlipX, 'on'); obj.SX = -1; end
+            if strcmpi(obj.ShapeFlipY, 'on'); obj.SY = -1; end
 
-            [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
-
+            mn = numel(obj.Data); sz = size(obj.Data);
+            [cols, rows] = meshgrid(1:sz(2), 1:sz(1));
             rows = reshape(obj.RP(rows), 1, []);
             cols = reshape(obj.CP(cols), 1, []);
             datas = reshape(obj.Data, 1, []);
-            mn = numel(obj.Data); sz = size(obj.Data);
             tRatio = abs(datas)./obj.maxV;
 
             switch lower(obj.Format)
@@ -635,91 +622,53 @@ classdef SHeatmap < handle
                     obj.PatchY = obj.SY.*(repmat([.5; .5; .5; .5], [1, mn]) - repmat([1; 1; 0; 0].*.95, [1, mn]).*repmat(tRatio, [4, 1])) + repmat(rows, [4, 1]);
                     obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
-
             end
 
-            % obj.textHdl = gobjects(size(obj.Data, 1), size(obj.Data, 2));
-            % Draw box lines (绘制小框线)
-            obj.BX = []; obj.BY = [];
-            for gi = 1:max(obj.RowGroup)
-                for gj = 1:max(obj.ColGroup)
-                    posi = obj.RP(obj.RowGroup == gi);
-                    posj = obj.CP(obj.ColGroup == gj);
-                    rowY = unique([posi - .5, posi + .5]);
-                    rowX = [posj(1) - .5; posj(end) + .5; nan]*ones(size(rowY));
-                    rowY = [1; 1; nan]*rowY;
-                    colX = unique([posj - .5, posj + .5]);  
-                    colY = [posi(1) - .5; posi(end) + .5; nan]*ones(size(colX));
-                    colX = [1; 1; nan]*colX;
-                    obj.BX = [obj.BX; rowX(:); colX(:)];
-                    obj.BY = [obj.BY; rowY(:); colY(:)];
-                end
-            end
-            obj.boxHdl = plot(obj.ax, obj.BX, obj.BY, ...
-                'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
+            % Creation of basic objects for box, frame, and tick (box, frame, tick 基础对象创建)
+            obj.boxHdl = plot(obj.ax, nan, nan, 'LineWidth', 0.8, 'Color', [1, 1, 1] .* 0.85);
+            obj.frameHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'LineJoin','miter', 'Visible','off');
+            obj.rowTickHdl = plot(obj.ax, nan(sz(1)*3, 1), nan(sz(1)*3, 1), 'Color','k', 'LineWidth',1, 'Visible','off');
+            obj.colTickHdl = plot(obj.ax, nan(sz(2)*3, 1), nan(sz(2)*3, 1), 'Color','k', 'LineWidth',1, 'Visible','off');
+            obj.RTX = nan(sz(1)*3, 1); obj.RTY = nan(sz(1)*3, 1);
+            obj.CTX = nan(sz(2)*3, 1); obj.CTY = nan(sz(2)*3, 1);
+            obj.newRTX = nan(sz(1)*3, 1); obj.newRTY = nan(sz(1)*3, 1);
+            obj.newCTX = nan(sz(2)*3, 1); obj.newCTY = nan(sz(2)*3, 1);
 
-            obj.FX = []; obj.FY = [];
-            for gi = 1:max(obj.RowGroup)
-                for gj = 1:max(obj.ColGroup)
-                    posi = obj.RP(obj.RowGroup == gi);
-                    posj = obj.CP(obj.ColGroup == gj);
-                    numY = round(max(posi) - min(posi) + 2);
-                    obj.FX = [obj.FX, [0, ones(1, numY), zeros(1, numY), 1, nan].*(max(posj) - min(posj) + 1) + min(posj) - .5];
-                    obj.FY = [obj.FY, [0, linspace(0, 1, numY), linspace(1, 0, numY), 0, nan].*(max(posi) - min(posi) + 1) + min(posi) - .5];
-                end
-            end
-            obj.frameHdl = plot(obj.ax, obj.FX, obj.FY, 'Color','k', 'LineWidth',1, 'LineJoin','miter', 'Visible','off');
-            obj.rowTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
-            obj.colTickHdl = plot(obj.ax, nan, nan, 'Color','k', 'LineWidth',1, 'Visible','off');
-
+            % If the Format is 3D, it is rendered separately (如果 Format 是 3d 则单独绘制)
             if obj.Format3DHeight < 1, obj.Format3DHeight = 1; end
             if obj.Format3DTheta < 0, obj.Format3DTheta = 0; end
             if obj.Format3DTheta > pi/2, obj.Format3DTheta = pi/2; end
-
             if strcmpi(obj.Format, '3d')
                 X3 = (repmat([-.32; .32; -.32; .32], [1, mn]) + [0; 0; 1; 1]*tRatio.*obj.Format3DHeight.*cos(obj.Format3DTheta)) + repmat(cols, [4, 1]);
                 Y3 = (repmat([-.32; .32; -.32; .32], [1, mn]) - [0; 0; 1; 1]*tRatio.*obj.Format3DHeight.*sin(obj.Format3DTheta)) + repmat(rows, [4, 1]);
                 obj.PatchX = X3([1; 2; 4; 4; 3; 1; 1; 3; 3; 3; 4; 3], :);
                 obj.PatchY = Y3([2; 2; 4; 3; 3; 1; 2; 4; 3; 4; 4; 4], :);
-                indFlip = reshape(1:mn, size(obj.Data)); 
+                indFlip = reshape(1:mn, sz); 
                 indFlip = reshape(indFlip(:, end:-1:1), [1, mn]);
                 obj.patchHdl = fill(obj.ax, obj.PatchX(:, indFlip), obj.PatchY(:, indFlip), datas(indFlip), 'EdgeColor',[0,0,0], 'LineWidth',.8, 'LineJoin','chamfer');
                 obj.patchHdl = fliplr(reshape(obj.patchHdl, sz));
             end
 
-            if strcmpi(obj.Format, 'sq') || ...
-               strcmpi(obj.Format, 'rrect') || ...
-               strcmpi(obj.Format, 'shade') || ...
-               strcmpi(obj.Format, 'c2rect') || ...
-               strcmpi(obj.Format, '3d') || ...
-               strcmpi(obj.Format, 'sqfull')
-                set(obj.boxHdl, 'Visible','off');
+            % Use different box colors for different Formats (为不同 Format 设置不同框颜色)
+            switch lower(obj.Format)
+                case {'sq', 'rrect', 'shade', 'c2rect', '3d', 'sqfull'}
+                    set(obj.boxHdl, 'Visible','off');
+                case {'bar', 'barh'}
+                    set(obj.boxHdl, 'Color',[0,0,0]);
             end
-
-            if strcmpi(obj.Format, 'bar') || ...
-               strcmpi(obj.Format, 'barh') 
-                set(obj.boxHdl, 'Color',[0,0,0]);
-            end
-
 
             if strcmpi(obj.Format, 'shade')
-                [posR, posC] = find(obj.Data >= 0);
-                if ~isempty(posR)
-                    for i = 1:length(posR)
-                        row = posR(i); col = posC(i);
-                        set(obj.pieHdl(row, col), 'XData', [0;0;0;0;0;0;0;0;0], ...
-                            'YData', [0;0;0;0;0;0;0;0;0], ...
-                            'Visible','off')
-                    end
-                end
+                set(obj.pieHdl(obj.Data >= 0), 'XData',nan(9,1), 'YData',nan(9,1), 'Visible','off')
             end
 
             [nanR, nanC] = find(isnan(obj.Data));
+            obj.TxtNaNXY = zeros(length(nanR), 2);
+            obj.TxtNaNXY(:, 1) = obj.CP(nanC);
+            obj.TxtNaNXY(:, 2) = obj.RP(nanR);
             if ~isempty(nanR)
                 if strcmpi(obj.Format, '3d')
                     obj.nanTextHdl = text(obj.ax, obj.CP(nanC), obj.RP(nanR), ...
                         ' ', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
-
                 else
                     obj.nanTextHdl = text(obj.ax, obj.CP(nanC), obj.RP(nanR), ...
                         '×', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
@@ -727,42 +676,33 @@ classdef SHeatmap < handle
 
                 tind = sub2ind(sz, nanR, nanC);
                 if ~isempty(obj.PatchX)
-                    if size(obj.PatchX, 1) < 4
-                        obj.PatchX(4, :) = nan;
-                        obj.PatchY(4, :) = nan;
-                    end
-                    obj.PatchX(:, tind) = nan;
+                    obj.PatchX(:, tind) = nan; 
                     obj.PatchY(:, tind) = nan;
-                    for i = 1:length(nanR)
-                        row = nanR(i); col = nanC(i);
-                        if strcmpi(obj.Format, '3d')
-                            set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5].*.98 + obj.CP(col), ...
-                                'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
-                                'FaceColor', [.9,.9,.9], 'EdgeColor','none');
-
-                        elseif strcmpi(obj.Format, 'sqfull')
-                            set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5] + obj.CP(col), ...
-                                'YData', [-.5,-.5,.5,.5] + obj.RP(row), ...
-                                'FaceColor', [.8,.8,.8], 'EdgeColor','none');
-                        else
-                            set(obj.patchHdl(row, col), 'XData', [-.5;.5;.5;-.5].*.98 + obj.CP(col), ...
-                                'YData', [-.5,-.5,.5,.5].*.98 + obj.RP(row), ...
-                                'FaceColor', [.8,.8,.8], 'EdgeColor','none');
-                        end
-                        obj.PatchX(1:4, tind(i)) = [-.5;.5;.5;-.5].*.98 + obj.CP(col);
-                        obj.PatchY(1:4, tind(i)) = [-.5,-.5,.5,.5].*.98 + obj.RP(row);
+                    if size(obj.PatchX, 1) < 4
+                        obj.PatchX(4, :) = obj.PatchX(3, :); 
+                        obj.PatchY(4, :) = obj.PatchY(3, :);
                     end
-                    
+                    if strcmpi(obj.Format, '3d')
+                        nX = repmat([-.5,.5,.5,-.5].*.98, [length(tind), 1]) + repmat(obj.CP(nanC).', [1, 4]);
+                        nY = repmat([-.5,-.5,.5,.5].*.98, [length(tind), 1]) + repmat(obj.RP(nanR).', [1, 4]);
+                        set(obj.patchHdl(tind), 'FaceColor', [.9,.9,.9], 'EdgeColor','none');
+                    elseif strcmpi(obj.Format, 'sqfull')
+                        nX = repmat([-.5,.5,.5,-.5], [length(tind), 1]) + repmat(obj.CP(nanC).', [1, 4]);
+                        nY = repmat([-.5,-.5,.5,.5], [length(tind), 1]) + repmat(obj.RP(nanR).', [1, 4]);
+                        set(obj.patchHdl(tind), 'FaceColor', [.8,.8,.8], 'EdgeColor','none');
+                    else
+                        nX = repmat([-.5,.5,.5,-.5].*.98, [length(tind), 1]) + repmat(obj.CP(nanC).', [1, 4]);
+                        nY = repmat([-.5,-.5,.5,.5].*.98, [length(tind), 1]) + repmat(obj.RP(nanR).', [1, 4]); 
+                        set(obj.patchHdl(tind), 'FaceColor', [.8,.8,.8], 'EdgeColor','none');
+                    end
+                    nXYC = [num2cell(nX, 2), num2cell(nY, 2)];
+                    set(obj.patchHdl(tind), {'XData', 'YData'}, nXYC)
+                    obj.PatchX(1:4, tind) = repmat([-.5;.5;.5;-.5].*.98, [1, length(tind)]) + repmat(obj.CP(nanC), [4, 1]);
+                    obj.PatchY(1:4, tind) = repmat([-.5;-.5;.5;.5].*.98, [1, length(tind)]) + repmat(obj.RP(nanR), [4, 1]);
                 end
                 if ~isempty(obj.PieX)
-                    obj.PieX(:, tind) = nan;
-                    obj.PieX(:, tind) = nan;
-                    for i = 1:length(nanR)
-                        row = nanR(i); col = nanC(i);
-                        set(obj.pieHdl(row, col), 'XData', [0;0;0;0], ...
-                                                  'YData', [0;0;0;0], ...
-                                                  'FaceColor', [0,0,0]);
-                    end
+                    obj.PieX(:, tind) = nan; obj.PieX(:, tind) = nan;
+                    set(obj.pieHdl(tind), 'XData', nan(4,1), 'YData', nan(4,1), 'FaceColor',[0,0,0]);
                 end
             end
 
@@ -770,85 +710,70 @@ classdef SHeatmap < handle
                 obj.setText()
             end
 
-            
-
-            if isempty(obj.VarName)
-                % Create default variable names (生成默认变量名)
-                obj.VarName{length(obj.Data)} = '';
-                for i = 1:length(obj.Data)
-                    obj.VarName{i} = ['Var-', num2str(i)];
-                end
+            % ## Add tick labels 
+            tflag = true;
+            if isempty(obj.VarName) % Create default variable names (生成默认变量名)
+                obj.VarName = compose('Var-%d', 1:length(obj.Data));
                 tflag = false;
-            else
-                tflag = true;
             end
-
             % Add row labels ('Visible', 'off') (添加行标签，默认隐藏)
-            obj.rowLabelHdl = gobjects(1, size(obj.Data, 1));
-            for row = 1:size(obj.Data, 1)
-                obj.rowLabelHdl(row) = text(obj.ax, 0.5 - obj.TickLabelOffset, obj.RP(row), ...
-                    obj.VarName{row}, 'HorizontalAlignment','right', ...
-                    'FontName','Times New Roman', 'FontSize',12, 'Visible','off');
-            end
-
+            rows = 1:sz(1); tind = mod(rows - 1, length(obj.VarName)) + 1;
+            obj.RTLDir = zeros(sz(1), 4); 
+            obj.RTLDir(:, 1) = .5; obj.RTLDir(:, 2) = obj.RP(rows); 
+            obj.RTLDir(:, 3) = .5 - obj.TickLabelOffset; obj.RTLDir(:, 4) = obj.RP(rows);
+            obj.rowLabelHdl = text(obj.ax, obj.RTLDir(:, 3), obj.RTLDir(:, 4), obj.VarName(tind), ...
+                'HorizontalAlignment','right', 'FontName','Times New Roman', 'FontSize',12, 'Visible','off');
             % Add column labels ('Visible', 'off') (添加列标签，默认隐藏)
-            obj.colLabelHdl = gobjects(1, size(obj.Data, 2));
-            for col = 1:size(obj.Data, 2)
-                obj.colLabelHdl(col) = text(obj.ax, obj.CP(col), obj.RP(end) + .5 + obj.TickLabelOffset, ...
-                    obj.VarName{col}, 'HorizontalAlignment','right', ...
-                    'FontName','Times New Roman', 'FontSize',12, 'Rotation',30, 'Visible','off');
-            end
+            cols = 1:sz(2); tind = mod(cols - 1, length(obj.VarName)) + 1;
+            obj.CTLDir = zeros(sz(2), 4);
+            obj.CTLDir(:, 1) = obj.CP(cols); obj.CTLDir(:, 2) = obj.RP(end) + .5;
+            obj.CTLDir(:, 3) = obj.CP(cols); obj.CTLDir(:, 4) = obj.RP(end) + .5 + obj.TickLabelOffset;
+            obj.colLabelHdl = text(obj.ax, obj.CTLDir(:, 3), obj.CTLDir(:, 4), obj.VarName(tind), ...
+                'HorizontalAlignment','right', 'FontName','Times New Roman', 'FontSize',12, 'Rotation',30, 'Visible','off');
 
-            if isempty(obj.RowGroupName)
-                obj.RowGroupName = compose('Group-%d', unique(obj.RowGroup));
-            end
-            if isempty(obj.ColGroupName)
-                obj.ColGroupName = compose('Group-%d', unique(obj.ColGroup));
-            end
-
-            obj.RGLST = zeros(max(obj.RowGroup), 4); 
+            % ## Add group labels 
+            if isempty(obj.RowGroupName), obj.RowGroupName = compose('Group-%d', unique(obj.RowGroup)); end
+            if isempty(obj.ColGroupName), obj.ColGroupName = compose('Group-%d', unique(obj.ColGroup)); end
+            % Add row group labels ('Visible', 'off') (添加行分组标签，默认隐藏)
+            obj.RGLDir = zeros(max(obj.RowGroup), 4); 
             obj.rowGroupLabelHdl = gobjects(1, max(obj.RowGroup));
             for row = 1:max(obj.RowGroup)
+                tind = mod(row - 1, length(obj.RowGroupName)) + 1;
                 obj.rowGroupLabelHdl(row) = text(obj.ax, 0.5 - obj.GroupLabelOffset, obj.RGP(row), ...
-                    obj.RowGroupName{row}, 'HorizontalAlignment','center', 'Rotation',90, ...
+                    obj.RowGroupName{tind}, 'HorizontalAlignment','center', 'Rotation',90, ...
                     'FontName','Times New Roman', 'FontSize',15, 'Visible','off');
-                obj.RGLST(row, :) = [.5, obj.RGP(row), .5 - obj.GroupLabelOffset, obj.RGP(row)];
+                obj.RGLDir(row, :) = [.5, obj.RGP(row), .5 - obj.GroupLabelOffset, obj.RGP(row)];
             end
-            obj.CGLST = zeros(max(obj.ColGroup), 4); 
+            % Add col group labels ('Visible', 'off') (添加列分组标签，默认隐藏)
+            obj.CGLDir = zeros(max(obj.ColGroup), 4); 
             obj.colGroupLabelHdl = gobjects(1, max(obj.ColGroup));
             for col = 1:max(obj.ColGroup)
+                tind = mod(col - 1, length(obj.ColGroupName)) + 1;
                 obj.colGroupLabelHdl(col) = text(obj.ax, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset, ...
-                    obj.ColGroupName{col}, 'HorizontalAlignment','center', 'Rotation',0, ...
+                    obj.ColGroupName{tind}, 'HorizontalAlignment','center', 'Rotation',0, ...
                     'FontName','Times New Roman', 'FontSize',15, 'Visible','off');
-                obj.CGLST(col, :) = [obj.CGP(col), obj.RP(end) + .5, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset];
+                obj.CGLDir(col, :) = [obj.CGP(col), obj.RP(end) + .5, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset];
             end
 
             % Apply 'Type' if not full
-            if ~strcmp(obj.Type, 'full')
+            if strcmpi(obj.Type, 'full')
+                obj.setBoxXY()
+                obj.setFrameXY()
+            else
                 obj.setType(obj.Type);
             end
 
-            if tflag
-                obj.setVarName(obj.VarName);
-            end
-
-            if ~isempty(obj.RowName)
-                obj.setRowName(obj.RowName);
-            end
-            if ~isempty(obj.ColName)
-                obj.setColLabelLocation('bottom')
-                obj.setColName(obj.ColName);
-            end
+            if tflag, obj.setVarName(); end
+            if ~isempty(obj.RowName), obj.setRowName(); end
+            if ~isempty(obj.ColName), obj.setColName(); end
 
             if strcmpi(obj.Format, '3d')
-                axis(obj.ax, 'tight')
-                obj.setFrame();
+                obj.setFrame(); axis(obj.ax, 'tight');
             end
 
             addlistener(obj.fig, 'Colormap', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
-            addlistener(obj.ax, 'Colormap', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
-            addlistener(obj.ax, 'CLim', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
-
+            addlistener(obj.ax , 'Colormap', 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
+            addlistener(obj.ax , 'CLim'    , 'PostSet', @(src, evt) obj.refreshTxtColor(src, evt));
 
             if nargout == 1
                 varargout = {obj};
@@ -861,6 +786,82 @@ classdef SHeatmap < handle
             end
         end
 
+% =========================================================================
+% Set indices of row/col ticks to display (设置要显示的行列刻度索引)
+% =========================================================================
+        function varargout = setRowTickIndices(obj, indices)
+
+            if nargin < 2
+                indices = obj.RowTickIndices;
+            else
+                obj.RowTickIndices = indices;
+            end
+
+            obj.ax.YTick = obj.RP(indices);
+            if ismember(lower(obj.Type), {'varu', 'varl', 'col'})
+                obj.ax.YTickLabel = '';
+            else
+                if ~isempty(obj.RowName)
+                    tind = mod(indices - 1, length(obj.RowName)) + 1;
+                    obj.ax.YTickLabel = obj.RowName(tind);
+                else
+                    trs = compose('%d', 1:size(obj.Data, 1));
+                    obj.ax.YTickLabel = trs(indices);
+                end
+            end
+
+            if obj.rowShown
+                set(obj.rowLabelHdl, 'Visible', 'off')
+                set(obj.rowLabelHdl(indices), 'Visible', 'on')
+
+                tickmask = nan(3, size(obj.Data, 1));
+                tickmask(:, indices) = 1;
+                obj.rowTickHdl.XData = obj.newRTX.*tickmask(:);
+                obj.rowTickHdl.YData = obj.newRTY.*tickmask(:);
+            end
+
+            obj.tickConfigured = true;
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
+
+        function varargout = setColTickIndices(obj, indices)
+
+            if nargin < 2
+                indices = obj.ColTickIndices;
+            else
+                obj.ColTickIndices = indices;
+            end
+
+            obj.ax.XTick = obj.CP(indices);
+            if ismember(lower(obj.Type), {'varu', 'varl', 'row'})
+                obj.ax.XTickLabel = '';
+            else
+                if ~isempty(obj.ColName)
+                    tind = mod(indices - 1, length(obj.ColName)) + 1;
+                    obj.ax.XTickLabel = obj.ColName(tind);
+                else
+                    tcs = compose('%d', 1:size(obj.Data, 2));
+                    obj.ax.XTickLabel = tcs(indices);
+                end
+            end
+
+            if obj.colShown
+                set(obj.colLabelHdl, 'Visible', 'off')
+                set(obj.colLabelHdl(indices), 'Visible', 'on')
+
+                tickmask = nan(3, size(obj.Data, 2));
+                tickmask(:, indices) = 1;
+                obj.colTickHdl.XData = obj.newCTX.*tickmask(:);
+                obj.colTickHdl.YData = obj.newCTY.*tickmask(:);
+            end
+
+            obj.tickConfigured = true;
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
 % =========================================================================
 % Text decoration (修饰文本)
 % =========================================================================
@@ -890,28 +891,74 @@ classdef SHeatmap < handle
             %   obj.setText(Bool, ___); Set properties for value labels
             %   where the logical matrix Bool is true.
 
+            dataVec = obj.Data(:); valid = ~isnan(dataVec); tRatio = abs(dataVec)./obj.maxV;
             if ~obj.txtShown
                 [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
-                rows = obj.RP(rows);
-                cols = obj.CP(cols);
-                dataVec = obj.Data(:);
-                strCell = cell(size(dataVec));
-                valid = ~isnan(dataVec);
+                rows = obj.RP(rows); cols = obj.CP(cols); 
+                strCell = cell(size(dataVec)); 
                 strCell(valid) = cellstr(num2str(dataVec(valid), '%.2f'));
                 strCell(~valid) = {''};
 
                 tRatio = abs(dataVec)./obj.maxV;
+                obj.TxtXY = zeros(length(dataVec), 2);
                 if strcmpi(obj.Format, '3d')
                     hAll = text(obj.ax, cols(:) + cos(obj.Format3DTheta).*tRatio.*obj.Format3DHeight, ...
                          rows(:) - sin(obj.Format3DTheta).*tRatio.*obj.Format3DHeight, strCell, ...
                         'FontName', 'Times New Roman', ...
                         'HorizontalAlignment', 'center', ...
                         'Visible', 'off');
-                else
-                    hAll = text(obj.ax, cols(:), rows(:), strCell, ...
+                    obj.TxtXY(:, 1) = cols(:) + cos(obj.Format3DTheta).*tRatio.*obj.Format3DHeight;
+                    obj.TxtXY(:, 2) = rows(:) - sin(obj.Format3DTheta).*tRatio.*obj.Format3DHeight; 
+                elseif strcmpi(obj.Format, 'tril') || strcmpi(obj.Format, 'trill')
+                    hAll = text(obj.ax, cols(:) - 1/6, rows(:) + 1/6, strCell, ...
+                        'FontName', 'Times New Roman', ...
+                        'HorizontalAlignment', 'center', 'Rotation', -45, ...
+                        'Visible', 'off');
+                    obj.TxtXY(:, 1) = cols(:) - 1/6; 
+                    obj.TxtXY(:, 2) = rows(:) + 1/6; 
+                elseif strcmpi(obj.Format, 'triu') || strcmpi(obj.Format, 'triur')
+                    hAll = text(obj.ax, cols(:) + 1/6, rows(:) - 1/6, strCell, ...
+                        'FontName', 'Times New Roman', ...
+                        'HorizontalAlignment', 'center', 'Rotation', -45, ...
+                        'Visible', 'off');
+                    obj.TxtXY(:, 1) = cols(:) + 1/6; 
+                    obj.TxtXY(:, 2) = rows(:) - 1/6; 
+                elseif strcmpi(obj.Format, 'trilr')
+                    hAll = text(obj.ax, cols(:) + 1/6, rows(:) + 1/6, strCell, ...
+                        'FontName', 'Times New Roman', ...
+                        'HorizontalAlignment', 'center', 'Rotation', 45, ...
+                        'Visible', 'off');
+                    obj.TxtXY(:, 1) = cols(:) + 1/6; 
+                    obj.TxtXY(:, 2) = rows(:) + 1/6;
+                elseif strcmpi(obj.Format, 'triul')
+                    hAll = text(obj.ax, cols(:) - 1/6, rows(:) - 1/6, strCell, ...
+                        'FontName', 'Times New Roman', ...
+                        'HorizontalAlignment', 'center', 'Rotation', 45, ...
+                        'Visible', 'off');
+                    obj.TxtXY(:, 1) = cols(:) - 1/6; 
+                    obj.TxtXY(:, 2) = rows(:) - 1/6;
+                elseif strcmpi(obj.Format, 'arrow')
+                    tOffset = ((dataVec < 0) - .5)./5.*obj.SY;
+                    hAll = text(obj.ax, cols(:), rows(:) + tOffset, strCell, ...
                         'FontName', 'Times New Roman', ...
                         'HorizontalAlignment', 'center', ...
                         'Visible', 'off');
+                    obj.TxtXY(:, 1) = cols(:); 
+                    obj.TxtXY(:, 2) = rows(:) + tOffset;
+                else
+                    if obj.XYTReset
+                        hAll = text(obj.ax, obj.newTxtXY(:, 1), obj.newTxtXY(:, 2), strCell, ...
+                            'FontName', 'Times New Roman', ...
+                            'HorizontalAlignment', 'center', ...
+                            'Visible', 'off');
+                    else
+                        hAll = text(obj.ax, cols(:), rows(:), strCell, ...
+                            'FontName', 'Times New Roman', ...
+                            'HorizontalAlignment', 'center', ...
+                            'Visible', 'off');
+                    end
+                    obj.TxtXY(:, 1) = cols(:);
+                    obj.TxtXY(:, 2) = rows(:);
                 end
                 hAll(~valid) = obj.nanTextHdl;
                 obj.textHdl = reshape(hAll, size(obj.Data));
@@ -922,97 +969,70 @@ classdef SHeatmap < handle
                 varargin = {'Visible','on'};
             end
             if islogical(varargin{1})
-                [M, N] = find(varargin{1});
-                for i = 1:length(M)
-                    m = M(i); n = N(i);
-                    set(obj.textHdl(m, n), varargin{2:end})
-                end
+                set(obj.textHdl(varargin{1}), varargin{2:end})
             elseif isnumeric(varargin{1})
                 M = varargin{1}; N = varargin{2};
                 if all(size(M) == size(N))
-                    for i = 1:length(M)
-                        m = M(i); n = N(i);
-                        set(obj.textHdl(m, n), varargin{3:end})
-                    end
+                    tind = sub2ind(size(obj.Data), M, N);
+                    set(obj.textHdl(tind), varargin{3:end})
                 else
                     if isempty(M); M = 1:size(obj.Data, 1); end
                     if isempty(N); N = 1:size(obj.Data, 2); end
-                    for i = 1:length(M)
-                        for j = 1:length(N)
-                            m = M(i); n = N(j);
-                            set(obj.textHdl(m, n), varargin{3:end})
-                        end
-                    end
+                    obj.textHdl(M, N)
+                    set(obj.textHdl(M, N), varargin{3:end})
                 end
             else
-            % Get grayscale of current colormap (获取当前颜色映射的灰度值)
-            cmp = get(obj.ax, 'Colormap');
-            graymap = mean(cmp, 2);
-            climit  = get(obj.ax, 'CLim');
-            values = linspace(climit(1), climit(2), size(cmp, 1) + 1);
-        
-            % Loop over all cells (遍历所有单元格)
-            for row = 1:size(obj.Data, 1)
-                for col = 1:size(obj.Data, 2)
-                    % Determine text color (black if background bright, white if dark)
-                    % (根据背景亮度决定文字颜色：亮底黑字，暗底白字)
-                    if ~isnan(obj.Data(row, col))
-                    if strcmpi(obj.Format, 'txt') || strcmpi(obj.Format, 'text')
-                        % textColor = interp1(linspace(climit(1), climit(2), size(cmp, 1)), ...
-                        %     cmp, obj.Data(row, col));
-                        tind = sum(obj.Data(row, col) >= values);
-                        tind(tind <= 0) = 1;
-                        tind(tind > size(cmp, 1)) = size(cmp, 1);
-                        textColor = cmp(tind, :);
-                    else
-                        % bgBrightness = interp1(linspace(climit(1), climit(2), size(graymap, 1)), ...
-                        %     graymap, obj.Data(row, col));
-                        tind = sum(obj.Data(row, col) >= values);
-                        tind(tind <= 0) = 1;
-                        tind(tind > size(cmp, 1)) = size(cmp, 1);
-                        bgBrightness = graymap(tind);
-                        if bgBrightness < 0.5
-                            textColor = [1, 1, 1];   % white (白色)
-                        else
-                            textColor = [0, 0, 0];   % black (黑色)
-                        end
-                    end
-                        set(obj.textHdl(row, col), 'Color',textColor)
-                    end
-                    set(obj.textHdl(row, col), 'Visible','on', varargin{:});
+                % Get grayscale of current colormap (获取当前颜色映射的灰度值)
+                cmp = get(obj.ax, 'Colormap');
+                climit  = get(obj.ax, 'CLim');
+
+                dataVec = obj.Data(:);
+                valid = ~isnan(dataVec);
+                counts = floor((dataVec - climit(1))./diff(climit).*size(cmp, 1)) + 1;
+                counts(counts > size(cmp, 1)) = size(cmp, 1);
+                counts(counts < 1) = 1;
+                counts(~valid) = 1;
+
+                % Set text color based on format; 根据格式设置文本颜色
+                if strcmpi(obj.Format, 'txt') || strcmpi(obj.Format, 'text')
+                    % Use actual color for 'text'/'txt' format; 对于 'text'/'txt' 格式使用实际颜色
+                    colors = cmp(counts, :);
+                    colors(~valid, :) = 0;
+                    set(obj.textHdl, {'Color'}, num2cell(colors, 2))
+                elseif ismember(lower(obj.Format), {'pie','bcirc','hex','star','asq','acirc','arrect','acust'})
+                    graymap = mean(cmp, 2);
+                    grays = repmat(graymap(counts, :) < .5, [1, 3]);
+                    grays(~valid, :) = 0;
+                    grays(tRatio < .3, :) = 0;
+                    set(obj.textHdl, {'Color'}, num2cell(grays, 2))
+                elseif ismember(lower(obj.Format), {'teardrop','bar','barh','moon'})
+                    graymap = mean(cmp, 2);
+                    grays = repmat(graymap(counts, :) < .5, [1, 3]);
+                    grays(~valid, :) = 0;
+                    grays(tRatio < .7, :) = 0;
+                    set(obj.textHdl, {'Color'}, num2cell(grays, 2))
+                elseif ismember(lower(obj.Format), {'oval'})
+                    graymap = mean(cmp, 2);
+                    grays = repmat(graymap(counts, :) < .5, [1, 3]);
+                    grays(~valid, :) = 0;
+                    grays(tRatio > .7, :) = 0;
+                    set(obj.textHdl, {'Color'}, num2cell(grays, 2))
+                elseif strcmpi(obj.Format, 'donut')
+                    set(obj.textHdl, 'Color',[0,0,0])
+                else
+                    % Use black/white contrast for other formats; 其他格式使用黑白对比色
+                    graymap = mean(cmp, 2);
+                    grays = repmat(graymap(counts, :) < .5, [1, 3]);
+                    grays(~valid, :) = 0;
+                    set(obj.textHdl, {'Color'}, num2cell(grays, 2))
                 end
-            end
 
-            if ismember('color', lower(varargin(1:2:(length(varargin) - 1))))
-                obj.txtFixed = true;
-            end
+                set(obj.textHdl, 'Visible','on', varargin{:});
+                if ismember('color', lower(varargin(1:2:(length(varargin) - 1))))
+                    obj.txtFixed = true;
+                end
 
-            switch lower(obj.Type)
-                case 'triu'      % upper triangle (including diagonal) (上三角，含对角线)
-                    for row = 1:size(obj.Data, 1)
-                        for col = 1:(row - 1)
-                            set(obj.textHdl(row, col), 'Visible','off');
-                        end
-                    end
-                case 'tril'      % lower triangle (including diagonal) (下三角，含对角线)
-                    for col = 1:size(obj.Data, 2)
-                        for row = 1:(col - 1)
-                            set(obj.textHdl(row, col), 'Visible','off');
-                        end
-                    end
-                case {'triu0', 'linku', 'varu'}     % upper triangle without diagonal (扣除对角线，上三角不含对角线)
-                    for row = 1:size(obj.Data, 1)
-                        for col = 1:(row)
-                            set(obj.textHdl(row, col), 'Visible','off');
-                        end
-                    end
-                case {'tril0', 'linkl', 'varl'}      % lower triangle without diagonal (扣除对角线，下三角不含对角线)
-                    for col = 1:size(obj.Data, 2)
-                        for row = 1:(col)
-                            set(obj.textHdl(row, col), 'Visible','off');
-                        end
-                    end
-            end
+                set(obj.textHdl(obj.Mask), 'Visible','off');
             end
             if nargout == 1
                 varargout = {obj};
@@ -1048,71 +1068,35 @@ classdef SHeatmap < handle
             %   obj.setPatch(Bool, ___); Set properties for patch objects
             %   where the logical matrix Bool is true.
 
+            pieFlag = strcmpi(obj.Format, 'pie')   || strcmpi(obj.Format, 'donut') || ...
+                      strcmpi(obj.Format, 'bcirc') || strcmpi(obj.Format, 'shade') || ...
+                      strcmpi(obj.Format, 'moon')  || strcmpi(obj.Format, 'teardrop');
             if islogical(varargin{1})
-                [M, N] = find(varargin{1});
-                for i = 1:length(M)
-                    m = M(i); n = N(i);
-                    set(obj.patchHdl(m, n), varargin{2:end});
-                    if strcmpi(obj.Format, 'pie') || ...
-                       strcmpi(obj.Format, 'donut') || ...
-                       strcmpi(obj.Format, 'bcirc') || ...
-                       strcmpi(obj.Format, 'shade') || ...
-                       strcmpi(obj.Format, 'moon') || ...
-                       strcmpi(obj.Format, 'teardrop')
-                        set(obj.pieHdl(m, n), varargin{2:end});
-                    end
+                set(obj.patchHdl(varargin{1}), varargin{2:end});
+                if pieFlag
+                    set(obj.pieHdl(varargin{1}), varargin{2:end});
                 end
             elseif isnumeric(varargin{1})
                 M = varargin{1}; N = varargin{2};
                 if all(size(M) == size(N))
-                    for i = 1:length(M)
-                        m = M(i); n = N(i);
-                        set(obj.patchHdl(m, n), varargin{3:end});
-                        if strcmpi(obj.Format, 'pie') || ...
-                           strcmpi(obj.Format, 'donut') || ...
-                           strcmpi(obj.Format, 'bcirc') || ...
-                           strcmpi(obj.Format, 'shade') || ...
-                           strcmpi(obj.Format, 'moon') || ...
-                           strcmpi(obj.Format, 'teardrop')
-                            set(obj.pieHdl(m, n), varargin{3:end});
-                        end
+                    tind = sub2ind(size(obj.Data), M, N);
+                    set(obj.patchHdl(tind), varargin{3:end});
+                    if pieFlag
+                        set(obj.pieHdl(tind), varargin{3:end});
                     end
                 else
                     if isempty(M); M = 1:size(obj.Data, 1); end
                     if isempty(N); N = 1:size(obj.Data, 2); end
-                    for i = 1:length(M)
-                        for j = 1:length(N)
-                            m = M(i); n = N(j);
-                            set(obj.patchHdl(m, n), varargin{3:end});
-                            if strcmpi(obj.Format, 'pie') || ...
-                               strcmpi(obj.Format, 'donut') || ...
-                               strcmpi(obj.Format, 'bcirc') || ...
-                               strcmpi(obj.Format, 'shade') || ...
-                               strcmpi(obj.Format, 'moon') || ...
-                               strcmpi(obj.Format, 'teardrop')
-                                set(obj.pieHdl(m, n), varargin{3:end});
-                            end
-                        end
+                    set(obj.patchHdl(M, N), varargin{3:end});
+                    if pieFlag
+                        set(obj.pieHdl(M, N), varargin{3:end});
                     end
                 end
             else
-            for row = 1:size(obj.Data, 1)
-                for col = 1:size(obj.Data, 2)
-                    if ~isnan(obj.Data(row, col))
-                        set(obj.patchHdl(row, col), varargin{:});
-                        % For pie/donut/bcirc formats, also set the pie background handle
-                        % (对于 pie/donut/bcirc 格式，同时设置饼图背景句柄)
-                        if strcmpi(obj.Format, 'pie') || ...
-                           strcmpi(obj.Format, 'donut') || ...
-                           strcmpi(obj.Format, 'bcirc') || ...
-                           strcmpi(obj.Format, 'shade') || ...
-                           strcmpi(obj.Format, 'moon') || ...
-                           strcmpi(obj.Format, 'teardrop')
-                            set(obj.pieHdl(row, col), varargin{:});
-                        end
-                    end
+                set(obj.patchHdl(~isnan(obj.Data)), varargin{:});
+                if pieFlag
+                    set(obj.pieHdl(~isnan(obj.Data)), varargin{:});
                 end
-            end
             end
             if nargout == 1
                 varargout = {obj};
@@ -1123,7 +1107,6 @@ classdef SHeatmap < handle
 % =========================================================================  
         function varargout = setGrid(obj, varargin)
             % obj.setGrid(varargin) - Set properties for grid handle (设置网格样式)
-
             obj.GX = []; obj.GY = [];
             for gi = 1:max(obj.RowGroup)
                 for gj = 1:max(obj.ColGroup)
@@ -1143,7 +1126,6 @@ classdef SHeatmap < handle
                             colX = [1; 1; nan]*colX;
                             obj.GX = [obj.GX; rowX(:); colX(:)];
                             obj.GY = [obj.GY; rowY(:); colY(:)];
-
                         case {'triu0', 'linku', 'varu'}
                             if gi == gj && length(posi) > 1
                                 gX1 = [1; 1; nan]*posj(2:end);
@@ -1164,7 +1146,6 @@ classdef SHeatmap < handle
                                 obj.GX = [obj.GX; gX1(:); gX2(:)];
                                 obj.GY = [obj.GY; gY1(:); gY2(:)];
                             end
-
                         case {'tril0', 'linkl', 'varl'}
                             if gi == gj && length(posi) > 1
                                 gX1 = [1; 1; nan]*posj(1:(end - 1));
@@ -1185,7 +1166,6 @@ classdef SHeatmap < handle
                                 obj.GX = [obj.GX; gX1(:); gX2(:)];
                                 obj.GY = [obj.GY; gY1(:); gY2(:)];
                             end
-
                         case  'triu'
                             if gi == gj
                                 gX1 = [1; 1; nan]*posj;
@@ -1202,7 +1182,6 @@ classdef SHeatmap < handle
                                 obj.GX = [obj.GX; gX1(:); gX2(:)];
                                 obj.GY = [obj.GY; gY1(:); gY2(:)];
                             end
-
                         case  'tril'
                             if gi == gj
                                 gX1 = [1; 1; nan]*posj;
@@ -1219,7 +1198,6 @@ classdef SHeatmap < handle
                                 obj.GX = [obj.GX; gX1(:); gX2(:)];
                                 obj.GY = [obj.GY; gY1(:); gY2(:)];
                             end
-
                     end
                 end
             end
@@ -1272,60 +1250,87 @@ classdef SHeatmap < handle
 % =========================================================================
         function varargout = setFrame(obj, varargin)
             % obj.setFrame(varargin) - Set properties for frame and tick handle (设置外轮廓样式)
-            if obj.XYTReset
-                set(obj.frameHdl, 'Visible','on', varargin{:})
-            else 
-            obj.TickLength(obj.TickLength < 0) = 0;
-            obj.TickLength(obj.TickLength > .5) = .5;
-
-            if isempty(obj.RowName)
-                obj.RowName = compose('%d', 1:size(obj.Data, 1));
-            end
-            if isempty(obj.ColName)
-                obj.ColName = compose('%d', 1:size(obj.Data, 2));
-            end
-            obj.ax.XColor = 'none';
-            obj.ax.YColor = 'none';
-            obj.setRowName(obj.RowName);
-            obj.setColName(obj.ColName);
-
             set(obj.frameHdl, 'Visible','on', varargin{:})
-            [M, N] = size(obj.Data);
+            if ~obj.XYTReset
+                obj.TickLength(obj.TickLength < 0) = 0;
+                obj.TickLength(obj.TickLength > .5) = .5;
+        
+                if isempty(obj.RowName)
+                    obj.RowName = compose('%d', 1:size(obj.Data, 1));
+                    obj.setRowName();
+                end
+                if isempty(obj.ColName)
+                    obj.ColName = compose('%d', 1:size(obj.Data, 2));
+                    obj.setColName();
+                end
+                obj.ax.XColor = 'none';
+                obj.ax.YColor = 'none';
+        
+                set(obj.rowTickHdl, 'Visible','on', varargin{:})
+                set(obj.colTickHdl, 'Visible','on', varargin{:})
+                obj.setRowLabelLocation()
+                obj.setColLabelLocation()
+                try
+                    obj.Colorbar.TickLength = .005;
+                    obj.Colorbar.TickDirection = 'out';
+                    obj.Colorbar.LineWidth = obj.frameHdl.LineWidth;
+                catch
+                end
+        
+                if strcmpi(obj.Type, 'row') || strcmpi(obj.Type, 'varu') || strcmpi(obj.Type, 'varl')
+                    obj.ColTickIndices = [];
+                end
+                if strcmpi(obj.Type, 'col')
+                    obj.RowTickIndices = [];
+                end
+            end
+
+            obj.rowShown = true;
+            obj.colShown = true;
+            obj.setRowTickIndices()
+            obj.setColTickIndices()
+
+            if nargout == 1
+                varargout = {obj};
+            end
+        end
+
+        function setRowTickXY(obj)
+            % obj.setRowTickXY() - Compute the row tick coordinates (计算行刻度坐标)
+            [M, ~] = size(obj.Data);
             switch obj.RowLabelLocation
                 case 'left'
                     switch lower(obj.Type)
                         case {'triu', 'varu'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*M, 1); Y = nan(3*M, 1);
                         case {'tril', 'varl'}
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'triu0', 'linku'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*M, 1); Y = nan(3*M, 1);
                         case {'tril0', 'linkl'}
-                            X = [.5; .5 - obj.TickLength; nan]*ones(1, M - 1);
-                            Y = [1; 1; nan]*obj.RP(2:M);
+                            X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
+                            Y = [1; 1; nan]*[nan, obj.RP(2:M)];
                         case {'full','row','col'}
                             X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                     end
-                    set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
                 case 'right'
                     switch lower(obj.Type)
                         case {'triu', 'varu'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'tril', 'varl'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*M, 1); Y = nan(3*M, 1);
                         case {'triu0', 'linku'}
-                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M - 1);
-                            Y = [1; 1; nan]*obj.RP(1:(M - 1));
+                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
+                            Y = [1; 1; nan]*[obj.RP(1:(M - 1)), nan];
                         case {'tril0', 'linkl'}
                             X = nan(3, 1); Y = nan(3, 1);
                         case {'full','row','col'}
                             X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                     end
-                    set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
                 case 'diag'
                     switch lower(obj.Type)
                         case 'triu'
@@ -1335,16 +1340,23 @@ classdef SHeatmap < handle
                             X = [obj.CP(1:M) + .5; obj.CP(1:M) + .5 + obj.TickLength; nan(1, M)];
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'triu0', 'linku'}
-                            X = [obj.CP(2:M) - .5; obj.CP(2:M) - .5 - obj.TickLength; nan(1, M - 1)];
-                            Y = [1; 1; nan]*obj.RP(1:(M - 1));
+                            X = [[obj.CP(2:M), nan] - .5; [obj.CP(2:M), nan] - .5 - obj.TickLength; nan(1, M)];
+                            Y = [1; 1; nan]*[obj.RP(1:(M - 1)), nan];
                         case {'tril0', 'linkl'}
-                            X = [obj.CP(1:(M - 1)) + .5; obj.CP(1:(M - 1)) + .5 + obj.TickLength; nan(1, M - 1)];
-                            Y = [1; 1; nan]*obj.RP(2:M);
+                            X = [[nan, obj.CP(1:(M - 1))] + .5; [nan, obj.CP(1:(M - 1))] + .5 + obj.TickLength; nan(1, M)];
+                            Y = [1; 1; nan]*[nan, obj.RP(2:M)];
                         case {'varu', 'varl'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*M, 1); Y = nan(3*M, 1);
                     end
-                    set(obj.rowTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
             end
+            obj.RTX = X(:); obj.RTY = Y(:);
+            obj.newRTX = X(:); obj.newRTY = Y(:);
+            set(obj.rowTickHdl, 'XData',obj.RTX, 'YData',obj.RTY)
+        end
+
+        function setColTickXY(obj)
+            % obj.setColTickXY() - Compute the col tick coordinates (计算列刻度坐标)
+            [~, N] = size(obj.Data);
             switch obj.ColLabelLocation
                 case 'top'
                     switch lower(obj.Type)
@@ -1352,34 +1364,32 @@ classdef SHeatmap < handle
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'tril', 'varl'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'triu0', 'linku'}
-                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, N - 1);
-                            X = [1; 1; nan]*obj.CP(2:N);
+                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
+                            X = [1; 1; nan]*[nan, obj.CP(2:N)];
                         case {'tril0', 'linkl'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'full','row','col'}
                             Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                     end
-                    set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
                 case 'bottom'
                     switch lower(obj.Type)
                         case {'triu', 'varu'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'tril', 'varl'}
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'triu0', 'linku'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'tril0', 'linkl'}
-                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N - 1);
-                            X = [1; 1; nan]*obj.CP(1:(N - 1));
+                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
+                            X = [1; 1; nan]*[obj.CP(1:(N - 1)), nan];
                         case {'full','row','col'}
                             Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                     end
-                    set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
                 case 'diag'
                     switch lower(obj.Type)
                         case 'triu'
@@ -1389,46 +1399,20 @@ classdef SHeatmap < handle
                             Y = [obj.RP(1:N) - .5; obj.RP(1:N) - .5 - obj.TickLength; nan(1, N)];
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'triu0', 'linku'}
-                            Y = [obj.RP(1:(N - 1)) + .5; obj.RP(1:(N - 1)) + .5 + obj.TickLength; nan(1, N - 1)];
-                            X = [1; 1; nan]*obj.CP(2:N);
+                            Y = [[nan, obj.RP(1:(N - 1))] + .5; [nan, obj.RP(1:(N - 1))] + .5 + obj.TickLength; nan(1, N)];
+                            X = [1; 1; nan]*[nan, obj.CP(2:N)];
                         case {'tril0', 'linkl'}
-                            Y = [obj.RP(2:N) - .5; obj.RP(2:N) - .5 - obj.TickLength; nan(1, N - 1)];
-                            X = [1; 1; nan]*obj.CP(1:(N - 1));
+                            Y = [[obj.RP(2:N), nan] - .5; [obj.RP(2:N), nan] - .5 - obj.TickLength; nan(1, N)];
+                            X = [1; 1; nan]*[obj.CP(1:(N - 1)), nan];
                         case {'varu', 'varl'}
-                            X = nan(3, 1); Y = nan(3, 1);
+                            X = nan(3*N, 1); Y = nan(3*N, 1);
                     end
-                    set(obj.colTickHdl, 'XData',X(:), 'YData',Y(:), 'Visible','on', varargin{:})
             end
-
-            obj.setRowLabelLocation(obj.RowLabelLocation)
-            obj.setColLabelLocation(obj.ColLabelLocation)
-            try
-                obj.Colorbar.TickLength = .005;
-                obj.Colorbar.TickDirection = 'out';
-                obj.Colorbar.LineWidth = obj.frameHdl.LineWidth;
-            catch
-            end
-
-            if strcmpi(obj.Type, 'row') || strcmpi(obj.Type, 'varu') || strcmpi(obj.Type, 'varl')
-                for n = 1:size(obj.Data, 2)
-                    set(obj.colLabelHdl(n), 'Visible','off')
-                end
-                set(obj.colTickHdl, 'Visible','off')
-            end
-
-            if strcmpi(obj.Type, 'col')
-                for n = 1:size(obj.Data, 1)
-                    set(obj.rowLabelHdl(n), 'Visible','off')
-                end
-                set(obj.rowTickHdl, 'Visible','off')
-            end
-            end
-
-
-            if nargout == 1
-                varargout = {obj};
-            end
+            obj.CTX = X(:); obj.CTY = Y(:);
+            obj.newCTX = X(:); obj.newCTY = Y(:);
+            set(obj.colTickHdl, 'XData',obj.CTX, 'YData',obj.CTY)
         end
+
 % =========================================================================
 % Set triangular type (设置三角样式)
 % =========================================================================
@@ -1449,87 +1433,30 @@ classdef SHeatmap < handle
             %   'varl'   : lower triangle (var-labels diagonal) : 下三角部分 (变量名对角线)
         
             % mustBeAllowedTriType(Type)
-                
-
-            if (size(obj.Data, 1) == size(obj.Data, 2) && isequal(obj.RowGroup, obj.ColGroup)) || (strcmpi(Type, 'row') || strcmpi(Type, 'col'))
-        
+            if (size(obj.Data, 1) == size(obj.Data, 2) && isequal(obj.RowGroup, obj.ColGroup)) ...
+                    || (strcmpi(Type, 'row') || strcmpi(Type, 'col') || strcmpi(Type, 'full'))
                 obj.Type = Type;
-                if (strcmpi( obj.Type, 'row') || strcmpi(obj.Type, 'col'))
-                    if isempty(obj.RowName)
-                        obj.RowName = compose('%d', 1:size(obj.Data, 1));
-                    end
-                    if isempty(obj.ColName)
-                        obj.ColName = compose('%d', 1:size(obj.Data, 1));
-                    end
+                if (strcmpi( obj.Type, 'row') || strcmpi(obj.Type, 'col') || strcmpi(Type, 'full'))
+                    if isempty(obj.RowName); obj.RowName = compose('%d', 1:size(obj.Data, 1)); end
+                    if isempty(obj.ColName); obj.ColName = compose('%d', 1:size(obj.Data, 1)); end
                 else
                     obj.RowName = obj.VarName;
                     obj.ColName = obj.VarName;
                 end
+                obj.setRowName()
+                obj.setColName()
 
                 % Hide axes labels and adjust axis location (隐藏坐标轴标签，调整轴位置)
                 obj.ax.XColor = 'none';
                 obj.ax.YColor = 'none';
-                obj.ax.YAxisLocation = 'right';
-
                 
-             
-                % Show all row and column labels initially (初始显示所有行/列标签)
-                for n = 1:size(obj.Data, 1)
-                    set(obj.rowLabelHdl(n), 'Visible', 'on');
-                end
-                for n = 1:size(obj.Data, 2)
-                    set(obj.colLabelHdl(n), 'Visible', 'on');
-                end
-
-                if strcmpi(obj.Type, 'row')
-                    for n = 1:size(obj.Data, 2)
-                        set(obj.colLabelHdl(n), 'Visible','off')
-                    end
-                    set(obj.colTickHdl, 'Visible','off')
-                end
-
-                if strcmpi(obj.Type, 'varu') || strcmpi(obj.Type, 'varl')
-                    for n = 1:size(obj.Data, 2)
-                        set(obj.colLabelHdl(n), 'Visible','off')
-                    end
-                    set(obj.colTickHdl, 'Visible','off')
-                    set(obj.rowTickHdl, 'Visible','off')
-                    obj.RowLabelLocation = 'diag';
-                    obj.ColLabelLocation = 'diag';
-                end
-
-                if strcmpi(obj.Type, 'col')
-                    for n = 1:size(obj.Data, 1)
-                        set(obj.rowLabelHdl(n), 'Visible','off')
-                    end
-                    set(obj.rowTickHdl, 'Visible','off')
-                end
-
-                if strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0')
-                    obj.RowLabelLocation = 'diag';
-                    obj.ColLabelLocation = 'top';
-                end
-                if strcmpi(obj.Type, 'tril') || strcmpi(obj.Type, 'tril0')
-                    obj.RowLabelLocation = 'left';
-                    obj.ColLabelLocation = 'diag';
-                end
-                if strcmpi(obj.Type, 'linku')
-                    obj.RowLabelLocation = 'right';
-                    obj.ColLabelLocation = 'top';
-                end
-                if strcmpi(obj.Type, 'linkl') 
-                    obj.RowLabelLocation = 'left';
-                    obj.ColLabelLocation = 'bottom';
-                end
-
-                if strcmpi(obj.Type, 'linkl') 
-                    obj.RowLabelLocation = 'left';
-                    obj.ColLabelLocation = 'bottom';
-                end
-
-                if strcmpi( obj.Type, 'row') || strcmpi(obj.Type, 'col')
-                    obj.RowLabelLocation = 'left';
-                    obj.ColLabelLocation = 'top';
+                switch lower(obj.Type)
+                    case {'triu', 'triu0'}; obj.RowLabelLocation = 'diag'; obj.ColLabelLocation = 'top';
+                    case {'tril', 'tril0'}; obj.RowLabelLocation = 'left'; obj.ColLabelLocation = 'diag';
+                    case {'linku'}; obj.RowLabelLocation = 'right'; obj.ColLabelLocation = 'top';
+                    case {'row', 'col'}; obj.RowLabelLocation = 'left'; obj.ColLabelLocation = 'top';
+                    case {'varu', 'varl'}; obj.RowLabelLocation = 'diag'; obj.ColLabelLocation = 'bottom';
+                    otherwise; obj.RowLabelLocation = 'left'; obj.ColLabelLocation = 'bottom';
                 end
         
                 % Apply specific triangular type (应用特定三角类型)
@@ -1546,205 +1473,180 @@ classdef SHeatmap < handle
                 switch lower(obj.Type)
                     case 'triu'   % upper triangle (including diagonal) (上三角含对角线)
                         % Hide lower-left patches/texts (隐藏左下部分图形和文本)
-                        for row = 1:size(obj.Data, 1)
-                            for col = 1:(row - 1)
-                                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
-                                    set(obj.patchHdl(row, col), 'Visible', 'off');
-                                end
-                                if ~isempty(obj.textHdl)
-                                    set(obj.textHdl(row, col),  'Visible', 'off');
-                                end
-                                if strcmpi(obj.Format, 'pie') || strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc') || strcmpi(obj.Format, 'shade') || ...
-                                   strcmpi(obj.Format, '3d') || strcmpi(obj.Format, 'moon') || ...
-                                   strcmpi(obj.Format, 'teardrop')
-                                    set(obj.pieHdl(row, col), 'Visible', 'off');
-                                end
-                            end
-                        end
+                        obj.Mask = triu(ones(size(obj.Data))) == 0;
                     case 'tril'   % lower triangle (including diagonal) (下三角含对角线)
                         % Hide upper-right patches/texts (隐藏右上部分图形和文本)
-                        for col = 1:size(obj.Data, 2)
-                            for row = 1:(col - 1)
-                                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
-                                    set(obj.patchHdl(row, col), 'Visible', 'off');
-                                end
-                                if ~isempty(obj.textHdl)
-                                    set(obj.textHdl(row, col),  'Visible', 'off');
-                                end
-                                if strcmpi(obj.Format, 'pie') || strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc') || strcmpi(obj.Format, 'shade') || ...
-                                   strcmpi(obj.Format, '3d') || strcmpi(obj.Format, 'moon') || ...
-                                   strcmpi(obj.Format, 'teardrop')
-                                    set(obj.pieHdl(row, col), 'Visible', 'off');
-                                end
-                            end
-                        end
+                        obj.Mask = tril(ones(size(obj.Data))) == 0;
                     case {'triu0', 'linku', 'varu'}  % upper triangle without diagonal (扣除对角线，上三角不含对角线)
                         % Hide diagonal and lower-left patches/texts (隐藏对角线及左下部分)
-                        for row = 1:size(obj.Data, 1)
-                            for col = 1:(row)
-                                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
-                                    set(obj.patchHdl(row, col), 'Visible', 'off');
-                                end
-                                if ~isempty(obj.textHdl)
-                                    set(obj.textHdl(row, col),  'Visible', 'off');
-                                end
-                                if strcmpi(obj.Format, 'pie') || strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc') || strcmpi(obj.Format, 'shade') || ...
-                                   strcmpi(obj.Format, '3d') || strcmpi(obj.Format, 'moon') || ...
-                                   strcmpi(obj.Format, 'teardrop')
-                                    set(obj.pieHdl(row, col), 'Visible', 'off');
-                                end
-                            end
-                        end
+                        obj.Mask = tril(ones(size(obj.Data))) == 1;
                         set(obj.colLabelHdl(1), 'Visible', 'off');
                         set(obj.rowLabelHdl(size(obj.Data, 1)), 'Visible', 'off');
                     case {'tril0', 'linkl', 'varl'}  % lower triangle without diagonal (扣除对角线，下三角不含对角线)
                         % Hide diagonal and upper-right patches/texts (隐藏对角线及右上部分)
-                        for col = 1:size(obj.Data, 2)
-                            for row = 1:(col)
-                                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
-                                    set(obj.patchHdl(row, col), 'Visible', 'off');
-                                end
-                                if ~isempty(obj.textHdl)
-                                    set(obj.textHdl(row, col),  'Visible', 'off');
-                                end
-                                if strcmpi(obj.Format, 'pie') || strcmpi(obj.Format, 'donut') || ...
-                                   strcmpi(obj.Format, 'bcirc') || strcmpi(obj.Format, 'shade') || ...
-                                   strcmpi(obj.Format, '3d') || strcmpi(obj.Format, 'moon') || ...
-                                   strcmpi(obj.Format, 'teardrop')
-                                    set(obj.pieHdl(row, col), 'Visible', 'off');
-                                end
-                            end
-                        end
+                        obj.Mask = triu(ones(size(obj.Data))) == 1;
                         set(obj.rowLabelHdl(1), 'Visible', 'off');
                         set(obj.colLabelHdl(size(obj.Data, 2)), 'Visible', 'off');
                 end
-            
 
-            if strcmpi(obj.Type, 'linkl')
-                for n = 1:size(obj.Data, 1)
-                    set(obj.rowLabelHdl(n), 'Visible', 'on');
-                    set(obj.colLabelHdl(n), 'Visible', 'on');
+                if ~(strcmpi(obj.Format,'txt') || strcmpi(obj.Format,'text'))
+                    set(obj.patchHdl(obj.Mask), 'Visible', 'off');
                 end
-                delete(obj.Colorbar)
+                if ~isempty(obj.textHdl)
+                    set(obj.textHdl(obj.Mask),  'Visible', 'off');
+                end
+                if strcmpi(obj.Format, 'pie') || strcmpi(obj.Format, 'donut') || ...
+                        strcmpi(obj.Format, 'bcirc') || strcmpi(obj.Format, 'shade') || ...
+                        strcmpi(obj.Format, '3d') || strcmpi(obj.Format, 'moon') || ...
+                        strcmpi(obj.Format, 'teardrop')
+                    set(obj.pieHdl(obj.Mask), 'Visible', 'off');
+                end
+
+                obj.RowTickIndices = 1:size(obj.Data, 1);
+                obj.ColTickIndices = 1:size(obj.Data, 2);
+                switch lower(obj.Type)
+                    case 'triu0' 
+                        obj.RowTickIndices = 1:(size(obj.Data, 1) - 1);
+                        obj.ColTickIndices = 2:size(obj.Data, 2);
+                    case 'tril0' 
+                        obj.RowTickIndices = 2:size(obj.Data, 1);
+                        obj.ColTickIndices = 1:(size(obj.Data, 2) - 1);
+                    case {'row', 'varu', 'varl'}
+                        obj.ColTickIndices = [];
+                    case 'col'
+                        obj.RowTickIndices = [];
+                    case {'linkl', 'linku'}
+                        delete(obj.Colorbar)
+                end
+                obj.setRowLabelLocation();
+                obj.setColLabelLocation();
+
+                obj.setBoxXY()
+                obj.setFrameXY()
+
+                obj.rowShown = true;
+                obj.colShown = true;
+                obj.setRowTickIndices()
+                obj.setColTickIndices()
             end
 
-            if strcmpi(obj.Type, 'linku')
-                for n = 1:size(obj.Data, 1)
-                    set(obj.rowLabelHdl(n), 'Visible', 'on');
-                    set(obj.colLabelHdl(n), 'Visible', 'on');
-                end
-                delete(obj.Colorbar)
+            if ~all(isnan(obj.GX))
+                obj.setGrid();
+            end
+            if strcmpi(obj.Format, '3d') || strcmpi(obj.frameHdl.Visible, 'on')
+                obj.setFrame();
             end
 
-            if strcmpi(obj.Type, 'varl') || strcmpi(obj.Type, 'varu')
-                for n = 1:size(obj.Data, 1)
-                    set(obj.rowLabelHdl(n), 'Visible', 'on');
-                end
-                for n = 1:size(obj.Data, 2)
-                    set(obj.colLabelHdl(n), 'Visible', 'off');
-                end
+            if nargout == 1
+                varargout = {obj};
             end
-            obj.setRowLabelLocation(obj.RowLabelLocation);
-            obj.setColLabelLocation(obj.ColLabelLocation);
+        end
 
+        function setBoxXY(obj)
             obj.BX = []; obj.BY = [];
-            for gi = 1:max(obj.RowGroup)
-                for gj = 1:max(obj.ColGroup)
-                    posi = obj.RP(obj.RowGroup == gi);
-                    posj = obj.CP(obj.ColGroup == gj); 
-                    M = length(posi);
-                    N = length(posj);
-                    switch lower(obj.Type)
-                        case {'triu', 'varu'}
-                            if gi == gj
-                                bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
-                                bY1 = [(posi(1) - .5).*ones(1, N + 1);
+                for gi = 1:max(obj.RowGroup)
+                    for gj = 1:max(obj.ColGroup)
+                        posi = obj.RP(obj.RowGroup == gi);
+                        posj = obj.CP(obj.ColGroup == gj);
+                        M = length(posi);
+                        N = length(posj);
+                        switch lower(obj.Type)
+                            case {'triu', 'varu'}
+                                if gi == gj
+                                    bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
+                                    bY1 = [(posi(1) - .5).*ones(1, N + 1);
                                         posi + .5, posi(end) + .5;
                                         nan(1, N + 1)];
-                                bX2 = [(posj(end) + .5).*ones(1, N + 1);
+                                    bX2 = [(posj(end) + .5).*ones(1, N + 1);
                                         posj(1) - .5, posj - .5;
                                         nan(1, N + 1)];
-                                bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            elseif gj > gi
-                                bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
-                                bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
-                                bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
-                                bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            end
-                        case {'tril', 'varl'}
-                            if gi == gj
-                                bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
-                                bY1 = [(posi(end) + .5).*ones(1, N + 1);
+                                    bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                elseif gj > gi
+                                    bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
+                                    bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
+                                    bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
+                                    bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                end
+                            case {'tril', 'varl'}
+                                if gi == gj
+                                    bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
+                                    bY1 = [(posi(end) + .5).*ones(1, N + 1);
                                         posi(1) - .5, posi - .5;
                                         nan(1, N + 1)];
-                                bX2 = [(posj(1) - .5).*ones(1, N + 1);
+                                    bX2 = [(posj(1) - .5).*ones(1, N + 1);
                                         posj + .5, posj(end) + .5;
                                         nan(1, N + 1)];
-                                bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            elseif gj < gi
-                                bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
-                                bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
-                                bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
-                                bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            end
-                        case {'triu0', 'linku'}
-                            if gi == gj && length(posi) > 1
-                                bX1 = [1; 1; nan]*(posj + .5);
-                                bY1 = [(posi(1) - .5).*ones(1, N);
+                                    bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                elseif gj < gi
+                                    bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
+                                    bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
+                                    bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
+                                    bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                end
+                            case {'triu0', 'linku'}
+                                if gi == gj && length(posi) > 1
+                                    bX1 = [1; 1; nan]*(posj + .5);
+                                    bY1 = [(posi(1) - .5).*ones(1, N);
                                         posi(1:(end - 1)) + .5, posi(end) - .5;
                                         nan(1, N)];
-                                bX2 = [(posj(end) + .5).*ones(1, N);
+                                    bX2 = [(posj(end) + .5).*ones(1, N);
                                         posj(1) + .5, posj(2:end) - .5;
                                         nan(1, N)];
-                                bY2 = [1; 1; nan]*(posj - .5);
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            elseif gj > gi
-                                bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
-                                bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
-                                bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
-                                bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            end
-                        case {'tril0', 'linkl'}
-                            if gi == gj && length(posi) > 1
-                                bX1 = [1; 1; nan]*(posj - .5);
-                                bY1 = [(posi(end) + .5).*ones(1, N);
+                                    bY2 = [1; 1; nan]*(posj - .5);
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                elseif gj > gi
+                                    bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
+                                    bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
+                                    bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
+                                    bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                end
+                            case {'tril0', 'linkl'}
+                                if gi == gj && length(posi) > 1
+                                    bX1 = [1; 1; nan]*(posj - .5);
+                                    bY1 = [(posi(end) + .5).*ones(1, N);
                                         posi(1) + .5, posi(2:end) - .5;
                                         nan(1, N)];
-                                bX2 = [(posj(1) - .5).*ones(1, N);
+                                    bX2 = [(posj(1) - .5).*ones(1, N);
                                         posj(1:(end - 1)) + .5, posj(end) - .5;
                                         nan(1, N)];
-                                bY2 = [1; 1; nan]*(posi + .5);
+                                    bY2 = [1; 1; nan]*(posi + .5);
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                elseif gj < gi
+                                    bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
+                                    bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
+                                    bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
+                                    bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
+                                    obj.BX = [obj.BX; bX1(:); bX2(:)];
+                                    obj.BY = [obj.BY; bY1(:); bY2(:)];
+                                end
+                            case {'full', 'row', 'col'}
+                                bY1 = unique([posi - .5, posi + .5]);
+                                bX1 = [posj(1) - .5; posj(end) + .5; nan]*ones(size(bY1));
+                                bY1 = [1; 1; nan]*bY1;
+                                bX2 = unique([posj - .5, posj + .5]);
+                                bY2 = [posi(1) - .5; posi(end) + .5; nan]*ones(size(bX2));
+                                bX2 = [1; 1; nan]*bX2;
                                 obj.BX = [obj.BX; bX1(:); bX2(:)];
                                 obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            elseif gj < gi
-                                bX1 = [1; 1; nan]*[posj(1) - .5, posj + .5];
-                                bY1 = [posi(1) - .5; posi(end) + .5; nan]*ones(1, N + 1);
-                                bX2 = [posj(1) - .5; posj(end) + .5; nan]*ones(1, M + 1);
-                                bY2 = [1; 1; nan]*[posi(1) - .5, posi + .5];
-                                obj.BX = [obj.BX; bX1(:); bX2(:)];
-                                obj.BY = [obj.BY; bY1(:); bY2(:)];
-                            end
+                        end
                     end
                 end
-            end
-            if ~(strcmpi(Type, 'row') || strcmpi(Type, 'col') || strcmpi(Type, 'full'))
                 set(obj.boxHdl, 'XData',obj.BX, 'YData',obj.BY)
-            end
+        end
 
+        function setFrameXY(obj)
             obj.FX = []; obj.FY = [];
             for gi = 1:max(obj.RowGroup)
                 for gj = 1:max(obj.ColGroup)
@@ -1796,24 +1698,14 @@ classdef SHeatmap < handle
                                 Y = [m, m, M, M, m, m] + .5;
                                 obj.FX = [obj.FX, X, nan]; obj.FY = [obj.FY, Y, nan];
                             end
+                        case {'full', 'row', 'col'}
+                            numY = round(max(posi) - min(posi) + 2);
+                            obj.FX = [obj.FX, [0, ones(1, numY), zeros(1, numY), 1, nan].*(max(posj) - min(posj) + 1) + min(posj) - .5];
+                            obj.FY = [obj.FY, [0, linspace(0, 1, numY), linspace(1, 0, numY), 0, nan].*(max(posi) - min(posi) + 1) + min(posi) - .5];
                     end
                 end
             end
-            if ~(strcmpi(Type, 'row') || strcmpi(Type, 'col') || strcmpi(Type, 'full'))
-                set(obj.frameHdl, 'XData',obj.FX, 'YData',obj.FY)
-            end
-            else
-                obj.Type = 'full';
-            end
-            if ~all(isnan(obj.GX))
-                obj.setGrid();
-            end
-            if strcmpi(obj.Format, '3d') || strcmpi(obj.frameHdl.Visible, 'on')
-                obj.setFrame();
-            end
-            if nargout == 1
-                varargout = {obj};
-            end
+            set(obj.frameHdl, 'XData',obj.FX, 'YData',obj.FY)
         end
 
 % =========================================================================
@@ -1824,20 +1716,22 @@ classdef SHeatmap < handle
             % (为行和列分配变量名，若名称数量少于维度则循环使用)       
             obj.ax.XColor = 'none';
             obj.ax.YColor = 'none';
-            obj.VarName = VarName;
-            obj.RowName = VarName;
-            obj.ColName = VarName;
+            if nargin == 2, obj.VarName = VarName; end
+            obj.RowName = obj.VarName;
+            obj.ColName = obj.VarName;
             VarNameLen = length(obj.VarName);
-            for n = 1:size(obj.Data, 1)
-                % Apply names cyclically (循环应用名称)
-                idx = mod(n - 1, VarNameLen) + 1;
-                set(obj.rowLabelHdl(n), 'String', obj.VarName{idx});
-                set(obj.colLabelHdl(n), 'String', obj.VarName{idx});
-                if strcmpi(obj.Type, 'full')
-                    set(obj.rowLabelHdl(n), 'Visible','on')
-                    set(obj.colLabelHdl(n), 'Visible','on')
-                end
-            end
+            tVarName = obj.VarName(:);
+            tVarName = [tVarName; tVarName{1}];
+            idx = 1:size(obj.Data, 1);
+            % Apply names cyclically (循环应用名称)
+            idx = mod(idx - 1, VarNameLen) + 1;
+            set(obj.rowLabelHdl, {'String'}, tVarName(idx));
+            set(obj.colLabelHdl, {'String'}, tVarName(idx));
+
+            obj.rowShown = true;
+            obj.colShown = true;
+            obj.setRowTickIndices()
+            obj.setColTickIndices()
             if nargout == 1
                 varargout = {obj};
             end
@@ -1847,16 +1741,17 @@ classdef SHeatmap < handle
             % obj.setRowName(RowName) - Assign variable names to rows (cyclically if fewer names than size)
             % (为列分配变量名，若名称数量少于维度则循环使用)
             obj.ax.YColor = 'none';
-            obj.RowName = RowName;
+            if nargin == 2, obj.RowName = RowName; end
             RowNameLen = length(obj.RowName);
-            for i = 1:size(obj.Data, 1)
-                % Apply names cyclically (循环应用名称)
-                idx = mod(i - 1, RowNameLen) + 1;
-                set(obj.rowLabelHdl(i), 'String', obj.RowName{idx});
-                if strcmpi(obj.Type, 'full')
-                    set(obj.rowLabelHdl(i), 'Visible','on')
-                end
-            end
+            tRowName = obj.RowName(:);
+            tRowName = [tRowName; tRowName{1}];
+            idx = 1:size(obj.Data, 1);
+            % Apply names cyclically (循环应用名称)
+            idx = mod(idx - 1, RowNameLen) + 1;
+            set(obj.rowLabelHdl, {'String'}, tRowName(idx));
+
+            obj.rowShown = true;
+            obj.setRowTickIndices()
             if nargout == 1
                 varargout = {obj};
             end
@@ -1866,16 +1761,17 @@ classdef SHeatmap < handle
             % obj.setColName(ColName) - Assign variable names to cols (cyclically if fewer names than size)
             % (为行分配变量名，若名称数量少于维度则循环使用)
             obj.ax.XColor = 'none';
-            obj.ColName = ColName;
+            if nargin == 2, obj.ColName = ColName; end
             ColNameLen = length(obj.ColName);
-            for j = 1:size(obj.Data, 2)
-                % Apply names cyclically (循环应用名称)
-                idx = mod(j - 1, ColNameLen) + 1;
-                set(obj.colLabelHdl(j), 'String', obj.ColName{idx});
-                if strcmpi(obj.Type, 'full')
-                    set(obj.colLabelHdl(j), 'Visible','on')
-                end
-            end
+            tColName = obj.ColName(:);
+            tColName = [tColName; tColName{1}];
+            idx = 1:size(obj.Data, 2);
+            % Apply names cyclically (循环应用名称)
+            idx = mod(idx - 1, ColNameLen) + 1;
+            set(obj.colLabelHdl, {'String'}, tColName(idx));
+            
+            obj.colShown = true;
+            obj.setColTickIndices()
             if nargout == 1
                 varargout = {obj};
             end
@@ -1883,9 +1779,7 @@ classdef SHeatmap < handle
         
         function varargout = setRowLabel(obj, varargin)
             % obj.setRowLabel(varargin) - Set properties for all row label text objects (设置所有行标签的属性)
-            for n = 1:size(obj.Data, 1)
-                set(obj.rowLabelHdl(n), varargin{:});
-            end
+            set(obj.rowLabelHdl, varargin{:});
             if nargout == 1
                 varargout = {obj};
             end
@@ -1893,9 +1787,7 @@ classdef SHeatmap < handle
         
         function varargout = setColLabel(obj, varargin)
             % obj.setColLabel(varargin) - Set properties for all col label text objects (设置所有列标签的属性)
-            for n = 1:size(obj.Data, 2)
-                set(obj.colLabelHdl(n), varargin{:});
-            end
+            set(obj.colLabelHdl, varargin{:});
             if nargout == 1
                 varargout = {obj};
             end
@@ -1912,7 +1804,9 @@ classdef SHeatmap < handle
 
             % mustBeAllowedRowLabelLocation(obj.RowLabelLocation)
 
-            if ~strcmpi(obj.RowLabelLocation, loc)
+            if nargin < 2
+                loc = obj.RowLabelLocation;
+            elseif ~strcmpi(obj.RowLabelLocation, loc)
                 obj.RowLabelLocation = loc;
             end
             obj.TickLength(obj.TickLength < 0) = 0;
@@ -1921,46 +1815,82 @@ classdef SHeatmap < handle
             obj.TickLabelOffset(obj.TickLabelOffset > .5) = .5;
 
             % 'left'/'right'/'diag'
-            for n = 1:size(obj.Data, 1)
-                switch lower(loc)
-                    case 'left'
-                        set(obj.rowLabelHdl(n), 'Position',[.5 - obj.TickLabelOffset, obj.RP(n), 0], 'HorizontalAlignment','right')
-                        if strcmpi(obj.rowTickHdl.Visible, 'on')
-                            set(obj.rowLabelHdl(n), 'Position',[.5 - obj.TickLabelOffset - obj.TickLength, obj.RP(n), 0])
-                        end
-                    case 'right'
-                        set(obj.rowLabelHdl(n), 'Position',[obj.CP(end) + .5 + obj.TickLabelOffset, obj.RP(n), 0], 'HorizontalAlignment','left')
-                        if strcmpi(obj.rowTickHdl.Visible, 'on')
-                            set(obj.rowLabelHdl(n), 'Position',[obj.CP(end) + .5 + obj.TickLabelOffset + obj.TickLength, obj.RP(n), 0])
-                        end
-                    case 'diag'
-                        switch lower(obj.Type)
-                            case 'tril'
-                                set(obj.rowLabelHdl(n), 'Position',[.5 + obj.TickLabelOffset + obj.CP(n), obj.RP(n), 0], 'HorizontalAlignment','left')
-                                if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                    set(obj.rowLabelHdl(n), 'Position',[.5 + obj.TickLabelOffset + obj.CP(n) + obj.TickLength, obj.RP(n), 0])
-                                end
-                            case {'tril0','linkl'}
-                                set(obj.rowLabelHdl(n), 'Position',[.5 + obj.TickLabelOffset + obj.CP(max(1, n - 1)), obj.RP(n), 0], 'HorizontalAlignment','left')
-                                if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                    set(obj.rowLabelHdl(n), 'Position',[.5 + obj.TickLabelOffset + obj.CP(max(1, n - 1)) + obj.TickLength, obj.RP(n), 0])
-                                end
-                            case 'triu'
-                                set(obj.rowLabelHdl(n), 'Position',[.5 - obj.TickLabelOffset - 1 + obj.CP(n), obj.RP(n), 0], 'HorizontalAlignment','right')
-                                if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                    set(obj.rowLabelHdl(n), 'Position',[.5 - obj.TickLabelOffset - 1 + obj.CP(n) - obj.TickLength, obj.RP(n), 0])
-                                end
-                            case {'triu0','linku'}
-                                set(obj.rowLabelHdl(n), 'Position',[-.5 - obj.TickLabelOffset + obj.CP(min(n + 1, length(obj.CP))), obj.RP(n), 0], 'HorizontalAlignment','right')
-                                if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                    set(obj.rowLabelHdl(n), 'Position',[-.5 - obj.TickLabelOffset + obj.CP(min(n + 1, length(obj.CP))) - obj.TickLength, obj.RP(n), 0])
-                                end
-                            case {'varu', 'varl'}
-                                set(obj.rowLabelHdl(n), 'Position',[obj.RP(n), obj.CP(n), 0], 'HorizontalAlignment','center')
-                        end
-                end
+            inds = 1:size(obj.Data, 1);
+            switch lower(loc)
+                case 'left'
+                    set(obj.rowLabelHdl, 'HorizontalAlignment','right')
+                    obj.RTLDir(:, 1) = .5; 
+                    obj.RTLDir(:, 2) = obj.RP(inds);
+                    obj.RTLDir(:, 3) = .5 - obj.TickLabelOffset;
+                    obj.RTLDir(:, 4) = obj.RP(inds);
+                    if strcmpi(obj.rowTickHdl.Visible, 'on')
+                        obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength;
+                    end
+                    obj.ax.YAxisLocation = 'left';
+                case 'right'
+                    set(obj.rowLabelHdl, 'HorizontalAlignment','left')
+                    obj.RTLDir(:, 1) = obj.CP(end) + .5; 
+                    obj.RTLDir(:, 2) = obj.RP(inds);
+                    obj.RTLDir(:, 3) = obj.CP(end) + .5 + obj.TickLabelOffset;
+                    obj.RTLDir(:, 4) = obj.RP(inds);
+                    if strcmpi(obj.rowTickHdl.Visible, 'on')
+                        obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength;
+                    end
+                    obj.ax.YAxisLocation = 'right';
+                case 'diag'
+                    switch lower(obj.Type)
+                        case 'tril'
+                            set(obj.rowLabelHdl, 'HorizontalAlignment','left')
+                            obj.RTLDir(:, 1) = .5 + obj.CP(inds); 
+                            obj.RTLDir(:, 2) = obj.RP(inds);
+                            obj.RTLDir(:, 3) = .5 + obj.CP(inds) + obj.TickLabelOffset;
+                            obj.RTLDir(:, 4) = obj.RP(inds);
+                            if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength;
+                            end
+                            obj.ax.YAxisLocation = 'right';
+                        case {'tril0','linkl'}
+                            set(obj.rowLabelHdl, 'HorizontalAlignment','left')
+                            obj.RTLDir(:, 1) = .5 + obj.CP(max(1, inds - 1)); 
+                            obj.RTLDir(:, 2) = obj.RP(inds);
+                            obj.RTLDir(:, 3) = .5 + obj.CP(max(1, inds - 1)) + obj.TickLabelOffset;
+                            obj.RTLDir(:, 4) = obj.RP(inds);
+                            if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength;
+                            end
+                            obj.ax.YAxisLocation = 'right';
+                        case 'triu'
+                            set(obj.rowLabelHdl, 'HorizontalAlignment','right')
+                            obj.RTLDir(:, 1) = -.5 + obj.CP(inds); 
+                            obj.RTLDir(:, 2) = obj.RP(inds);
+                            obj.RTLDir(:, 3) = -.5 - obj.TickLabelOffset + obj.CP(inds);
+                            obj.RTLDir(:, 4) = obj.RP(inds);
+                            if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength;
+                            end
+                            obj.ax.YAxisLocation = 'left';
+                        case {'triu0','linku'}
+                            set(obj.rowLabelHdl, 'HorizontalAlignment','right')
+                            obj.RTLDir(:, 1) = -.5 + obj.CP(min(inds + 1, length(obj.CP))); 
+                            obj.RTLDir(:, 2) = obj.RP(inds);
+                            obj.RTLDir(:, 3) = -.5 - obj.TickLabelOffset + obj.CP(min(inds + 1, length(obj.CP)));
+                            obj.RTLDir(:, 4) = obj.RP(inds);
+                            if strcmpi(obj.rowTickHdl.Visible, 'on')
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength;
+                            end
+                            obj.ax.YAxisLocation = 'left';
+                        case {'varu', 'varl'}
+                            set(obj.rowLabelHdl, 'HorizontalAlignment','center')
+                            obj.RTLDir(:, 1) = obj.CP(inds); 
+                            obj.RTLDir(:, 2) = obj.RP(inds);
+                            obj.RTLDir(:, 3) = obj.CP(inds);
+                            obj.RTLDir(:, 4) = obj.RP(inds);
+                            obj.ax.YTick = [];
+                    end
             end
+            set(obj.rowLabelHdl, {'Position'}, mat2cell([obj.RTLDir(:, [3, 4]), obj.RTLDir(:, 4).*0], ones(1, size(obj.Data, 1)), 3))
             if strcmpi(obj.rowTickHdl.Visible, 'on')
+                obj.setRowTickXY()
                 switch lower(loc)
                     case 'left'
                         obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength);
@@ -1991,7 +1921,9 @@ classdef SHeatmap < handle
 
             % mustBeAllowedColLabelLocation(obj.ColLabelLocation)
 
-            if ~strcmpi(obj.ColLabelLocation, loc)
+            if nargin < 2
+                loc = obj.ColLabelLocation;
+            elseif ~strcmpi(obj.ColLabelLocation, loc)
                 obj.ColLabelLocation = loc;
             end
             obj.TickLength(obj.TickLength < 0) = 0;
@@ -2000,46 +1932,82 @@ classdef SHeatmap < handle
             obj.TickLabelOffset(obj.TickLabelOffset > .5) = .5;
 
             % 'top'/'bottom'/'diag
-            for n = 1:size(obj.Data, 2)
+            inds = 1:size(obj.Data, 2);
             switch lower(loc)
                 case 'top'
-                    set(obj.colLabelHdl(n), 'Position',[obj.CP(n), .5 - obj.TickLabelOffset, 0], 'HorizontalAlignment','left')
+                    set(obj.colLabelHdl(inds), 'HorizontalAlignment','left')
+                    obj.CTLDir(:, 1) = obj.CP(inds);
+                    obj.CTLDir(:, 2) = .5;
+                    obj.CTLDir(:, 3) = obj.CP(inds);
+                    obj.CTLDir(:, 4) = .5 - obj.TickLabelOffset;
                     if strcmpi(obj.colTickHdl.Visible, 'on')
-                        set(obj.colLabelHdl(n), 'Position',[obj.CP(n), .5 - obj.TickLabelOffset - obj.TickLength, 0])
+                        obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength;
                     end
+                    obj.ax.XAxisLocation = 'top';
                 case 'bottom'
-                    set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(end) + .5 + obj.TickLabelOffset, 0], 'HorizontalAlignment','right')
+                    set(obj.colLabelHdl(inds), 'HorizontalAlignment','right')
+                    obj.CTLDir(:, 1) = obj.CP(inds);
+                    obj.CTLDir(:, 2) = obj.RP(end) + .5;
+                    obj.CTLDir(:, 3) = obj.CP(inds);
+                    obj.CTLDir(:, 4) = obj.RP(end) + .5 + obj.TickLabelOffset;
                     if strcmpi(obj.colTickHdl.Visible, 'on')
-                        set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(end) + .5 + obj.TickLabelOffset + obj.TickLength, 0])
+                        obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength;
                     end
+                    obj.ax.XAxisLocation = 'bottom';
                 case 'diag'
                     switch lower(obj.Type)
                         case 'tril'
-                            set(obj.colLabelHdl(n), 'Position',[obj.CP(n), .5 - obj.TickLabelOffset - 1 + obj.RP(n), 0], 'HorizontalAlignment','left')
+                            set(obj.colLabelHdl(inds), 'HorizontalAlignment','left')
+                            obj.CTLDir(:, 1) = obj.CP(inds);
+                            obj.CTLDir(:, 2) = -.5 + obj.RP(inds);
+                            obj.CTLDir(:, 3) = obj.CP(inds);
+                            obj.CTLDir(:, 4) = -.5 + obj.RP(inds) - obj.TickLabelOffset;
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                set(obj.colLabelHdl(n), 'Position',[obj.CP(n), .5 - obj.TickLabelOffset - 1 + obj.RP(n) - obj.TickLength, 0])
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength;
                             end
+                            obj.ax.XAxisLocation = 'top';
                         case {'tril0','linkl'}
-                            set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(min(n + 1, length(obj.RP))) - .5 - obj.TickLabelOffset, 0], 'HorizontalAlignment','left')
+                            set(obj.colLabelHdl(inds), 'HorizontalAlignment','left')
+                            obj.CTLDir(:, 1) = obj.CP(inds);
+                            obj.CTLDir(:, 2) = -.5 + obj.RP(min(inds + 1, length(obj.RP)));
+                            obj.CTLDir(:, 3) = obj.CP(inds);
+                            obj.CTLDir(:, 4) = -.5 + obj.RP(min(inds + 1, length(obj.RP))) - obj.TickLabelOffset;
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(min(n + 1, length(obj.RP))) - .5 - obj.TickLabelOffset - obj.TickLength, 0])
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength;
                             end
+                            obj.ax.XAxisLocation = 'top';
                         case 'triu'
-                            set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(n) + .5 + obj.TickLabelOffset, 0], 'HorizontalAlignment','right')
+                            set(obj.colLabelHdl(inds), 'HorizontalAlignment','right')
+                            obj.CTLDir(:, 1) = obj.CP(inds);
+                            obj.CTLDir(:, 2) = obj.RP(inds) + .5;
+                            obj.CTLDir(:, 3) = obj.CP(inds);
+                            obj.CTLDir(:, 4) = obj.RP(inds) + .5 + obj.TickLabelOffset;
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(n) + .5 + obj.TickLabelOffset + obj.TickLength, 0])
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength;
                             end
+                            obj.ax.XAxisLocation = 'bottom';
                         case {'triu0','linku'}
-                            set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(max(1, n - 1)) + .5, 0], 'HorizontalAlignment','right')
+                            set(obj.colLabelHdl(inds), 'HorizontalAlignment','right')
+                            obj.CTLDir(:, 1) = obj.CP(inds);
+                            obj.CTLDir(:, 2) = obj.RP(max(1, inds - 1)) + .5;
+                            obj.CTLDir(:, 3) = obj.CP(inds);
+                            obj.CTLDir(:, 4) = obj.RP(max(1, inds - 1)) + .5 + obj.TickLabelOffset;
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                set(obj.colLabelHdl(n), 'Position',[obj.CP(n), obj.RP(max(1, n - 1)) + .5 + obj.TickLabelOffset + obj.TickLength, 0])
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength;
                             end
+                            obj.ax.XAxisLocation = 'bottom';
                         case {'varu', 'varl'}
-                            set(obj.colLabelHdl(n), 'Position',[obj.RP(n), obj.CP(n), 0], 'HorizontalAlignment','center')
+                            set(obj.colLabelHdl(inds), 'HorizontalAlignment','center')
+                            obj.CTLDir(:, 1) = obj.CP(inds);
+                            obj.CTLDir(:, 2) = obj.CP(inds);
+                            obj.CTLDir(:, 3) = obj.CP(inds);
+                            obj.CTLDir(:, 4) = obj.CP(inds);
+                            obj.ax.XTick = [];
                     end
             end
-            end
+            set(obj.colLabelHdl, {'Position'}, mat2cell([obj.CTLDir(:, [3, 4]), obj.CTLDir(:, 4).*0], ones(1, size(obj.Data, 2)), 3))
             if strcmpi(obj.colTickHdl.Visible, 'on')
+                obj.setColTickXY()
                 switch lower(loc)
                     case 'top'
                         obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength);
@@ -2066,11 +2034,14 @@ classdef SHeatmap < handle
             % (为行分组分配组名，若名称数量少于组数则循环使用)
             obj.RowGroupName = RowGroupName;
             RowGroupNameLen = length(obj.RowGroupName);
-            for i = 1:max(obj.RowGroup)
-                % Apply names cyclically (循环应用名称)
-                idx = mod(i - 1, RowGroupNameLen) + 1;
-                set(obj.rowGroupLabelHdl(i), 'String', obj.RowGroupName{idx}, 'Visible','on');
-            end
+            tRowGroupName = obj.RowGroupName(:);
+            tRowGroupName = [tRowGroupName; tRowGroupName(1)];
+            idx = 1:max(obj.RowGroup);
+            % Apply names cyclically (循环应用名称)
+            idx = mod(idx - 1, RowGroupNameLen) + 1;
+            set(obj.rowGroupLabelHdl, 'Visible','on');
+            set(obj.rowGroupLabelHdl, {'String'}, tRowGroupName(idx));
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -2080,20 +2051,21 @@ classdef SHeatmap < handle
             % (为列分组分配组名，若名称数量少于组数则循环使用)
             obj.ColGroupName = ColGroupName;
             ColGroupNameLen = length(obj.ColGroupName);
-            for i = 1:max(obj.ColGroup)
-                % Apply names cyclically (循环应用名称)
-                idx = mod(i - 1, ColGroupNameLen) + 1;
-                set(obj.colGroupLabelHdl(i), 'String', obj.ColGroupName{idx}, 'Visible','on');
-            end
+            tColGroupName = obj.ColGroupName(:);
+            tColGroupName = [tColGroupName; tColGroupName(1)];
+            idx = 1:max(obj.ColGroup);
+            % Apply names cyclically (循环应用名称)
+            idx = mod(idx - 1, ColGroupNameLen) + 1;
+            set(obj.colGroupLabelHdl, 'Visible','on');
+            set(obj.colGroupLabelHdl, {'String'}, tColGroupName(idx));
+             
             if nargout == 1
                 varargout = {obj};
             end
         end
         function varargout = setRowGroupLabel(obj, varargin)
             % obj.setRowGroupLabel(varargin) - Set properties for all row-group label text objects (设置所有行分组标签的属性)
-            for n = 1:max(obj.RowGroup)
-                set(obj.rowGroupLabelHdl(n), 'Visible','on', varargin{:});
-            end
+            set(obj.rowGroupLabelHdl, 'Visible','on', varargin{:});
             if nargout == 1
                 varargout = {obj};
             end
@@ -2101,9 +2073,7 @@ classdef SHeatmap < handle
         
         function varargout = setColGroupLabel(obj, varargin)
             % obj.setColGroupLabel(varargin) - Set properties for all col-group label text objects (设置所有列分组标签的属性)
-            for n = 1:max(obj.ColGroup)
-                set(obj.colGroupLabelHdl(n), 'Visible','on', varargin{:});
-            end
+            set(obj.colGroupLabelHdl, 'Visible','on', varargin{:});
             if nargout == 1
                 varargout = {obj};
             end
@@ -2129,65 +2099,63 @@ classdef SHeatmap < handle
                         set(obj.rowGroupLabelHdl(n), 'Visible','off')
                     case 'left'
                         set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',[.5 - obj.GroupLabelOffset, obj.RGP(n), 0], 'Rotation',90)
-                        obj.RGLST(n, :) = [.5, obj.RGP(n), .5 - obj.GroupLabelOffset, obj.RGP(n)];
+                        obj.RGLDir(n, :) = [.5, obj.RGP(n), .5 - obj.GroupLabelOffset, obj.RGP(n)];
                     case 'right'
                         set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CP(end) + .5 + obj.GroupLabelOffset, obj.RGP(n), 0], 'Rotation',-90)
-                        obj.RGLST(n, :) = [obj.CP(end) + .5, obj.RGP(n), obj.CP(end) + .5 + obj.GroupLabelOffset, obj.RGP(n)];
+                        obj.RGLDir(n, :) = [obj.CP(end) + .5, obj.RGP(n), obj.CP(end) + .5 + obj.GroupLabelOffset, obj.RGP(n)];
                     case 'diag'
                         switch lower(obj.Type)
                             case 'tril'
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.RGLST(n, :) = [obj.RGP(n) + .5, obj.CGP(n) - .5, ...
+                                obj.RGLDir(n, :) = [obj.RGP(n) + .5, obj.CGP(n) - .5, ...
                                      obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2)];
                             case {'tril0','linkl'}
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.RGLST(n, :) = [obj.RGP(n), obj.CGP(n), ...
+                                obj.RGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
                                     obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) - obj.GroupLabelOffset/sqrt(2)];
                             case 'triu'
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.RGLST(n, :) = [obj.RGP(n) - .5, obj.CGP(n) + .5, ...
+                                obj.RGLDir(n, :) = [obj.RGP(n) - .5, obj.CGP(n) + .5, ...
                                     obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2)];
                             case {'triu0','linku'}
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.RGLST(n, :) = [obj.RGP(n), obj.CGP(n), ...
+                                obj.RGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
                                     obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) + obj.GroupLabelOffset/sqrt(2)];
                         end
                 end
             end
-
             switch lower(loc)
                 case 'left'
                     switch lower(obj.Type)
                         case {'tril0','linkl'}
                             obj.rowGroupLabelHdl(1).Position(2) = obj.rowGroupLabelHdl(1).Position(2) + .5;
-                            obj.RGLST(1, [2, 4]) = obj.RGLST(1, [2, 4]) + .5;
+                            obj.RGLDir(1, [2, 4]) = obj.RGLDir(1, [2, 4]) + .5;
                         case {'triu0','linku'}
                             obj.rowGroupLabelHdl(end).Position(2) = obj.rowGroupLabelHdl(end).Position(2) - .5;
-                            obj.RGLST(end, [2, 4]) = obj.RGLST(end, [2, 4]) - .5;
+                            obj.RGLDir(end, [2, 4]) = obj.RGLDir(end, [2, 4]) - .5;
                     end
                 case 'right'
                     switch lower(obj.Type)
                         case {'tril0','linkl'}
                             obj.rowGroupLabelHdl(1).Position(2) = obj.rowGroupLabelHdl(1).Position(2) + .5;
-                            obj.RGLST(1, [2, 4]) = obj.RGLST(1, [2, 4]) + .5;
+                            obj.RGLDir(1, [2, 4]) = obj.RGLDir(1, [2, 4]) + .5;
                         case {'triu0','linku'}
                             obj.rowGroupLabelHdl(end).Position(2) = obj.rowGroupLabelHdl(end).Position(2) - .5;
-                            obj.RGLST(end, [2, 4]) = obj.RGLST(end, [2, 4]) - .5;
+                            obj.RGLDir(end, [2, 4]) = obj.RGLDir(end, [2, 4]) - .5;
                     end
             end
-
             if nargout == 1
                 varargout = {obj};
             end
@@ -2214,65 +2182,63 @@ classdef SHeatmap < handle
                         set(obj.colGroupLabelHdl(n), 'Visible','off')
                     case 'top'
                         set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CGP(n), .5 - obj.GroupLabelOffset, 0], 'Rotation',0)
-                        obj.CGLST(n, :) = [obj.CGP(n), .5, obj.CGP(n), .5 - obj.GroupLabelOffset];
+                        obj.CGLDir(n, :) = [obj.CGP(n), .5, obj.CGP(n), .5 - obj.GroupLabelOffset];
                     case 'bottom'
                         set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset, 0], 'Rotation',0)
-                        obj.CGLST(n, :) = [obj.CGP(n), .5 + obj.RP(end), obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset];
+                        obj.CGLDir(n, :) = [obj.CGP(n), .5 + obj.RP(end), obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset];
                     case 'diag'
                         switch lower(obj.Type)
                             case 'tril'
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.CGLST(n, :) = [obj.RGP(n) + .5, obj.CGP(n) - .5, ...
+                                obj.CGLDir(n, :) = [obj.RGP(n) + .5, obj.CGP(n) - .5, ...
                                     obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2)];
                             case {'tril0','linkl'}
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.CGLST(n, :) = [obj.RGP(n), obj.CGP(n), ...
+                                obj.CGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
                                     obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) - obj.GroupLabelOffset/sqrt(2)];
                             case 'triu'
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.CGLST(n, :) = [obj.RGP(n) - .5, obj.CGP(n) + .5, ...
+                                obj.CGLDir(n, :) = [obj.RGP(n) - .5, obj.CGP(n) + .5, ...
                                     obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2)];
                             case {'triu0','linku'}
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
                                     [obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
                                      obj.CGP(n) + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
-                                obj.CGLST(n, :) = [obj.RGP(n), obj.CGP(n), ...
+                                obj.CGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
                                     obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
                                     obj.CGP(n) + obj.GroupLabelOffset/sqrt(2)];
                         end
                 end
             end
-
             switch lower(loc)
                 case 'top'
                     switch lower(obj.Type)
                         case {'tril0','linkl'}
                             obj.colGroupLabelHdl(end).Position(1) = obj.colGroupLabelHdl(end).Position(1) - .5;
-                            obj.CGLST(end, [1, 3]) = obj.CGLST(end, [1, 3]) - .5;
+                            obj.CGLDir(end, [1, 3]) = obj.CGLDir(end, [1, 3]) - .5;
                         case {'triu0','linku'}
                             obj.colGroupLabelHdl(1).Position(1) = obj.colGroupLabelHdl(1).Position(1) + .5;
-                            obj.CGLST(1, [1, 3]) = obj.CGLST(1, [1, 3]) + .5;
+                            obj.CGLDir(1, [1, 3]) = obj.CGLDir(1, [1, 3]) + .5;
                     end
                 case 'bottom'
                     switch lower(obj.Type)
                         case {'tril0','linkl'}
                             obj.colGroupLabelHdl(end).Position(1) = obj.colGroupLabelHdl(end).Position(1) - .5;
-                            obj.CGLST(end, [1, 3]) = obj.CGLST(end, [1, 3]) - .5;
+                            obj.CGLDir(end, [1, 3]) = obj.CGLDir(end, [1, 3]) - .5;
                         case {'triu0','linku'}
                             obj.colGroupLabelHdl(1).Position(1) = obj.colGroupLabelHdl(1).Position(1) + .5;
-                            obj.CGLST(1, [1, 3]) = obj.CGLST(1, [1, 3]) + .5;
+                            obj.CGLDir(1, [1, 3]) = obj.CGLDir(1, [1, 3]) + .5;
                     end
             end
-
             if nargout == 1
                 varargout = {obj};
             end
@@ -2289,18 +2255,15 @@ classdef SHeatmap < handle
             %   func : function handle that takes a numeric value and returns a string
             %          (函数句柄，接受数值并返回字符串)
         
-            for row = 1:size(obj.Data, 1)
-                for col = 1:size(obj.Data, 2)
-                    if ~isnan(obj.Data(row, col))
-                        if nargin(func) ~= 1
-                            tStr = func(obj.Data(row, col), obj.PVal(row, col));
-                        else
-                            tStr = func(obj.Data(row, col));
-                        end
-                        set(obj.textHdl(row, col), 'String', tStr);
-                    end
-                end
+            valid = ~isnan(obj.Data);
+            
+            if nargin(func) ~= 1
+                tStr = arrayfun(func, obj.Data(valid), obj.PVal(valid), 'UniformOutput', false);
+            else
+                tStr = arrayfun(func, obj.Data(valid), 'UniformOutput', false);
             end
+            set(obj.textHdl(valid), {'String'}, tStr);
+
             if nargout == 1
                 varargout = {obj};
             end
@@ -2317,20 +2280,19 @@ classdef SHeatmap < handle
         
             climit = get(obj.ax, 'CLim');
             cmap   = get(obj.ax, 'Colormap');
-            % Create bin edges for quantizing data values to colormap indices
-            % (创建分箱边界，将数据值量化到颜色映射索引)
-            values = linspace(climit(1), climit(2), size(cmap, 1) + 1);
-        
-            for row = 1:size(obj.Data, 1)
-                for col = 1:size(obj.Data, 2)
-                    % Find which color bin the value falls into (确定数值落在哪个颜色分箱)
-                    tind = sum(obj.Data(row, col) >= values);
-                    tind(tind <= 0) = 1;
-                    tind(tind > size(cmap, 1)) = size(cmap, 1);
-                    % Apply the fixed color (应用固定颜色)
-                    set(obj.patchHdl(row, col), 'FaceColor', cmap(tind, :));
-                end
+            
+            dataVec = obj.Data(:); valid = ~isnan(dataVec);
+            counts = floor((dataVec - climit(1))./diff(climit).*size(cmap, 1)) + 1;
+            counts(counts > size(cmap, 1)) = size(cmap, 1); 
+            counts(counts < 1) = 1;
+            counts(~valid) = 1;
+            colors = cmap(counts, :);
+            if strcmpi(obj.Format, '3d')
+                colors(~valid, :) = .9;
+            else
+                colors(~valid, :) = .8;
             end
+            set(obj.patchHdl, {'FaceColor'}, num2cell(colors, 2))
         
             if isvalid(obj.Colorbar)
                 % Update colorbar to reflect the fixed colormap and limits
@@ -2387,22 +2349,19 @@ classdef SHeatmap < handle
                     starobj.(vararginList2{tid}) = varargin{i + 1};
                 end
             end
-            for row = 1:size(obj.Data, 1)
-                for col = 1:size(obj.Data, 2)
-                    if ~isnan(obj.Data(row, col))
-                        if strcmp(starobj.CorrLabel, 'on')
-                            % Keep original text and prepend stars in a cell array (保留原文本，星标在上)
-                            tStr = get(obj.textHdl(row, col), 'String');
-                            set(obj.textHdl(row, col), 'String', ...
-                                {obj.pval2stars(pval(row, col), starobj.Levels); tStr});
-                        else
-                            % Replace text with stars only (仅显示星标)
-                            set(obj.textHdl(row, col), 'String', ...
-                                obj.pval2stars(pval(row, col), starobj.Levels));
-                        end
-                    end
-                end
+            
+            nvalid = isnan(obj.Data);
+            strs = get(obj.textHdl, 'String');
+            stars = obj.matPval2stars(pval, starobj.Levels);
+            stars = stars(:); 
+
+            if strcmp(starobj.CorrLabel, 'on')
+                stars = num2cell([stars, strs].', 1).';
+            else
+                stars(nvalid) = strs(nvalid);
             end
+            set(obj.textHdl, {'String'}, stars)
+           
             if nargout == 1
                 varargout = {obj};
             end
@@ -2428,6 +2387,47 @@ classdef SHeatmap < handle
 
             % Generate asterisk string based on significance level
             stars = repmat('*', 1, sum(pval < levels));
+        end
+
+        function stars = matPval2stars(~, matPval, levels)
+            % matPval2stars - Convert matrix of p-values to significance stars
+            %   stars = matPval2stars(matPval) returns a cell array of the same size as
+            %   matPval, where each entry is a string of asterisks indicating the
+            %   significance level:
+            %       p < 0.05   -> '*'
+            %       p < 0.01   -> '**'
+            %       p < 0.001  -> '***'
+            %
+            %   stars = matPval2stars(matPval, levels) custom significance thresholds.
+            %       levels = [0.05, 0.01, 0.001] (default)
+            %
+            %   The output cell array contains spaces for non-significant entries.
+            %   (p >= the smallest threshold)
+            %
+            % Examples:
+            %   matPval2stars([0.03, 0.002; 0.2, 0.0005])
+            %       returns {'*', '**'; ' ', '***'}
+            %
+            %   matPval2stars([0.04, 0.009], [0.05, 0.01])
+            %       returns {'*', '**'}   (since 0.009 < 0.01)
+            %
+            % See also: pval2stars
+
+            if nargin < 2
+                levels = [0.05, 0.01, 0.001];
+            end
+            levels = levels(:).';
+
+            N = length(levels);
+            mn = numel(matPval);
+            starCell = cell(1, N + 1);
+            starCell{1} = ' ';
+            for n = 1:N
+                starCell{n + 1} = repmat('*', 1, n);
+            end
+
+            counts = sum(repmat(matPval(:), [1, N]) < repmat(levels, [mn, 1]), 2);
+            stars = reshape(starCell(counts + 1), size(matPval));
         end
     end
 
@@ -2479,311 +2479,199 @@ classdef SHeatmap < handle
                     obj.ax.DataAspectRatio = [1,1,1];
                 end
                 obj.XYTReset = true;
-                
                 tLen = max(1./diff(OXLim).*diff(obj.XLim), 1./diff(OYLim).*diff(obj.YLim));
-
-                obj.XLim = sort(obj.XLim);
-                obj.YLim = sort(obj.YLim);
-                % obj.TLim = sort(obj.TLim);
-
-                if abs(diff(obj.XLim)) < eps
-                    obj.XLim = [obj.CP(1) - .5, obj.CP(end) + .5];
-                end
-                if abs(diff(obj.YLim)) < eps
-                    obj.YLim = [obj.RP(1) - .5, obj.RP(end) + .5];
-                end
+                obj.XLim = sort(obj.XLim); obj.YLim = sort(obj.YLim);
+                if abs(diff(obj.XLim)) < eps, obj.XLim = [obj.CP(1) - .5, obj.CP(end) + .5]; end
+                if abs(diff(obj.YLim)) < eps, obj.YLim = [obj.RP(1) - .5, obj.RP(end) + .5]; end
 
                 if abs(diff(obj.TLim)) < eps
-                    X = obj.boxHdl.XData; Y = obj.boxHdl.YData;
-                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    % Set X, Y, Theta Lim for boxHdl
+                    [nX, nY] = getNewXY(obj.BX, obj.BY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                     obj.boxHdl.XData = nX; obj.boxHdl.YData = nY;
+                    % Set X, Y, Theta Lim for frameHdl
+                    [nX, nY] = getNewXY(obj.FX, obj.FY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
+                    % Set X, Y, Theta Lim for gridHdl
+                    if ~all(isnan(obj.GX))
+                    [nX, nY] = getNewXY(obj.GX, obj.GY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.gridHdl.XData = nX; obj.gridHdl.YData = nY;
+                    end
                 else
+                    % Set X, Y, Theta Lim for boxHdl
                     NN = max(size(obj.Data));
-                    X = interpDataNaN(obj.boxHdl.XData, NN*20); 
-                    Y = interpDataNaN(obj.boxHdl.YData, NN*20);
+                    X = interpDataNaN(obj.BX, NN*20); Y = interpDataNaN(obj.BY, NN*20);
                     [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                     obj.boxHdl.XData = nX; obj.boxHdl.YData = nY;
                     set(obj.boxHdl, 'Visible','off');
-                end
-                if abs(diff(obj.TLim)) < eps
-                    X = obj.frameHdl.XData; Y = obj.frameHdl.YData;
+                    % Set X, Y, Theta Lim for frameHdl
+                    X = interpDataNaN(obj.FX, 10); Y = interpDataNaN(obj.FY, 10);
                     [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                     obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
-                else
-                    X = interpDataNaN(obj.frameHdl.XData, 10);
-                    Y = interpDataNaN(obj.frameHdl.YData, 10);
+                    % Set X, Y, Theta Lim for gridHdl
+                    if ~all(isnan(obj.GX))
+                    X = interpDataNaN(obj.GX, 10); Y = interpDataNaN(obj.GY, 10);
                     [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                    obj.frameHdl.XData = nX; obj.frameHdl.YData = nY;
-                end
-
-                if ~all(isnan(obj.GX))
-                    if abs(diff(obj.TLim)) < eps
-                        X = obj.GX; Y = obj.GY;
-                        [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                        obj.gridHdl.XData = nX; obj.gridHdl.YData = nY;
-                    else
-                        X = interpDataNaN(obj.GX, 10);
-                        Y = interpDataNaN(obj.GY, 10);
-                        [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                        obj.gridHdl.XData = nX; obj.gridHdl.YData = nY;
+                    obj.gridHdl.XData = nX; obj.gridHdl.YData = nY;
                     end
                 end
 
-                X = obj.rowTickHdl.XData; Y = obj.rowTickHdl.YData;
-                [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                % Set X, Y, Theta Lim for rowTickHdl
+                [nX, nY] = getNewXY(obj.RTX, obj.RTY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 nX = reshape(nX, 3, []); nY = reshape(nY, 3, []);
-                tRowX = nX(1, :); tRowY = nY(1, :);
                 if obj.TickLength > 0
                     nV = [nX(2, :) - nX(1, :); nY(2, :) - nY(1, :)];
-                    nL = sqrt(nV(1, :).^2 + nV(2, :).^2);
-                    nV = nV./[nL; nL];
+                    nL = sqrt(nV(1, :).^2 + nV(2, :).^2); nV = nV./[nL; nL];
                     nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength.*tLen;
                     nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength.*tLen;
-                end
-                obj.rowTickHdl.XData = nX(:); obj.rowTickHdl.YData = nY(:);
-
-                X = obj.colTickHdl.XData; Y = obj.colTickHdl.YData;
-                [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                end; obj.newRTX = nX(:); obj.newRTY = nY(:); obj.setRowTickIndices();
+                % Set X, Y, Theta Lim for colTickHdl
+                [nX, nY] = getNewXY(obj.CTX, obj.CTY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 nX = reshape(nX, 3, []); nY = reshape(nY, 3, []);
-                tColX = nX(1, :); tColY = nY(1, :);
                 if obj.TickLength > 0
                     nV = [nX(2, :) - nX(1, :); nY(2, :) - nY(1, :)];
-                    nL = sqrt(nV(1, :).^2 + nV(2, :).^2);
-                    nV = nV./[nL; nL];
+                    nL = sqrt(nV(1, :).^2 + nV(2, :).^2); nV = nV./[nL; nL];
                     nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength.*tLen;
                     nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength.*tLen;
-                end
-                obj.colTickHdl.XData = nX(:); obj.colTickHdl.YData = nY(:);
+                end; obj.newCTX = nX(:); obj.newCTY = nY(:);  obj.setColTickIndices()
 
+                % Set X, Y, Theta Lim for patchHdl
                 if ~isempty(obj.PatchX)
                     if abs(diff(obj.TLim)) < eps
                         [nX, nY] = getNewXY(obj.PatchX, obj.PatchY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                        for i = 1:size(obj.patchHdl, 1)
-                            for j = 1:size(obj.patchHdl, 2)
-                                n = sub2ind(size(obj.Data), i, j);
-                                if isnan(obj.Data(i, j))
-                                    set(obj.patchHdl(i, j), 'XData',nX(1:4, n), 'YData',nY(1:4, n))
-                                else
-                                    set(obj.patchHdl(i, j), 'XData',nX(:, n), 'YData',nY(:, n))
-                                end
-                            end
+                        nXYC = [num2cell(nX.', 2), num2cell(nY.', 2)];
+                        set(obj.patchHdl, {'XData', 'YData'}, nXYC)
+                        nanI = find(isnan(obj.Data));
+                        if ~isempty(nanI)
+                            nX = nX(1:4, nanI); nY = nY(1:4, nanI);
+                            nXYC = [num2cell(nX.', 2), num2cell(nY.', 2)];
+                            set(obj.patchHdl(nanI), {'XData', 'YData'}, nXYC)
                         end
                     else
-                        tT1 = [1, 2, 3, 4, 5]; tT2 = [linspace(1, 2, 10), linspace(2, 3, 10), linspace(3, 4, 10), linspace(4, 5, 10)];
+                        tT1 = [1, 2, 3, 4, 5]; 
+                        if size(obj.Data, 1) >= 100 
+                            tT2 = [linspace(1, 2, 2), linspace(2, 3, 5), linspace(3, 4, 2), linspace(4, 5, 5)];
+                        else
+                            tT2 = [linspace(1, 2, 3), linspace(2, 3, 10), linspace(3, 4, 3), linspace(4, 5, 10)];
+                        end
                         tX = [obj.PatchX; obj.PatchX(1, :)]; tY = [obj.PatchY; obj.PatchY(1, :)];
                         tX = interp1(tT1, tX, tT2); tY = interp1(tT1, tY, tT2);
                         [nX, nY] = getNewXY(tX, tY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                        for i = 1:size(obj.patchHdl, 1)
-                            for j = 1:size(obj.patchHdl, 2)
-                                n = sub2ind(size(obj.Data), i, j);
-                                set(obj.patchHdl(i, j), 'XData',nX(:, n), 'YData',nY(:, n))
-                            end
-                        end
+                        nXYC = [num2cell(nX.', 2), num2cell(nY.', 2)];
+                        set(obj.patchHdl, {'XData', 'YData'}, nXYC)
                     end
                 end
-
+                % Set X, Y, Theta Lim for pieHdl
                 if ~isempty(obj.PieX)
                     [nX, nY] = getNewXY(obj.PieX, obj.PieY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                    for i = 1:size(obj.pieHdl, 1)
-                        for j = 1:size(obj.pieHdl, 2)
-                            n = sub2ind(size(obj.Data), i, j);
-                            set(obj.pieHdl(i, j), 'XData',nX(:, n), 'YData',nY(:, n))
-                        end
-                    end
+                    nXYC = [num2cell(nX.', 2), num2cell(nY.', 2)];
+                    set(obj.pieHdl, {'XData', 'YData'}, nXYC)
                 end
-
-                if ~isempty(obj.nanTextHdl)&&isempty(obj.textHdl)
-                    for i = 1:length(obj.nanTextHdl)
-                        X = obj.nanTextHdl(i).Position(1); Y = obj.nanTextHdl(i).Position(2);
-                        [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                        set(obj.nanTextHdl(i), 'Position',[nX, nY, 0])
-                    end
+                % Set X, Y, Theta Lim for textHdl
+                if (~isempty(obj.nanTextHdl)) && isempty(obj.textHdl)
+                    [nX, nY] = getNewXY(obj.TxtNaNXY(:, 1), obj.TxtNaNXY(:, 2), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    nXYC = num2cell([nX, nY, nX.*0], 2);
+                    set(obj.nanTextHdl, {'Position'}, nXYC)
                 end
-
                 if ~isempty(obj.textHdl)
-                    for i = 1:size(obj.textHdl, 1)
-                        for j = 1:size(obj.textHdl, 2)
-                            X = obj.textHdl(i, j).Position(1); Y = obj.textHdl(i, j).Position(2);
-                            [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                            set(obj.textHdl(i, j), 'Position',[nX, nY, 0])
-                        end
-                    end
-                end
-
-                for i = 1:length(obj.rowLabelHdl)
-                    X = obj.rowLabelHdl(i).Position(1); Y = obj.rowLabelHdl(i).Position(2);
-                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                    if strcmpi(obj.Type, 'full') || strcmpi(obj.Type, 'row') || strcmpi(obj.Type, 'col')
-                        nV = [nX - tRowX(i), nY - tRowY(i)];
-                        nV = nV./norm(nV);
-                        nX = tRowX(i) + nV(1).*(obj.TickLength + obj.TickLabelOffset).*tLen;
-                        nY = tRowY(i) + nV(2).*(obj.TickLength + obj.TickLabelOffset).*tLen;
-                    end
-                    obj.rowLabelHdl(i).Position(1) = nX; obj.rowLabelHdl(i).Position(2) = nY;
-                end
-
-                for j = 1:length(obj.colLabelHdl)
-                    X = obj.colLabelHdl(j).Position(1); Y = obj.colLabelHdl(j).Position(2);
-                    [nX, nY] = getNewXY(X, Y, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
-                    if strcmpi(obj.Type, 'full') || strcmpi(obj.Type, 'row') || strcmpi(obj.Type, 'col')
-                        nV = [nX - tColX(j), nY - tColY(j)];
-                        nV = nV./norm(nV);
-                        nX = tColX(j) + nV(1).*(obj.TickLength + obj.TickLabelOffset).*tLen;
-                        nY = tColY(j) + nV(2).*(obj.TickLength + obj.TickLabelOffset).*tLen;
-                    end
-                    obj.colLabelHdl(j).Position(1) = nX; obj.colLabelHdl(j).Position(2) = nY;
-                end
-
-                if abs(diff(obj.TLim)) < eps
-                    T = mod(obj.TLim(1)/pi*180 + 180, 360) - 180;
-                    for i = 1:length(obj.colLabelHdl)
-                        if strcmpi(obj.ColLabelLocation, 'top') || (strcmpi(obj.ColLabelLocation, 'diag') && (strcmpi(obj.Type, 'tril') || strcmpi(obj.Type, 'tril0')))
-                            if T > 0
-                                set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','right')
-                            else
-                                set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','left')
-                            end
-                        else
-                            if T > 0
-                                set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','left')
-                            else
-                                set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','right')
-                            end
-                        end
-                    end
-                    for i = 1:length(obj.rowLabelHdl)
-                        if strcmpi(obj.RowLabelLocation, 'left') || (strcmpi(obj.RowLabelLocation, 'diag') && (strcmpi(obj.Type, 'triu') || strcmpi(obj.Type, 'triu0')))
-                            if T < 90 && T > -90
-                                set(obj.rowLabelHdl(i), 'Rotation',T, 'HorizontalAlignment','right')
-                            else
-                                set(obj.rowLabelHdl(i), 'Rotation',T + 180, 'HorizontalAlignment','left')
-                            end
-                        else
-                            if T <= 90 && T >= -90
-                                set(obj.rowLabelHdl(i), 'Rotation',T, 'HorizontalAlignment','left')
-                            else
-                                set(obj.rowLabelHdl(i), 'Rotation',T + 180, 'HorizontalAlignment','right')
-                            end
-                        end 
-                    end
+                    [nX, nY] = getNewXY(obj.TxtXY(:,1), obj.TxtXY(:,2), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    nXYC = num2cell([nX, nY, nX.*0], 2);
+                    set(obj.textHdl, {'Position'}, nXYC)
                 else
-                    if strcmpi(obj.ColLabelLocation, 'top')
-                        T = mod(obj.TLim(1)/pi*180 + 180, 360) - 180;
-                        for i = 1:length(obj.colLabelHdl)
-                            if T > 0
-                                if obj.TLim(1) < obj.TLim(2)
-                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','left')
-                                else
-                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','right')
-                                end
-                            else
-                                if obj.TLim(1) < obj.TLim(2)
-                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','right')
-                                else
-                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','left')
-                                end
-                            end
-                        end
-                    else
-                        T = mod(obj.TLim(2)/pi*180 + 180, 360) - 180;
-                        for i = 1:length(obj.colLabelHdl)
-                            if T > 0
-                                if obj.TLim(1) < obj.TLim(2)
-                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','right')
-                                else
-                                    set(obj.colLabelHdl(i), 'Rotation',T - 90, 'HorizontalAlignment','left')
-                                end
-                            else
-                                if obj.TLim(1) < obj.TLim(2)
-                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','left')
-                                else
-                                    set(obj.colLabelHdl(i), 'Rotation',T + 90, 'HorizontalAlignment','right')
-                                end
-                            end
-                        end
-                    end
-                    for i = 1:length(obj.rowLabelHdl)
-                        X = obj.rowLabelHdl(i).Position(1);
-                        Y = obj.rowLabelHdl(i).Position(2);
-                        T = atan2(Y, X)/pi*180;
-                        if sqrt(X.^2 + Y.^2) < obj.XLim(1)
-                            if T <= 90 && T >= -90
-                                set(obj.rowLabelHdl(i), 'Rotation',- T, 'HorizontalAlignment','right')
-                            else
-                                set(obj.rowLabelHdl(i), 'Rotation',180 - T, 'HorizontalAlignment','left')
-                            end
-                        else
-                            if T <= 90 && T >= -90
-                                set(obj.rowLabelHdl(i), 'Rotation',-T, 'HorizontalAlignment','left')
-                            else
-                                set(obj.rowLabelHdl(i), 'Rotation',180-T, 'HorizontalAlignment','right')
-                            end
-                        end
-                    end
+                    [cols, rows] = meshgrid(1:size(obj.Data, 2), 1:size(obj.Data, 1));
+                    rows = obj.RP(rows); cols = obj.CP(cols);
+                    [nX, nY] = getNewXY(cols(:), rows(:), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                    obj.newTxtXY = [nX, nY];
                 end
+                % Set X, Y, Theta Lim for rowLabelHdl
+                [nX, nY] = getNewXY(obj.RTLDir(:, [1,3]), obj.RTLDir(:, [2,4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                nV = [nX(:, 2) - nX(:, 1), nY(:, 2) - nY(:, 1)];
+                nL = sqrt(nV(:, 1).^2 + nV(:, 2).^2);
+                nV = nV./[nL, nL]; nV(isnan(nV)) = 0;
+                nT = atan2(nV(:, 2), nV(:, 1)); nT = nT./pi.*180;
+                nT = nT + 180.*((nT >= 90) | (nT < -90)).*sign(nT);
+                nX = nX(:, 1) + nV(:, 1).*(obj.TickLength + obj.TickLabelOffset).*tLen;
+                nY = nY(:, 1) + nV(:, 2).*(obj.TickLength + obj.TickLabelOffset).*tLen;
+                nXYC = num2cell([nX, nY, nX.*0], 2);
+                HA = {'left'; 'right'};
+                nR = num2cell(-nT, 2);
+                set(obj.rowLabelHdl, {'Position', 'HorizontalAlignment', 'Rotation'}, [nXYC, HA((abs(nT) >= 270) + 1), nR])
+                % Set X, Y, Theta Lim for colLabelHdl
+                [nX, nY] = getNewXY(obj.CTLDir(:, [1,3]), obj.CTLDir(:, [2,4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                nV = [nX(:, 2) - nX(:, 1), nY(:, 2) - nY(:, 1)];
+                nL = sqrt(nV(:, 1).^2 + nV(:, 2).^2);
+                nV = nV./[nL, nL]; nV(isnan(nV)) = 0;
+                nT = atan2(nV(:, 2), nV(:, 1)); nT = nT./pi.*180;
+                nT = nT + 180.*((nT >= 90) | (nT < -90)).*sign(nT);
+                nX = nX(:, 1) + nV(:, 1).*(obj.TickLength + obj.TickLabelOffset).*tLen;
+                nY = nY(:, 1) + nV(:, 2).*(obj.TickLength + obj.TickLabelOffset).*tLen;
+                nXYC = num2cell([nX, nY, nX.*0], 2);
+                HA = {'left'; 'right'};
+                nR = num2cell(-nT, 2);
+                set(obj.colLabelHdl, {'Position', 'HorizontalAlignment', 'Rotation'}, [nXYC, HA((abs(nT) >= 270) + 1), nR])
 
                 if strcmpi(obj.Type, 'varl') || strcmpi(obj.Type, 'varu')
-                    for n = 1:size(obj.Data, 1)
-                        set(obj.rowLabelHdl(n), 'HorizontalAlignment','center', 'Rotation',0)
-                    end
-                    for n = 1:size(obj.Data, 2)
-                        set(obj.colLabelHdl(n), 'HorizontalAlignment','center', 'Rotation',0)
-                    end
+                    set(obj.rowLabelHdl, 'HorizontalAlignment','center', 'Rotation',0)
+                    set(obj.colLabelHdl, 'HorizontalAlignment','center', 'Rotation',0)
                 end
-
-
-                [nX, nY] = getNewXY(obj.RGLST(:, [1, 3]), obj.RGLST(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+    
+                % Set X, Y, Theta Lim for rowGroupLabelHdl and colGroupLabelHdl
+                [nX, nY] = getNewXY(obj.RGLDir(:, [1, 3]), obj.RGLDir(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 for n = 1:size(nX, 1)
                     nV = [nX(n, 2) - nX(n, 1); nY(n, 2) - nY(n, 1)];
-                    nL = sqrt(nV(1).^2 + nV(2).^2);
-                    nV = nV./[nL; nL];
+                    nL = sqrt(nV(1).^2 + nV(2).^2); nV = nV./[nL; nL];
                     nT = atan2(nV(2), nV(1)); nT = nT./pi.*180;
                     nT = nT - 180*((nT > 0) - .5);
                     set(obj.rowGroupLabelHdl(n), 'Position', ...
                         [nX(n, 1) + nV(1).*obj.GroupLabelOffset.*tLen, ...
                          nY(n, 1) + nV(2).*obj.GroupLabelOffset.*tLen, 0], ...
                          'HorizontalAlignment','center', 'Rotation',-nT);
-
                 end
-
-                [nX, nY] = getNewXY(obj.CGLST(:, [1, 3]), obj.CGLST(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
+                [nX, nY] = getNewXY(obj.CGLDir(:, [1, 3]), obj.CGLDir(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 for n = 1:size(nX, 1)
                     nV = [nX(n, 2) - nX(n, 1); nY(n, 2) - nY(n, 1)];
-                    nL = sqrt(nV(1).^2 + nV(2).^2);
-                    nV = nV./[nL; nL];
+                    nL = sqrt(nV(1).^2 + nV(2).^2); nV = nV./[nL; nL];
                     nT = atan2(nV(2), nV(1)); nT = nT./pi.*180;
                     nT = nT - 180*((nT > 0) - .5);
                     set(obj.colGroupLabelHdl(n), 'Position', ...
                         [nX(n, 1) + nV(1).*obj.GroupLabelOffset.*tLen, ...
                          nY(n, 1) + nV(2).*obj.GroupLabelOffset.*tLen, 0], ...
                         'HorizontalAlignment','center', 'Rotation',-nT);
-
                 end
-
                 try axis(obj.ax, 'tight'), catch, end
             end
 
             function nX = interpDataNaN(X, N)
-                XX = [X(1:end-1), nan; X(2:end), nan];
-                ind = any(isnan(XX), 1);
-                XX(:, ind) = 1;
-                nX = interp1([0,1], XX, linspace(0,1,N));
-                nX(:, ind) = nan;
-                nX = nX(:).';
+                % INTERPDATANAN Interpolate between consecutive data points, expanding to N points per interval.
+                %   在相邻数据点之间插值，将每段扩展为 N 个均匀点 (NaN 位置保持为 NaN)
+                if all(isnan(X))
+                    nX = X;
+                else
+                    X = X(:).';
+                    XX = [X(1:end-1), nan; X(2:end), nan];
+                    ind = any(isnan(XX), 1);
+                    XX(:, ind) = 1;
+                    nX = interp1([0,1], XX, linspace(0,1,N));
+                    nX(:, ind) = nan;
+                    nX = nX(:).';
+                end
             end
 
             function [nX, nY] = getNewXY(X, Y, OXLim, OYLim, XLim, YLim, TLim)
+                % GETNEWXY Transform coordinates from original space to target space with optional rotation or annular mapping.
+                %   将坐标从原始空间映射到目标空间，支持旋转或环形变换。
+                %   - If TLim(1) == TLim(2): apply 2D rotation (仅旋转).
+                %   - If TLim(1) ~= TLim(2): map Y to angle, X to radius (环形映射)
                 TLim = [-TLim(1), -TLim(2)];
+                % Linear mapping to target limits (线性映射到目标范围)
                 X = (X - OXLim(1))./diff(OXLim).*diff(XLim) + XLim(1);
                 Y = (Y - OYLim(1))./diff(OYLim).*diff(YLim) + YLim(1);
-
-                if abs(diff(TLim)) < eps
+                if abs(diff(TLim)) < eps % Rotation only (仅旋转)
                     RMat = [cos(TLim(1)), sin(TLim(1));
-                        -sin(TLim(1)), cos(TLim(1))];
+                           -sin(TLim(1)), cos(TLim(1))];
                     XY = [X(:), Y(:)]*RMat;
                     nX = reshape(XY(:, 1), size(X, 1), []);
                     nY = reshape(XY(:, 2), size(Y, 1), []);
-                else
+                else % Annular mapping (环形映射): Y -> angle, X -> radius
                     TArr = (Y - YLim(1))./diff(YLim).*diff(TLim) + TLim(1);
                     RArr = X;
                     nX = cos(TArr).*RArr;

@@ -1,5 +1,6 @@
 %% Circular heatmap with dendrogram and Group Block
 
+tic
 rng(5)
 % Made up some data casually (随便捏造了点数据)
 X = randn(100, 80) + [(linspace(-1,2.5,100)').*ones(1, 15), (linspace(.5,-.7,100)').*ones(1, 15),...
@@ -32,7 +33,7 @@ SCB_T.draw(); SCB_T.setXYTLim('XLim',[1,2], 'YLim',[-.05, -.15], 'TLim',[0,0])
 % Exchange data order (交换数据顺序)
 Data = Data(orderL, orderT);
 % Draw heatmap (绘制热图)
-SHM = SHeatmap(Data, 'Format','sq');
+SHM = SHeatmap(Data, 'Format','sqfull');
 SHM.TickLength = .3;
 SHM.draw();
 SHM.setRowName(rowName(orderL))
@@ -46,3 +47,4 @@ SHM.Colorbar.Position(1) = SHM.Colorbar.Position(1) + .1;
 legend([SCB_L.blockHdl, SCB_T.blockHdl], [rgnames, cgnames], ...
     'FontSize',15, 'FontName','Times New Roman')
 colormap(slanCM(97, 32))
+toc

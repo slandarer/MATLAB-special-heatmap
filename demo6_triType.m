@@ -10,7 +10,7 @@ Data = corr(X);
 figure()
 SHM_s1 = SHeatmap(Data, 'Format','donut');
 SHM_s1.draw();
-SHM_s1.setType('triu');
+SHM_s1.setType('triu0');
 % SHM_s1.setText();
 
 

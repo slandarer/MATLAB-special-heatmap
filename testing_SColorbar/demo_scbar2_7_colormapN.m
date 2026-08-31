@@ -41,6 +41,7 @@ for i = 1:max(group)
     tSHM.setXYTLim('XLim', xl)
     tSHM.setColLabel('Rotation', 30)
     tSHM.setColGroupName(gnames(i))
+    tSHM.setText()
 
     % Set colormap and clim
     clim(clims{i})

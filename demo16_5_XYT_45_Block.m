@@ -22,10 +22,9 @@ SHM.draw();
 SHM.setType('triu');
 SHM.setText().showStars(pval, 'Levels', [0.05, 0.01, 0.001], 'CorrLabel','off')
 SHM.setRowLabelLocation('right')
+SHM.setColTickIndices([])
 SHM.setXYTLim('TLim',[pi/4, pi/4]);
 
 SHM.Colorbar.Location = 'southoutside';
-set(SHM.colLabelHdl, 'Visible','off')
-set(SHM.colTickHdl, 'Visible','off')
 legend(SCB.blockHdl, gnames, 'FontSize',15, 'FontName','Times New Roman')
 

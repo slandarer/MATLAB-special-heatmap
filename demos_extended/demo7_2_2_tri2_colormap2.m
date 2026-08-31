@@ -19,7 +19,7 @@ SHM1.Colorbar.Position(1) = SHM1.Colorbar.Position(1) + .05;
 SHM1.setFrame()
 SHM1.setRowLabel('Visible','off')
 SHM1.setColLabel('Visible','off')
-SHM1.setText('Rotation', 45, 'FontSize',13)
+SHM1.setText('FontSize',13)
 colormap(ax1, slanCM(17, 32));
 clim(ax1, [0, 1])
 
@@ -29,7 +29,7 @@ SHM2.setFrame()
 SHM2.setBox('Color','k', 'LineWidth',1)
 SHM2.setRowName(rowName)
 SHM2.setColName(colName)
-SHM2.setText('Rotation', 45, 'FontSize',13)
+SHM2.setText('FontSize',13)
 SHM2.Colorbar.Position(1) = SHM2.Colorbar.Position(1) + .1;
 colormap(ax2, slanCM(19, 32));
 clim(ax2, [0, 100])
@@ -40,9 +40,3 @@ set(SHM2.Colorbar.Label, 'FontSize', 18, 'Position',[-1.5, 0, 0]);
 
 
 linkaxes([ax1, ax2], 'xy')
-for i = 1:size(Data1, 1)
-    for j = 1:size(Data1, 2)
-        SHM1.textHdl(i, j).Position = SHM1.textHdl(i, j).Position - [1/6, 1/6, 0];
-        SHM2.textHdl(i, j).Position = SHM2.textHdl(i, j).Position + [1/6, 1/6, 0];
-    end
-end

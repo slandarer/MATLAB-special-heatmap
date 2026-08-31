@@ -1,7 +1,7 @@
 %% Set heatmap to upper triangular or lower triangular type (show all types)
 
 % Set to upper triangle or lower triangle (设置为上三角或下三角)
-
+tic
 % Made up some data casually (随便捏造了点数据)
 X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), (linspace(.5,-.7,20)').*ones(1, 5), (linspace(.9,-.2,20)').*ones(1, 4)];
 % Get the correlation matrix (求相关系数矩阵)
@@ -66,3 +66,4 @@ SHM_s5.setType('triu');
 % Set Font Color (设置标签颜色)
 SHM_s5.setRowLabel('Color',[.8,0,0])
 SHM_s5.setColLabel('Color',[0,0,.8]) 
+toc

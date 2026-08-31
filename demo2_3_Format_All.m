@@ -38,6 +38,8 @@ Format = {'sq','sqfull','shade','rrect','c2rect','pie','donut','circ','bcirc','o
 A = rand(12, 12);
 B = rand(12, 12) - .5;
 
+B([1,3,4,17,141]) = nan;
+
 
 % % Draw positive heatmap (绘制纯正数热图)
 % for i = 1:length(Format)

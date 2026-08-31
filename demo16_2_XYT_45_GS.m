@@ -16,8 +16,10 @@ SHM.ColGroup = [1,1,1,1,1,1,2,2,2,2,2,3,3,3,3];
 SHM.draw();
 SHM.setType('triu0');
 
+
 % Set theta limits: TLim(1) == TLim(2) -> rotation only, no deformation (rotate by 45°)
 % 设置角度范围：TLim(1) == TLim(2) -> 仅旋转不形变 (旋转45度)
 SHM.setXYTLim('TLim', [pi/4, pi/4]);
+% SHM.setText()
 
 SHM.Colorbar.Location = 'southoutside';

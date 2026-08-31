@@ -9,7 +9,7 @@ rowName = compose('row-%d', 1:50);
 colName = compose('col-%d', 1:10);
 
 figure()
-SHM = SHeatmap(Data, 'Format','sq');
+SHM = SHeatmap(Data, 'Format','sqfull');
 SHM.TickLength = .3;
 SHM.RowGroup = [ones(1, 5), 2.*ones(1, 30), 3.*ones(1, 15)];
 SHM.ColGroup = [1,1,1,1,1,1,1,2,2,2];

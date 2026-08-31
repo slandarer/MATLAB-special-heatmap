@@ -57,3 +57,5 @@ SHM1.Colorbar.Position = [.38, .55, .24, .02];
 SHM2.Colorbar.Position = [.38, .45, .24, .02];
 ax1.XLim = ax2.XLim;
 ax1.YLim = ax2.YLim;
+
+linkaxes([ax1, ax2], 'xy')

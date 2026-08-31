@@ -13,7 +13,7 @@ ax = axes('Parent',fig, 'Position',[.05,.1,.8,.8]);
 SHM = SHeatmap(ax, Data, 'Format','sq', 'RowName',rowName, 'ColName',colName, 'TickLength',0).draw();
 SHM.setRowLabelLocation('right')
 SHM.setText()
-SHM.setXYTLim('XLim',[1,2.5], 'YLim',[0,1], 'TLim',[pi/8, 7*pi/8]);
+SHM.setXYTLim('XLim',[1,2.5], 'YLim',[0,1], 'TLim',[7*pi/8, pi/8]);
 
 set(SHM.colLabelHdl, 'Visible','off')
 setTextPerpRadial(SHM.rowLabelHdl, 'outer')

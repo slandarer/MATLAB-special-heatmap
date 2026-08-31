@@ -8,7 +8,7 @@ cnames = compose('col-%d', 1:5);
 gnames = compose('group-%d', 1:5);
 
 
-SHM = SHeatmap(Data, 'Format','rrect', 'RowName',rnames, 'ColName',cnames);
+SHM = SHeatmap(Data, 'Format','rrect', 'RowName',rnames, 'ColName',cnames, 'TickLabelOffset',.05);
 SHM.draw()
 SHM.setFrame('Visible','off')
 

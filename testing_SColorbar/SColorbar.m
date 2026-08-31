@@ -399,8 +399,9 @@ classdef SColorbar < handle
                     nV = nV./[nL, nL];
                     nT = atan2(nV(2), nV(1)); 
                     nT = nT/pi*180;
-                    if nT >= 90 || nT < -90
-                        set(obj.labelHdl(i), 'Rotation',180 - nT, 'HorizontalAlignment','right')
+                    nT = nT + 180.*((nT >= 90) | (nT < -90)).*sign(nT);
+                    if abs(nT) >= 270
+                        set(obj.labelHdl(i), 'Rotation',-nT, 'HorizontalAlignment','right')
                     else
                         set(obj.labelHdl(i), 'Rotation',-nT, 'HorizontalAlignment','left')
                         

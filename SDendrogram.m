@@ -307,10 +307,9 @@ classdef SDendrogram < handle
             else
                 tCData = zeros(obj.MaxClust + 1, 3);
             end
-            obj.treeHdl = gobjects(1, length(obj.LIds));
-            for i = 1:length(obj.LIds)
-                obj.treeHdl(i) = plot(obj.ax, obj.X(i,:), obj.Y(i,:), 'Color',tCData(obj.LIds(i) + 1, :), 'LineWidth',1);
-            end
+
+            obj.treeHdl = plot(obj.ax, obj.X.', obj.Y.', 'Color','k', 'LineWidth',1);
+            set(obj.treeHdl, {'Color'}, num2cell(tCData(obj.LIds + 1, :), 2))
 
             % Render branch highlights (绘制树枝高亮) 
             obj.branchHighlightHdl = gobjects(1, length(obj.GIds));
@@ -402,34 +401,36 @@ classdef SDendrogram < handle
                 tYY = [tY1 + tT.*(tY2 - tY1), tY2 + tT.*(tY3 - tY2), tY3 + tT.*(tY4 - tY3)];
             end
             [nX, nY] = getNewXY(tXX, tYY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
-            for i = 1:length(obj.treeHdl)
-                set(obj.treeHdl(i), 'XData',nX(i,:), 'YData',nY(i,:))
-            end
+            nXYC = [num2cell(nX, 2), num2cell(nY, 2)];
+            set(obj.treeHdl, {'XData','YData'}, nXYC)
 
             [nX, nY] = getNewXY(obj.BX, obj.BY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
-            for i = 1:length(obj.branchHighlightHdl)
-                set(obj.branchHighlightHdl(i), 'XData',nX(i,:), 'YData',nY(i,:))
-            end
+            nXYC = [num2cell(nX, 2), num2cell(nY, 2)];
+            set(obj.branchHighlightHdl, {'XData','YData'}, nXYC)
+
             [nX, nY] = getNewXY(obj.GX, obj.GY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
-            for i = 1:length(obj.groupHighlightHdl)
-                set(obj.groupHighlightHdl(i), 'XData',nX(i,:), 'YData',nY(i,:))
-            end
+            nXYC = [num2cell(nX, 2), num2cell(nY, 2)];
+            set(obj.groupHighlightHdl, {'XData','YData'}, nXYC)
 
 
             try axis(obj.ax, 'tight'), catch, end
             % Helper function: coordinate transformation (辅助函数：坐标变换) 
             function [nX, nY] = getNewXY(X, Y, OXLim, OYLim, XLim, YLim, TLim)
+                % GETNEWXY Transform coordinates from original space to target space with optional rotation or annular mapping.
+                %   将坐标从原始空间映射到目标空间，支持旋转或环形变换。
+                %   - If TLim(1) == TLim(2): apply 2D rotation (仅旋转).
+                %   - If TLim(1) ~= TLim(2): map Y to angle, X to radius (环形映射)
                 TLim = [-TLim(1), -TLim(2)];
+                % Linear mapping to target limits (线性映射到目标范围)
                 X = (X - OXLim(1))./diff(OXLim).*diff(XLim) + XLim(1);
                 Y = (Y - OYLim(1))./diff(OYLim).*diff(YLim) + YLim(1);
-
-                if abs(diff(TLim)) < eps
+                if abs(diff(TLim)) < eps % Rotation only (仅旋转)
                     RMat = [cos(TLim(1)), sin(TLim(1));
-                        -sin(TLim(1)), cos(TLim(1))];
+                           -sin(TLim(1)), cos(TLim(1))];
                     XY = [X(:), Y(:)]*RMat;
                     nX = reshape(XY(:, 1), size(X, 1), []);
                     nY = reshape(XY(:, 2), size(Y, 1), []);
-                else
+                else % Annular mapping (环形映射): Y -> angle, X -> radius
                     TArr = (Y - YLim(1))./diff(YLim).*diff(TLim) + TLim(1);
                     RArr = X;
                     nX = cos(TArr).*RArr;
