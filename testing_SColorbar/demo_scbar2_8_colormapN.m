@@ -33,6 +33,7 @@ for i = 1:max(group)
     yl = [ind(1) - .5, ind(end) + .5] + (i - 1);
     tSHM = SHeatmap(ax, Data(ind, :), 'Format', formats{i}, ...
         'RowName',rnames(ind), 'ColName',cnames, 'GroupLabelOffset',2.5).draw();
+    % tSHM.setText()
     
     if i ~= max(group)
         tSHM.setType('row')

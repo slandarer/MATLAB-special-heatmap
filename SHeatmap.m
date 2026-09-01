@@ -350,11 +350,17 @@ classdef SHeatmap < handle
             
             % Set color axis limits (设置颜色轴范围)
             if any(any(obj.Data < 0))
-                try caxis(obj.ax, obj.maxV .* [-1, 1]), catch, end
-                try clim(obj.ax,  obj.maxV .* [-1, 1]), catch, end
+                try 
+                    caxis(obj.ax, obj.maxV .* [-1, 1]) 
+                catch
+                    clim(obj.ax,  obj.maxV .* [-1, 1])
+                end
             else
-                try caxis(obj.ax, obj.maxV .* [0, 1]),  catch, end
-                try clim(obj.ax,  obj.maxV .* [0, 1]),  catch, end
+                try 
+                    caxis(obj.ax, obj.maxV .* [0, 1])
+                catch
+                    clim(obj.ax,  obj.maxV .* [0, 1]),
+                end
             end
             
             obj.GroupSep(obj.GroupSep < 0) = 0;
@@ -475,7 +481,7 @@ classdef SHeatmap < handle
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                     obj.PieX = obj.SX.*repmat([.49; .01; nan; .49; -.49; nan; -.01; -.49; nan], [1, mn]) + repmat(cols, [9, 1]);
                     obj.PieY = obj.SY.*repmat([-.01; -.49; nan; .49; -.49; nan; .49; .01; nan], [1, mn]) + repmat(rows, [9, 1]);
-                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, datas, 'EdgeColor',[1,1,1], 'LineWidth',1, 'LineJoin','chamfer', 'EdgeAlpha',.7);
+                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, datas, 'EdgeColor',[1,1,1], 'LineWidth',1, 'EdgeAlpha',.7, 'LineJoin','chamfer');
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                 case 'pie'
                     obj.PieX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
@@ -486,7 +492,7 @@ classdef SHeatmap < handle
                     tTheta = pi/2 + tMesh.*repmat(datas./obj.maxV.*2.*pi, 100, 1);
                     obj.PatchX = obj.SX.*[zeros(1, mn); cos(tTheta).*.92.*.5] + repmat(cols, [101, 1]);
                     obj.PatchY = obj.SY.*[zeros(1, mn);-sin(tTheta).*.92.*.5] + repmat(rows, [101, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'circ'
                     obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
@@ -535,12 +541,12 @@ classdef SHeatmap < handle
                     tValue = 2.*((datas < 0) - .5);
                     obj.PatchX = obj.SX.*repmat(XM, [1,mn]).*[ones([40, mn]); repmat(tRatio.*2 - 1, [40, 1])].*repmat(tValue, [80, 1]) + repmat(cols, [80, 1]);
                     obj.PatchY = obj.SY.*repmat(YM, [1,mn]) + repmat(rows, [80, 1]); 
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'teardrop'
                     obj.PieX = obj.SX.*repmat(XT, [1, mn]) + repmat(cols, [80, 1]);
                     obj.PieY = obj.SY.*repmat(YT, [1, mn]) + repmat(rows, [80, 1]);
-                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, [1,1,1], 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, [1,1,1], 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                     tX1 = obj.SX.*repmat(XT, [1, mn]);
                     tY1 = obj.SY.*repmat(YT, [1, mn]);
@@ -549,13 +555,13 @@ classdef SHeatmap < handle
                     tY1(tY1 < tY2) = tY2(tY1 < tY2);
                     obj.PatchX = tX1 + repmat(cols, [80, 1]);
                     obj.PatchY = tY1 + repmat(rows, [80, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'arrow'
                     tValue = 2.*((datas < 0) - .5);
                     obj.PatchX = obj.SX.*repmat(XA.*.8, [1, mn]) + repmat(cols, [7, 1]);
                     obj.PatchY = obj.SY.*repmat(YA.*.8, [1, mn]).*repmat(tValue, [7, 1]) + repmat(rows, [7, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case {'tril', 'trill'}
                     obj.PatchX = obj.SX.*repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
@@ -671,7 +677,7 @@ classdef SHeatmap < handle
                         ' ', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
                 else
                     obj.nanTextHdl = text(obj.ax, obj.CP(nanC), obj.RP(nanR), ...
-                        '×', 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
+                        char(215), 'FontName','Times New Roman', 'HorizontalAlignment','center', 'FontSize',20);
                 end
 
                 tind = sub2ind(sz, nanR, nanC);
@@ -960,7 +966,9 @@ classdef SHeatmap < handle
                     obj.TxtXY(:, 1) = cols(:);
                     obj.TxtXY(:, 2) = rows(:);
                 end
-                hAll(~valid) = obj.nanTextHdl;
+                if any(~valid)
+                    hAll(~valid) = obj.nanTextHdl;
+                end
                 obj.textHdl = reshape(hAll, size(obj.Data));
                 obj.txtShown = true;
             end

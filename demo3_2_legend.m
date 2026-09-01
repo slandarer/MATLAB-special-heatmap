@@ -12,8 +12,12 @@ SHM = SHeatmap(Data, 'Format','rrect', 'RowName',rnames, 'ColName',cnames, 'Tick
 SHM.draw()
 SHM.setFrame('Visible','off')
 
+try
+    clim([1, 5])
+catch
+    caxis([1, 5])
+end
 
-clim([1, 5])
 colormap(colors)
 delete(SHM.Colorbar)
 

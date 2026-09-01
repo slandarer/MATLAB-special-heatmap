@@ -48,7 +48,10 @@ for i = 141 % [141, 136, 134]
     Data = rand(14, 14) - .5;
     SHM_slan = SHeatmap(Data, 'Format','sq');
     SHM_slan.draw();
+
+    % caxis([-.7, .7])
     clim([-.7, .7])
+
     colormap(slanCM(i))
     SHM_slan.setText();
     % exportgraphics(gca, ['gallery\Colormap_slanCM_', num2str(i), '.png'])

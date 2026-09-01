@@ -184,7 +184,11 @@ classdef SVarRowChart < handle
             if strcmpi(hdl.TopTree, 'on') || strcmpi(hdl.TopBlock, 'on')
                 tFig = figure(); tAx = axes('Parent',tFig);
                 hdl.ColTree = linkage(Data.', hdl.Method);
-                [tColTreeHdl, ~, hdl.ColOrder] = dendrogram(tAx, hdl.ColTree, 0, 'Orientation', 'top');
+                try
+                    [tColTreeHdl, ~, hdl.ColOrder] = dendrogram(tAx, hdl.ColTree, 0, 'Orientation', 'top');
+                catch
+                    [tColTreeHdl, ~, hdl.ColOrder] = dendrogram(hdl.ColTree, 0, 'Orientation', 'top');
+                end
                 hdl.ColGroup = cluster(hdl.ColTree, 'Maxclust',hdl.ColClust);
                 hdl.ColGroup = hdl.ColGroup(hdl.ColOrder);
                 [~, ~, hdl.ColGroup] = unique(hdl.ColGroup, 'stable');
@@ -233,7 +237,11 @@ classdef SVarRowChart < handle
             if strcmpi(hdl.RightTree, 'on') || strcmpi(hdl.RightBlock, 'on')
                 tFig = figure(); tAx = axes('Parent',tFig);
                 hdl.RowTree = linkage(Data, hdl.Method);
-                [tRowTreeHdl, ~, hdl.RowOrder] = dendrogram(tAx, hdl.RowTree, 0, 'Orientation', 'right');
+                try
+                    [tRowTreeHdl, ~, hdl.RowOrder] = dendrogram(tAx, hdl.RowTree, 0, 'Orientation', 'right');
+                catch
+                    [tRowTreeHdl, ~, hdl.RowOrder] = dendrogram(hdl.RowTree, 0, 'Orientation', 'right');
+                end
                 hdl.RowGroup = cluster(hdl.RowTree, 'Maxclust',hdl.RowClust);
                 hdl.RowGroup = hdl.RowGroup(hdl.RowOrder);
                 [~, ~, hdl.RowGroup] = unique(hdl.RowGroup, 'stable');
@@ -340,7 +348,11 @@ classdef SVarRowChart < handle
             if isempty(hdl.CBreak)
                 cbar = colorbar(obj.ax);
                 cbar.Position(4) = cbar.Position(4).*.6;
-                clim(obj.ax, hdl.CLim);
+                try
+                    caxis(obj.ax, hdl.CLim);
+                catch
+                    clim(obj.ax, hdl.CLim);
+                end
                 hdl.CBreak = cbar.YTick;
                 delete(cbar);
             end

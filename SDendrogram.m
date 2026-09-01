@@ -181,7 +181,11 @@ classdef SDendrogram < handle
             obj.CutOff = median([obj.Tree(end - (obj.MaxClust - 1), 3), obj.Tree(end - (obj.MaxClust - 2), 3)]);
 
             % Assign cluster groups and reorder according to leaf order (分配簇组，并按叶节点顺序重新排序)
-            [tTreeHdl, ~, obj.Order] = dendrogram(tAx, obj.Tree, 0, 'Orientation', obj.Orientation);
+            try
+                [tTreeHdl, ~, obj.Order] = dendrogram(tAx, obj.Tree, 0, 'Orientation', obj.Orientation);
+            catch
+                [tTreeHdl, ~, obj.Order] = dendrogram(obj.Tree, 0, 'Orientation', obj.Orientation);
+            end
             obj.Group = cluster(obj.Tree, 'Maxclust',obj.MaxClust);
             obj.Group = obj.Group(obj.Order);
             obj.Group = cumsum([1, diff(obj.Group(:).') ~= 0]);
