@@ -35,7 +35,7 @@ SHM.setRowGroupLabelLocation('diag')
 %         ├── 'brack'  - Left/right square brackets (方括号) [ ]
 %         ├── 'brace'  - Left/right curly braces (花括号) { }
 %         ├── 'chev'   - Left/right angle brackets (尖括号) < >
-%         └── 'span'   - span markers (跨度标记)
+%         └── 'span'   - span markers (跨度标记) I
 SCB_T = SClusterBlock(ax, group, 'Orientation','top', 'Group',group, ...
     'BlockProp', {'EdgeColor','k', 'LineWidth',1.2}, 'Height',.5, 'BasePos',-1.5, 'Format','brace');
 SCB_T.draw();

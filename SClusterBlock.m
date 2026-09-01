@@ -44,7 +44,7 @@ classdef SClusterBlock < handle
 %      ├── 'brack'  - Left/right square brackets (方括号) []
 %      ├── 'brace'  - Left/right curly braces (花括号) {}
 %      ├── 'chev'   - Left/right angle brackets (尖括号) <>
-%      └── 'span'   - span markers (跨度标记) |-|
+%      └── 'span'   - span markers (跨度标记) I
 
 
     properties
