@@ -30,17 +30,16 @@ SHM.setRowGroupName(gname)
 SHM.setRowGroupLabelLocation('diag')
 
 % Draw group block (绘制分组方块)
+% Try : Format
+%         ├── 'paren'  - Left/right parentheses (圆括号) ( )
+%         ├── 'brack'  - Left/right square brackets (方括号) [ ]
+%         ├── 'brace'  - Left/right curly braces (花括号) { }
+%         ├── 'chev'   - Left/right angle brackets (尖括号) < >
+%         └── 'span'   - span markers (跨度标记)
 SCB_T = SClusterBlock(ax, group, 'Orientation','top', 'Group',group, ...
-    'BlockProp', {'EdgeColor','k', 'LineWidth',1.2}, 'Height',.5, 'BasePos',-1.5);
+    'BlockProp', {'EdgeColor','k', 'LineWidth',1.2}, 'Height',.5, 'BasePos',-1.5, 'Format','brace');
 SCB_T.draw();
 SCB_T.setXYTLim('XLim', sqrt(2)/2 + sqrt(2)*[0, size(Data, 2) + .5*(max(group) - 1)], 'TLim', [-pi/4, -pi/4]);
-
-for i = 1:length(SCB_T.blockHdl)
-    tX = SCB_T.blockHdl(i).XData;
-    tY = SCB_T.blockHdl(i).YData;
-    SCB_T.blockHdl(i).XData = [tX(1); nan; tX(2:4)];
-    SCB_T.blockHdl(i).YData = [tY(1); nan; tY(2:4)];
-end
 
 % Draw colorbar
 RCB = SColorbar(ax, 'Location','north', 'CDir','reverse');

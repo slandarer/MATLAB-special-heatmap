@@ -36,16 +36,27 @@ classdef SClusterBlock < handle
 %                     用于设置方块属性的元胞数组
 %   'ColorList'     - Custom color matrix for groups
 %                     每组配色
+%   'Format'        - Bracket/block shape style for each group (分组区块形状样式)
+%      ├── 'block'  - (default) Filled square block (实心方块)
+%      ├── 'sq'     - Square block (alias for 'block') (方块，同 'block')
+%      ├── 'square' - Square block (alias for 'block') (方块，同 'block')
+%      ├── 'paren'  - Left/right parentheses (圆括号) ()
+%      ├── 'brack'  - Left/right square brackets (方括号) []
+%      ├── 'brace'  - Left/right curly braces (花括号) {}
+%      ├── 'chev'   - Left/right angle brackets (尖括号) <>
+%      └── 'span'   - span markers (跨度标记) |-|
 
 
     properties
         ax
         Parent
-        arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', 'BlockProp', 'Height', 'Group', 'GroupSep'};
+        arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', ...
+            'BlockProp', 'Height', 'Group', 'GroupSep','Format'};
 
         Orientation = 'top';              % 'top'/'left' (方块位置/方向)               
         BasePos     = 0;                  % Base position for block placement (方块放置的基准位置)
         Height      = 1;                  % Height of blocks (方块高度)
+        Format      = 'block'             % Bracket/block shape style for each group (分组区块形状样式)
         BlockProp   = {'LineWidth', 1};   % Cell array of patch properties (用于设置方块属性的元胞数组)
         ColorList   = [0.55, 0.83, 0.78; 1.00, 1.00, 0.70; 0.75, 0.73, 0.85;
             0.98, 0.50, 0.45; 0.50, 0.69, 0.83; 0.99, 0.71, 0.38;
@@ -54,7 +65,7 @@ classdef SClusterBlock < handle
         Class
         Group = [];                       % Group assignments (分组)
         GroupSep = .5;                    % Group separation gap (组间分离间距)
-        X, Y
+        X; Y
 
         XLim
         YLim
@@ -65,7 +76,8 @@ classdef SClusterBlock < handle
     end
 
     properties (Hidden)
-        CC; CP; OXLim; OYLim; BX; BY
+        CC; CP; OXLim; OYLim; BoxX; BoxY; BlkX; BlkY
+        baseV1; baseV2; OX; OY
     end
 
     methods
@@ -115,7 +127,43 @@ classdef SClusterBlock < handle
             obj.ax.YTick       = [];
             obj.ax.NextPlot    = 'add';
 
-            % Find group boundaries (查找分组边界)
+            switch lower(obj.Format)
+                case {'block', 'sq', 'square'}
+                    obj.baseV1 = [0, 1, 1, 0];
+                    obj.baseV2 = [0, 0, 1, 1];
+                case 'paren'
+                    baseT = linspace(pi/2 + pi/6, pi/2 - pi/6, 100);
+                    obj.baseV1 = [cos(baseT) + .5, nan];
+                    obj.baseV2 = [(sin(baseT) - sqrt(3)/2)./(1 - sqrt(3)/2), nan];
+                case 'brack'
+                    obj.baseV1 = [0, 0, 1, 1, nan];
+                    obj.baseV2 = [0, 1, 1, 0, nan];
+                case 'brace'
+                    baseT1 = linspace(pi, pi/2, 25);
+                    baseT2 = linspace(-pi/2, 0, 25);
+                    baseT3 = linspace(-pi, -pi/2, 25);
+                    baseT4 = linspace(pi/2, 0, 25);
+                    obj.baseV1 = [(cos(baseT1) + 1)./8, ...
+                                  linspace(1/8, 3/8, 50), ...
+                                   cos(baseT2)./8 + 3/8, ...
+                                  (cos(baseT3) + 1)./8 + 1/2, ...
+                                  linspace(5/8, 7/8, 50), ...
+                                  cos(baseT4)./8 + 7/8, nan];
+                    obj.baseV2 = [sin(baseT1)./2, ...
+                                  ones(1, 50)./2, ...
+                                  sin(baseT2)./2 + 1, ...
+                                  sin(baseT3)./2 + 1, ...
+                                  ones(1, 50)./2, ...
+                                  sin(baseT4)./2, nan];
+                    obj.BlockProp = [{'LineJoin','chamfer'}, obj.BlockProp];
+                case 'chev'
+                    obj.baseV1 = [0, .5, 1, nan];
+                    obj.baseV2 = [0,  1, 0, nan];
+                case 'span'
+                    obj.baseV1 = [0, 0, nan, 1, 1, nan, 0, 1, nan];
+                    obj.baseV2 = [0, 1, nan, 0, 1, nan, .5, .5, nan];
+            end
+
 
             % Find group boundaries (查找分组边界)
             [~, ~, obj.Class] = unique(obj.Class(:).', 'stable');
@@ -131,23 +179,23 @@ classdef SClusterBlock < handle
             % Preallocate center coordinates (预分配中心坐标)
             switch obj.Orientation
                 case 'top'
-                    obj.X = zeros(1, length(obj.CC) - 1);
-                    obj.Y = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
+                    obj.OX = zeros(1, length(obj.CC) - 1);
+                    obj.OY = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
                     obj.OXLim = [min(obj.CP) - .5, max(obj.CP) + .5];
                     obj.OYLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
                 case 'bottom'
-                    obj.X = zeros(1, length(obj.CC) - 1);
-                    obj.Y = ones(1, length(obj.CC) - 1) .* (obj.BasePos + obj.Height/2);
+                    obj.OX = zeros(1, length(obj.CC) - 1);
+                    obj.OY = ones(1, length(obj.CC) - 1) .* (obj.BasePos + obj.Height/2);
                     obj.OXLim = [min(obj.CP) - .5, max(obj.CP) + .5];
                     obj.OYLim = sort([obj.BasePos, obj.BasePos + obj.Height]);
                 case 'left'
-                    obj.X = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
-                    obj.Y = zeros(1, length(obj.CC) - 1);
+                    obj.OX = ones(1, length(obj.CC) - 1) .* (obj.BasePos - obj.Height/2);
+                    obj.OY = zeros(1, length(obj.CC) - 1);
                     obj.OYLim = [min(obj.CP) - .5, max(obj.CP) + .5];
                     obj.OXLim = sort([obj.BasePos, obj.BasePos - obj.Height]);
                 case 'right'
-                    obj.X = ones(1, length(obj.CC) - 1) .* (obj.BasePos + obj.Height/2);
-                    obj.Y = zeros(1, length(obj.CC) - 1);
+                    obj.OX = ones(1, length(obj.CC) - 1) .* (obj.BasePos + obj.Height/2);
+                    obj.OY = zeros(1, length(obj.CC) - 1);
                     obj.OYLim = [min(obj.CP) - .5, max(obj.CP) + .5];
                     obj.OXLim = sort([obj.BasePos, obj.BasePos + obj.Height]);
             end
@@ -156,73 +204,79 @@ classdef SClusterBlock < handle
 
             % Draw blocks (绘制方块)
             obj.blockHdl = gobjects(1, length(obj.CC) - 1);
-            for i = 1:length(obj.CC) - 1
+            obj.BlkX = cell(1, length(obj.CC) - 1);
+            obj.BlkY = cell(1, length(obj.CC) - 1);
+            for i = 1:(length(obj.CC) - 1)
                 CL = [obj.CP(obj.CC(i) + 1), obj.CP(obj.CC(i + 1))];
                 CFL = obj.CP((obj.CC(i) + 1) : obj.CC(i + 1));
                 CInd = obj.Class(obj.CC(i) + 1);
 
                 switch obj.Orientation
                     case 'top'
-                        obj.blockHdl(i) = fill(obj.ax, ...
-                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-                            [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
-                            obj.ColorList(CInd, :), obj.BlockProp{:});
-                        obj.X(i) = (CL(1) + CL(2)) / 2;
+                        tX0 = [CL(1) - .5, CL(2) + .5];
+                        tY0 = [obj.BasePos, obj.BasePos - obj.Height];
+                        obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV1;
+                        obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV2;
+                        obj.blockHdl(i) = fill(obj.ax, obj.BlkX{i}, obj.BlkY{i}, obj.ColorList(CInd, :), obj.BlockProp{:});
+                        obj.OX(i) = (CL(1) + CL(2)) / 2;
                         tX1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
                         tY1 = [obj.BasePos; obj.BasePos - obj.Height; nan]*ones(1, length(CFL) + 1);
                         tX2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
                         tY2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos - obj.Height; obj.BasePos - obj.Height; nan]*ones(1, length(CFL));
-                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
-                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
+                        obj.BoxX = [obj.BoxX, tX1(:).', tX2(:).'];
+                        obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                     case 'bottom'
-                        obj.blockHdl(i) = fill(obj.ax, ...
-                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-                            [obj.BasePos, obj.BasePos, obj.BasePos + obj.Height, obj.BasePos + obj.Height], ...
-                            obj.ColorList(CInd, :), obj.BlockProp{:});
-                        obj.X(i) = (CL(1) + CL(2)) / 2;
+                        tX0 = [CL(1) - .5, CL(2) + .5];
+                        tY0 = [obj.BasePos, obj.BasePos + obj.Height];
+                        obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV1;
+                        obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV2;
+                        obj.blockHdl(i) = fill(obj.ax, obj.BlkX{i}, obj.BlkY{i}, obj.ColorList(CInd, :), obj.BlockProp{:});
+                        obj.OX(i) = (CL(1) + CL(2)) / 2;
                         tX1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
                         tY1 = [obj.BasePos; obj.BasePos + obj.Height; nan]*ones(1, length(CFL) + 1);
                         tX2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
                         tY2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos + obj.Height; obj.BasePos + obj.Height; nan]*ones(1, length(CFL));
-                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
-                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
+                        obj.BoxX = [obj.BoxX, tX1(:).', tX2(:).'];
+                        obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                     case 'left'
-                        obj.blockHdl(i) = fill(obj.ax, ...
-                            [obj.BasePos, obj.BasePos, obj.BasePos - obj.Height, obj.BasePos - obj.Height], ...
-                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-                            obj.ColorList(CInd, :), obj.BlockProp{:});
+                        tX0 = [obj.BasePos, obj.BasePos - obj.Height];
+                        tY0 = [CL(1) - .5, CL(2) + .5];
+                        obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV2;
+                        obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV1;
+                        obj.blockHdl(i) = fill(obj.ax, obj.BlkX{i}, obj.BlkY{i}, obj.ColorList(CInd, :), obj.BlockProp{:});
                         obj.ax.YDir = 'reverse';
-                        obj.Y(i) = (CL(1) + CL(2)) / 2;
+                        obj.OY(i) = (CL(1) + CL(2)) / 2;
                         tY1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
                         tX1 = [obj.BasePos; obj.BasePos - obj.Height; nan]*ones(1, length(CFL) + 1);
                         tY2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
                         tX2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos - obj.Height; obj.BasePos - obj.Height; nan]*ones(1, length(CFL));
-                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
-                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
+                        obj.BoxX = [obj.BoxX, tX1(:).', tX2(:).'];
+                        obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                     case 'right'
-                        obj.blockHdl(i) = fill(obj.ax, ...
-                            [obj.BasePos, obj.BasePos, obj.BasePos + obj.Height, obj.BasePos + obj.Height], ...
-                            CL([1, 2, 2, 1]) + [-0.5, 0.5, 0.5, -0.5], ...
-                            obj.ColorList(CInd, :), obj.BlockProp{:});
+                        tX0 = [obj.BasePos, obj.BasePos + obj.Height];
+                        tY0 = [CL(1) - .5, CL(2) + .5];
+                        obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV2;
+                        obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV1;
+                        obj.blockHdl(i) = fill(obj.ax, obj.BlkX{i}, obj.BlkY{i}, obj.ColorList(CInd, :), obj.BlockProp{:});
                         obj.ax.YDir = 'reverse';
-                        obj.Y(i) = (CL(1) + CL(2)) / 2;
+                        obj.OY(i) = (CL(1) + CL(2)) / 2;
                         tY1 = [CFL(1) - .5, CFL(1:end) + .5; CFL(1) - .5, CFL(1:end) + .5; nan(1, length(CFL) + 1)];
                         tX1 = [obj.BasePos; obj.BasePos + obj.Height; nan]*ones(1, length(CFL) + 1);
                         tY2 = [CFL - .5; CFL + .5; nan(1, length(CFL)); CFL - .5; CFL + .5; nan(1, length(CFL))];
                         tX2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos + obj.Height; obj.BasePos + obj.Height; nan]*ones(1, length(CFL));
-                        obj.BX = [obj.BX, tX1(:).', tX2(:).'];
-                        obj.BY = [obj.BY, tY1(:).', tY2(:).'];
+                        obj.BoxX = [obj.BoxX, tX1(:).', tX2(:).'];
+                        obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                 end
             end
 
-            obj.boxHdl = plot(obj.ax, obj.BX, obj.BY, 'LineWidth',1, 'Color','k', 'Visible','off');
-            
+            obj.boxHdl = plot(obj.ax, obj.BoxX, obj.BoxY, 'LineWidth',1, 'Color','k', 'Visible','off');
+            obj.X = obj.OX; obj.Y = obj.OY;
             try axis(obj.ax, 'tight'); catch, end
 
             if nargout == 1
-                varargout = {obj.X};
+                varargout = {obj.OX};
             elseif nargout == 2
-                varargout = {obj.X, obj.Y};
+                varargout = {obj.OX, obj.OY};
             end
         end
 
@@ -258,26 +312,44 @@ classdef SClusterBlock < handle
                     [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
                     set(obj.blockHdl(i), 'XData',nX, 'YData',nY);
                 end
-                tX = obj.BX;
-                tY = obj.BY;
+                tX = obj.BoxX;
+                tY = obj.BoxY;
                 [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
                 set(obj.boxHdl, 'XData',nX, 'YData',nY);
             else
                 for i = 1:length(obj.blockHdl)
-                    tX = obj.blockHdl(i).XData;
-                    tY = obj.blockHdl(i).YData;
-                    tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), linspace(tX(3), tX(4), 50), linspace(tX(4), tX(1), 50)];
-                    tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), linspace(tY(3), tY(4), 50), linspace(tY(4), tY(1), 50)];
+                    tX = obj.BlkX{i};
+                    tY = obj.BlkY{i};
+                    switch lower(obj.Format)
+                        case {'block', 'sq', 'square'}
+                            tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), linspace(tX(3), tX(4), 50), linspace(tX(4), tX(1), 50)];
+                            tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), linspace(tY(3), tY(4), 50), linspace(tY(4), tY(1), 50)];
+                        case 'paren'
+                            tXX = tX;
+                            tYY = tY;
+                        case 'brack'
+                            tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), linspace(tX(3), tX(4), 50), nan];
+                            tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), linspace(tY(3), tY(4), 50), nan];
+                        case 'brace'
+                            tXX = tX;
+                            tYY = tY;
+                        case 'chev'
+                            tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), nan];
+                            tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), nan];
+                        case 'span'
+                            tXX = [linspace(tX(1), tX(2), 50), nan, linspace(tX(4), tX(5), 50), nan, linspace(tX(7), tX(8), 50), nan];
+                            tYY = [linspace(tY(1), tY(2), 50), nan, linspace(tY(4), tY(5), 50), nan, linspace(tY(7), tY(8), 50), nan];
+                    end
                     [nX, nY] = getNewXY(tXX, tYY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
                     set(obj.blockHdl(i), 'XData',nX, 'YData',nY);
                 end
-                tX = interpDataNaN(obj.BX, 10);
-                tY = interpDataNaN(obj.BY, 10);
+                tX = interpDataNaN(obj.BoxX, 10);
+                tY = interpDataNaN(obj.BoxY, 10);
                 [nX, nY] = getNewXY(tX, tY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
                 set(obj.boxHdl, 'XData',nX, 'YData',nY);
             end
             
-            [obj.X, obj.Y] = getNewXY(obj.X, obj.Y, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
+            [obj.X, obj.Y] = getNewXY(obj.OX, obj.OY, obj.OXLim, obj.OYLim, obj.XLim, obj.YLim, obj.TLim);
 
             try axis(obj.ax, 'tight'), catch, end
             % Helper function: coordinate transformation (辅助函数：坐标变换) 
