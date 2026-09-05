@@ -44,7 +44,8 @@ classdef SClusterBlock < handle
 %      ├── 'brack'  - Left/right square brackets (方括号) []
 %      ├── 'brace'  - Left/right curly braces (花括号) {}
 %      ├── 'chev'   - Left/right angle brackets (尖括号) <>
-%      └── 'span'   - span markers (跨度标记) I
+%      ├── 'span'   - span markers (跨度标记) I
+%      └── 'bounds' - Vertical bound markers (边界标记) =
 
 
     properties
@@ -63,6 +64,8 @@ classdef SClusterBlock < handle
             0.70, 0.87, 0.41; 0.99, 0.80, 0.90; 0.85, 0.85, 0.85;
             0.74, 0.50, 0.74; 0.80, 0.92, 0.77; 1.00, 0.93, 0.44];
         Class
+        ClassId
+        ClassName
         Group = [];                       % Group assignments (分组)
         GroupSep = .5;                    % Group separation gap (组间分离间距)
         X; Y
@@ -76,7 +79,7 @@ classdef SClusterBlock < handle
     end
 
     properties (Hidden)
-        CC; CP; OXLim; OYLim; BoxX; BoxY; BlkX; BlkY
+        CC; GC; CP; OXLim; OYLim; BoxX; BoxY; BlkX; BlkY
         baseV1; baseV2; OX; OY
     end
 
@@ -108,7 +111,9 @@ classdef SClusterBlock < handle
             end
             obj.Group = cumsum([1, diff(obj.Group(:).') ~= 0]);
 
-            obj.ColorList = [obj.ColorList; rand(max(obj.Class), 3)./5 + .5];
+            [obj.ClassName, ~, obj.ClassId] = unique(obj.Class(:).', 'stable');
+            obj.ClassId = obj.ClassId(:).';
+            obj.ColorList = [obj.ColorList; rand(length(obj.ClassName), 3)./5 + .5];
         end
 
         function varargout = draw(obj)
@@ -159,6 +164,9 @@ classdef SClusterBlock < handle
                 case 'chev'
                     obj.baseV1 = [0, .5, 1, nan];
                     obj.baseV2 = [0,  1, 0, nan];
+                case 'bounds'
+                    obj.baseV1 = [0, 0, nan, 1, 1, nan];
+                    obj.baseV2 = [0, 1, nan, 0, 1, nan];
                 case 'span'
                     obj.baseV1 = [0, 0, nan, 1, 1, nan, 0, 1, nan];
                     obj.baseV2 = [0, 1, nan, 0, 1, nan, .5, .5, nan];
@@ -166,15 +174,16 @@ classdef SClusterBlock < handle
 
 
             % Find group boundaries (查找分组边界)
-            [~, ~, obj.Class] = unique(obj.Class(:).', 'stable');
-            obj.Class = obj.Class(:).';
-            obj.CC = [0, find([diff(obj.Class), 1] ~= 0)];
-            obj.CP = 1:length(obj.Class);
+            obj.CC = [0, find([diff(obj.ClassId), 1] ~= 0)];
+            obj.GC = [0, find([diff(obj.Group(:).'), 1] ~= 0)];
+            obj.CP = 1:length(obj.ClassId);
+            obj.CC = unique([obj.CC, obj.GC]);
 
             for j = max(obj.Group):-1:2
                 pos = find(obj.Group == j, 1);
                 obj.CP(obj.CP >= pos) = obj.CP(obj.CP >= pos) + obj.GroupSep;
             end
+
 
             % Preallocate center coordinates (预分配中心坐标)
             switch obj.Orientation
@@ -209,7 +218,7 @@ classdef SClusterBlock < handle
             for i = 1:(length(obj.CC) - 1)
                 CL = [obj.CP(obj.CC(i) + 1), obj.CP(obj.CC(i + 1))];
                 CFL = obj.CP((obj.CC(i) + 1) : obj.CC(i + 1));
-                CInd = obj.Class(obj.CC(i) + 1);
+                CInd = obj.ClassId(obj.CC(i) + 1);
 
                 switch obj.Orientation
                     case 'top'
@@ -336,6 +345,9 @@ classdef SClusterBlock < handle
                         case 'chev'
                             tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), nan];
                             tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), nan];
+                        case 'bounds'
+                            tXX = [linspace(tX(1), tX(2), 50), nan, linspace(tX(4), tX(5), 50), nan];
+                            tYY = [linspace(tY(1), tY(2), 50), nan, linspace(tY(4), tY(5), 50), nan];
                         case 'span'
                             tXX = [linspace(tX(1), tX(2), 50), nan, linspace(tX(4), tX(5), 50), nan, linspace(tX(7), tX(8), 50), nan];
                             tYY = [linspace(tY(1), tY(2), 50), nan, linspace(tY(4), tY(5), 50), nan, linspace(tY(7), tY(8), 50), nan];

@@ -4,6 +4,7 @@
 %                 yinzhiqiang11 【python+遥感学习日志】
 %                 https://mp.weixin.qq.com/s/RkwGo-nswkVUJKm0XXG-qQ
 
+
 rng(6)
 X  = randn(20, 10).*1.7 + [(linspace(-1,2.5,20)').*ones(1, 3), ...
                            (linspace(1.5,.7,20)').*ones(1, 3), ...

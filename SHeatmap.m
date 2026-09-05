@@ -255,28 +255,32 @@ classdef SHeatmap < handle
         RP; CP; FX; FY; BX; BY; 
         GX = nan; GY = nan; 
         SX = 1; SY = 1;
-        txtShown = false; 
-        rowShown = false;
-        colShown = false;
-        XYTReset = false;
-        isFrozen = false;
-        txtFixed = false;
+        
         RGP; CGP; RGLDir; CGLDir;
         PatchX; PatchY; PieX; PieY; 
         
         TxtXY; TxtNaNXY; newTxtXY; nanTextHdl
-
         
         RTX; RTY; CTX; CTY; RTLDir; CTLDir
         newRTX; newRTY; newCTX; newCTY
-
-        tickConfigured = false;
+        
         RowTickIndices = [];   % Indices of row ticks to display (要显示的行刻度索引)
         ColTickIndices = [];   % Indices of column ticks to display (要显示的列刻度索引)
 
         Format3DHeight = 2
         Format3DTheta = pi/3.5
     end
+
+    properties (Hidden, SetObservable)
+        txtShown = false; 
+        rowShown = false;
+        colShown = false;
+        XYTReset = false;
+        isFrozen = false;
+        txtFixed = false;
+        tickConfigured = false;
+    end
+
 
     methods
 
@@ -452,36 +456,36 @@ classdef SHeatmap < handle
                 case 'sq'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'sqfull'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5], [1, mn]) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5], [1, mn]) + repmat(rows, [4, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'asq'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]).*repmat(tRatio, [4, 1]) + repmat(rows, [4, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'rrect'
                     obj.PatchX = obj.SX.*repmat((X4.*.7 + cos(T4).*.3).*.46, [1, mn]) + repmat(cols, [80, 1]);
                     obj.PatchY = obj.SY.*repmat((Y4.*.7 + sin(T4).*.3).*.46, [1, mn]) + repmat(rows, [80, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'c2rect'
                     obj.PatchX = obj.SX.*(repmat(X4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(cols, [80, 1]);
                     obj.PatchY = obj.SY.*(repmat(Y4.*.46, [1, mn]).*repmat(tRatio, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio, [80, 1])) + repmat(rows, [80, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'shade'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.98, [1, mn]) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.98, [1, mn]) + repmat(rows, [4, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                     obj.PieX = obj.SX.*repmat([.49; .01; nan; .49; -.49; nan; -.01; -.49; nan], [1, mn]) + repmat(cols, [9, 1]);
                     obj.PieY = obj.SY.*repmat([-.01; -.49; nan; .49; -.49; nan; .49; .01; nan], [1, mn]) + repmat(rows, [9, 1]);
-                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, datas, 'EdgeColor',[1,1,1], 'LineWidth',1, 'EdgeAlpha',.7, 'LineJoin','chamfer');
+                    obj.pieHdl = fill(obj.ax, obj.PieX, obj.PieY, datas(:), 'EdgeColor',[1,1,1], 'LineWidth',1, 'EdgeAlpha',.7, 'LineJoin','chamfer');
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                 case 'pie'
                     obj.PieX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
@@ -492,23 +496,23 @@ classdef SHeatmap < handle
                     tTheta = pi/2 + tMesh.*repmat(datas./obj.maxV.*2.*pi, 100, 1);
                     obj.PatchX = obj.SX.*[zeros(1, mn); cos(tTheta).*.92.*.5] + repmat(cols, [101, 1]);
                     obj.PatchY = obj.SY.*[zeros(1, mn);-sin(tTheta).*.92.*.5] + repmat(rows, [101, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'circ'
                     obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
                     obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]) + repmat(rows, [length(baseT), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'acirc'
                     obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
                     obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'arrect'
                     tRatio2 = max(0, 4*(tRatio - 0.75));
                     obj.PatchX = obj.SX.*(repmat(X4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(cos(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(cols, [80, 1]);
                     obj.PatchY = obj.SY.*(repmat(Y4.*.46, [1, mn]).*repmat(tRatio2, [80, 1]) + repmat(sin(T4).*.46, [1, mn]).*repmat(1 - tRatio2, [80, 1])).*repmat(tRatio, [80, 1]) + repmat(rows, [80, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'oval'
                     tValue = datas./obj.maxV;
@@ -519,19 +523,19 @@ classdef SHeatmap < handle
                     baseOvalXY = [baseOvalX(:), baseOvalY(:)]*thetaMat;
                     obj.PatchX = obj.SX.*reshape(baseOvalXY(:,1), [length(baseT), mn]) + repmat(cols, [length(baseT), 1]);
                     obj.PatchY = -obj.SY.*reshape(baseOvalXY(:,2), [length(baseT), mn]) + repmat(rows, [length(baseT), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'hex'
                     obj.PatchX = obj.SX.*repmat(cos(hexT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(hexT), 1]) + repmat(cols, [length(hexT), 1]);
                     obj.PatchY = obj.SY.*repmat(sin(hexT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(hexT), 1]) + repmat(rows, [length(hexT), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'star'
                     tValue = datas./obj.maxV;
                     tR = [1;.5;1;.5;1;.5;1;.5;1;.5;1];
                     obj.PatchX = obj.SX.*repmat(cos(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(cols, [length(starT), 1]);
                     obj.PatchY = -obj.SY.*repmat(sin(starT).*.92.*.5.*tR, [1, mn]).*repmat(tValue, [length(starT), 1]) + repmat(rows, [length(starT), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'moon'
                     obj.PieX = obj.SX.*repmat(XM, [1, mn]) + repmat(cols, [80, 1]);
@@ -541,7 +545,7 @@ classdef SHeatmap < handle
                     tValue = 2.*((datas < 0) - .5);
                     obj.PatchX = obj.SX.*repmat(XM, [1,mn]).*[ones([40, mn]); repmat(tRatio.*2 - 1, [40, 1])].*repmat(tValue, [80, 1]) + repmat(cols, [80, 1]);
                     obj.PatchY = obj.SY.*repmat(YM, [1,mn]) + repmat(rows, [80, 1]); 
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'teardrop'
                     obj.PieX = obj.SX.*repmat(XT, [1, mn]) + repmat(cols, [80, 1]);
@@ -555,33 +559,33 @@ classdef SHeatmap < handle
                     tY1(tY1 < tY2) = tY2(tY1 < tY2);
                     obj.PatchX = tX1 + repmat(cols, [80, 1]);
                     obj.PatchY = tY1 + repmat(rows, [80, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'arrow'
                     tValue = 2.*((datas < 0) - .5);
                     obj.PatchX = obj.SX.*repmat(XA.*.8, [1, mn]) + repmat(cols, [7, 1]);
                     obj.PatchY = obj.SY.*repmat(YA.*.8, [1, mn]).*repmat(tValue, [7, 1]) + repmat(rows, [7, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case {'tril', 'trill'}
                     obj.PatchX = obj.SX.*repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
                     obj.PatchY = obj.SY.*repmat([.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case {'triu', 'triur'}
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5].*.98, [1, mn]) + repmat(cols, [3, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'triul'
                     obj.PatchX = obj.SX.*repmat([.5; -.5; -.5].*.98, [1, mn]) + repmat(cols, [3, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5].*.98, [1, mn]) + repmat(rows, [3, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'trilr'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5].*.98, [1, mn]) + repmat(cols, [3, 1]);
                     obj.PatchY = obj.SY.*repmat([.5; .5; -.5].*.98, [1, mn]) + repmat(rows, [3, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor','none', 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor','none', 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'donut'
                     obj.PieX = obj.SX.*repmat([cos(baseT - pi/2).*.92.*.5; cos(baseT(end:-1:1, :) - pi/2).*.92.*.25], [1, mn]) + repmat(cols, [2*length(baseT), 1]);
@@ -592,17 +596,17 @@ classdef SHeatmap < handle
                     tTheta = pi/2 + tMesh.*repmat(datas./obj.maxV.*2.*pi, 50, 1);
                     obj.PatchX = obj.SX.*[cos(tTheta).*.92.*.5; cos(tTheta(end:-1:1, :)).*.92.*.25] + repmat(cols, [100, 1]);
                     obj.PatchY = -obj.SY.*[sin(tTheta).*.92.*.5; sin(tTheta(end:-1:1, :)).*.92.*.25] + repmat(rows, [100, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'cust'
                     obj.PatchX = obj.SX.*repmat(obj.SData(1,:).', [1, mn]) + repmat(cols, [length(obj.SData(1,:)), 1]);
                     obj.PatchY = obj.SY.*repmat(-obj.SData(2,:).', [1, mn]) + repmat(rows, [length(obj.SData(2,:)), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'acust'
                     obj.PatchX = obj.SX.*repmat(obj.SData(1,:).', [1, mn]).*repmat(tRatio, [length(obj.SData(1,:)), 1]) + repmat(cols, [length(obj.SData(1,:)), 1]);
                     obj.PatchY = obj.SY.*repmat(-obj.SData(2,:).', [1, mn]).*repmat(tRatio, [length(obj.SData(2,:)), 1]) + repmat(rows, [length(obj.SData(2,:)), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'bcirc'
                     obj.PieX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]) + repmat(cols, [length(baseT), 1]);
@@ -611,7 +615,7 @@ classdef SHeatmap < handle
                     obj.pieHdl = reshape(obj.pieHdl, sz);
                     obj.PatchX = obj.SX.*repmat(cos(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(cols, [length(baseT), 1]);
                     obj.PatchY = obj.SY.*repmat(sin(baseT).*.92.*.5, [1, mn]).*repmat(tRatio, [length(baseT), 1]) + repmat(rows, [length(baseT), 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8);
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case '3d'
                     obj.PieX = repmat([-.5; .5; .5; -.5].*.94, [1, mn]) + repmat(cols, [4, 1]);
@@ -621,12 +625,12 @@ classdef SHeatmap < handle
                 case 'barh'
                     obj.PatchX = obj.SX.*(repmat([-.5; -.5; -.5; -.5], [1, mn]) + repmat([0; 1; 1; 0].*.95, [1, mn]).*repmat(tRatio, [4, 1])) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*repmat([-.5; -.5; .5; .5].*.75, [1, mn]) + repmat(rows, [4, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
                 case 'bar'
                     obj.PatchX = obj.SX.*repmat([-.5; .5; .5; -.5].*.75, [1, mn]) + repmat(cols, [4, 1]);
                     obj.PatchY = obj.SY.*(repmat([.5; .5; .5; .5], [1, mn]) - repmat([1; 1; 0; 0].*.95, [1, mn]).*repmat(tRatio, [4, 1])) + repmat(rows, [4, 1]);
-                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas, 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
+                    obj.patchHdl = fill(obj.ax, obj.PatchX, obj.PatchY, datas(:), 'EdgeColor',[1,1,1].*.3, 'LineWidth',.8, 'LineJoin','chamfer');
                     obj.patchHdl = reshape(obj.patchHdl, sz);
             end
 
@@ -787,6 +791,7 @@ classdef SHeatmap < handle
         end
 
         function refreshTxtColor(obj, ~, ~)
+            obj.Colormap = obj.ax.Colormap;
             if obj.txtShown && (~obj.isFrozen) && (~obj.txtFixed)
                 obj.setText();
             end
@@ -1463,7 +1468,7 @@ classdef SHeatmap < handle
                     case {'tril', 'tril0'}; obj.RowLabelLocation = 'left'; obj.ColLabelLocation = 'diag';
                     case {'linku'}; obj.RowLabelLocation = 'right'; obj.ColLabelLocation = 'top';
                     case {'row', 'col'}; obj.RowLabelLocation = 'left'; obj.ColLabelLocation = 'top';
-                    case {'varu', 'varl'}; obj.RowLabelLocation = 'diag'; obj.ColLabelLocation = 'bottom';
+                    case {'varu', 'varl'}; obj.RowLabelLocation = 'diag'; obj.ColLabelLocation = 'diag';
                     otherwise; obj.RowLabelLocation = 'left'; obj.ColLabelLocation = 'bottom';
                 end
         

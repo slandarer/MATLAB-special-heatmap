@@ -48,12 +48,11 @@ classdef SColorbar < handle
     properties
         ax, fig                   % Axes and figure handles (坐标区及图形窗口句柄)
         Parent = []               % Parent axes (父坐标区)
-
         % Parameter name list for parsing (参数名称列表，用于解析输入)
         arginList = {'TickDir', 'TickLength', 'Location', 'CDir', ...
             'Tick', 'TickLabel', 'TickLabelOffset', 'BasePos', 'Width', ...
             'Color', 'LineWidth', 'TitleLocation', 'TitleLabelOffset', ...
-            'TickVisible'}
+            'TickVisible', 'Target'}
 
         CLim                      % Color limits (颜色范围)
         Colormap                  % Colormap (颜色映射表)
@@ -153,7 +152,7 @@ classdef SColorbar < handle
             xl = obj.ax.XLim;
             yl = obj.ax.YLim;
 
-            thdl = findobj(gca, 'Type', 'text');
+            thdl = findobj(gca, 'Type', 'text', 'Visible','on');
             if isempty(thdl)
                 tpos = [];
             else

@@ -29,3 +29,4 @@ scbar5 = SColorbar(gca, 'Location','east', 'Width',.1);
 scbar5.draw()
 
 SHM.setFrame()
+
