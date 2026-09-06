@@ -13,6 +13,7 @@ SHM.draw()
 
 SHM.setFrame()
 SHM.setBox('Color','w', 'LineWidth',.5)
+SHM.setText()
 set(SHM.frameHdl, 'Visible','off')
 
 

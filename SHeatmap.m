@@ -129,7 +129,7 @@ classdef SHeatmap < handle
                      'GroupSep', 'RowGroup', 'ColGroup', ...
                      'TickLength','TickLabelOffset','GroupLabelOffset', ...
                      'RowGroupName', 'ColGroupName', 'ShapeFlipX', 'ShapeFlipY', ...
-                     'Format3DHeight', 'Format3DTheta'}
+                     'Format3DHeight', 'Format3DTheta','RowLabelLocation','ColLabelLocation'}
         Data
         PVal
 
@@ -387,8 +387,14 @@ classdef SHeatmap < handle
             obj.ColGroup = obj.ColGroup(1:size(obj.Data, 2));
             obj.RowGroup = cumsum([1, diff(obj.RowGroup(:).') ~= 0]);
             obj.ColGroup = cumsum([1, diff(obj.ColGroup(:).') ~= 0]);
-            obj.RP = (1:size(obj.Data, 1)) + (obj.RowGroup - 1).*obj.GroupSep;
-            obj.CP = (1:size(obj.Data, 2)) + (obj.ColGroup - 1).*obj.GroupSep;
+            if isscalar(obj.GroupSep)
+                obj.RP = (1:size(obj.Data, 1)) + (obj.RowGroup - 1).*obj.GroupSep;
+                obj.CP = (1:size(obj.Data, 2)) + (obj.ColGroup - 1).*obj.GroupSep;
+            else
+                obj.RP = (1:size(obj.Data, 1)) + (obj.RowGroup - 1).*obj.GroupSep(1);
+                obj.CP = (1:size(obj.Data, 2)) + (obj.ColGroup - 1).*obj.GroupSep(2);
+            end
+            
             obj.RGP = accumarray(obj.RowGroup(:), obj.RP(:), [], @mean);
             obj.CGP = accumarray(obj.ColGroup(:), obj.CP(:), [], @mean);
 
@@ -814,7 +820,7 @@ classdef SHeatmap < handle
             else
                 if ~isempty(obj.RowName)
                     tind = mod(indices - 1, length(obj.RowName)) + 1;
-                    obj.ax.YTickLabel = obj.RowName(tind);
+                    obj.ax.YTickLabel = strrep(strrep(obj.RowName(tind), '\', ' '), '_', ' ');
                 else
                     trs = compose('%d', 1:size(obj.Data, 1));
                     obj.ax.YTickLabel = trs(indices);
@@ -851,7 +857,7 @@ classdef SHeatmap < handle
             else
                 if ~isempty(obj.ColName)
                     tind = mod(indices - 1, length(obj.ColName)) + 1;
-                    obj.ax.XTickLabel = obj.ColName(tind);
+                    obj.ax.XTickLabel = strrep(strrep(obj.ColName(tind), '\', ' '), '_', ' ');
                 else
                     tcs = compose('%d', 1:size(obj.Data, 2));
                     obj.ax.XTickLabel = tcs(indices);
@@ -1279,10 +1285,11 @@ classdef SHeatmap < handle
                 obj.ax.XColor = 'none';
                 obj.ax.YColor = 'none';
         
-                set(obj.rowTickHdl, 'Visible','on', varargin{:})
-                set(obj.colTickHdl, 'Visible','on', varargin{:})
+                set(obj.rowTickHdl, 'Visible','on')
+                set(obj.colTickHdl, 'Visible','on')
                 obj.setRowLabelLocation()
                 obj.setColLabelLocation()
+                
                 try
                     obj.Colorbar.TickLength = .005;
                     obj.Colorbar.TickDirection = 'out';
@@ -1302,6 +1309,10 @@ classdef SHeatmap < handle
             obj.colShown = true;
             obj.setRowTickIndices()
             obj.setColTickIndices()
+            if ~isempty(varargin)
+                set(obj.rowTickHdl, varargin{:})
+                set(obj.colTickHdl, varargin{:})
+            end
 
             if nargout == 1
                 varargout = {obj};

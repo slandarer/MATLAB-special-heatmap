@@ -25,7 +25,7 @@ for i = 1:length(names)
     colormap(ax, rgb2gray(cmaps{i}))
     tscbar = SColorbar(ax, 'Location','south', 'Tick',[]);
     tscbar.draw()
-    tscbar.setXYTLim('YLim', [.5, 1] + i*1.5, 'XLim',[0,15])
+    tscbar.setXYTLim('YLim', [.5, .75] + i*1.5, 'XLim',[0,15])
     tscbar.freezeColors
 end
 axis off

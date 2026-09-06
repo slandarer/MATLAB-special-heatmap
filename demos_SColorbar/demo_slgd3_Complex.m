@@ -1,4 +1,4 @@
-%% Complex heatmap
+%% Complex heatmap 1
 % Inspired by : Fig. 3e
 %     Elmentaite, R., Kumasaka, N., Roberts, K. et al. 
 %     Cells of the human intestinal tract mapped across space and time. 
@@ -70,3 +70,4 @@ slgd1.draw(); %slgd1.setBox('Visible','off')
 % Draw legend 2
 slgd2 = SLegend(SCB3, 'RowSep',.25, 'BasePos',[-6.25,21], 'LabelOffset',.25);
 slgd2.draw(); %slgd2.setBox('Visible','off')
+
