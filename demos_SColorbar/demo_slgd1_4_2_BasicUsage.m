@@ -11,15 +11,11 @@ Y = randn(20, 12) + [(linspace(.5,-.7,20)').*ones(1,8), (linspace(.9,-.2,20)').*
 rowName = {'Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10','Y11','Y12'};
 colName = {'X1','X2','X3','X4','X5','X6','X7','X8','X9','X10'};
 
-% Convert p-values to significance levels (将p值转换为显著性等级)
-% 1: p<0.05, 2: p<0.01, 3: p<0.001
-pcirc = zeros(size(pval));
-pcirc(pval < 0.05) = 1;
-pcirc(pval < 0.01) = 2;
-pcirc(pval < 0.001) = 3;
+% Convert p-values to -log10(p) for marker size (将p值转换为 -log10(p) 用于标记大小)
+neglog10pval = -log(pval)/log(10);
 
 % Create and draw the main correlation heatmap (创建并绘制主相关系数热图)
-SHM = SHeatmap(pcirc, 'Format','acirc');
+SHM = SHeatmap(neglog10pval, 'Format','acirc');
 SHM.RowName = rowName;
 SHM.ColName = colName;
 SHM.draw()
@@ -29,8 +25,7 @@ SHM.setBox('Visible','off')
 SHM.setExtGrid()
 
 % Add legend (添加图例)
-slgd = SLegend(SHM, 'Tick', [3,2,1], 'TitleString','Significance', 'BasePos',[11,1.5], ...
-    'Label', {'p < 0.001', 'p < 0.01', 'p < 0.05'});
+slgd = SLegend(SHM, 'Tick', [3, 2, 1.301], 'TitleString','-log_{10}(pval)', 'BasePos',[11,1.5]);
 slgd.draw()
 slgd.setPatch('FaceColor','none', 'EdgeColor','k')
 slgd.setBox('Visible','off')
@@ -47,3 +42,8 @@ scbar = SColorbar(gca, 'Location','southeast');
 scbar.draw()
 scbar.setXYTLim('YLim',[6.5, 12.5], 'XLim',[11, 11.5])
 text(11, 6, "Peason's r", 'FontSize',17, 'FontName','Times New Roman')
+
+
+
+
+

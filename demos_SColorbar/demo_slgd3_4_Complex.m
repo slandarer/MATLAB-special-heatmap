@@ -26,7 +26,7 @@ colormap(SHM.ax, cmap)
 scbar = SColorbar(ax, 'Location','south', 'Tick',-2:1:2);
 scbar.draw()
 scbar.setXYTLim('XLim',[25.5,31.5], 'YLim',[13,13.5])
-scbar.setTickLabel('FontName','Arial')
+scbar.setTickLabel('FontName','Arial', 'HorizontalAlignment','center', 'VerticalAlignment','top', 'Rotation',0)
 text(ax, 28.5, 12.25, 'Activation score', 'FontName','Arial', 'FontSize',17, 'HorizontalAlignment','center')
 
 names = erase(T.colName, regexpPattern('_rep\d+'));

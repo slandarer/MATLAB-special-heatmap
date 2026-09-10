@@ -49,6 +49,11 @@ SHMr.setCData(-log(T.pvalue)./log(10))
 SHMr.setPatch('FaceAlpha',.95)
 colormap(slanCM(12, 32))
 
+% SHMr.frameHdl.XData(SHMr.frameHdl.XData < 10.4) = SHMr.frameHdl.XData(SHMr.frameHdl.XData < 10.4) - 1;
+% SHMr.frameHdl.XData(SHMr.frameHdl.XData > 10.6) = SHMr.frameHdl.XData(SHMr.frameHdl.XData > 10.6) + 1;
+% SHMr.extGridHdl.XData(SHMr.extGridHdl.XData < 10.4) = SHMr.extGridHdl.XData(SHMr.extGridHdl.XData < 10.4) - 1;
+% SHMr.extGridHdl.XData(SHMr.extGridHdl.XData > 10.6) = SHMr.extGridHdl.XData(SHMr.extGridHdl.XData > 10.6) + 1;
+% SHMr.rowTickHdl.XData = SHMr.rowTickHdl.XData - 1;
 
 % Add colorbar2 (添加颜色条2)
 scbar2 = SColorbar(ax, 'Location','east', 'TickDir','in', 'Tick',0:.6:2.7);
