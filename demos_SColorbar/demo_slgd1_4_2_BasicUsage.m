@@ -41,7 +41,7 @@ clim([-1, 1])
 scbar = SColorbar(gca, 'Location','southeast');
 scbar.draw()
 scbar.setXYTLim('YLim',[6.5, 12.5], 'XLim',[11, 11.5])
-text(11, 6, "Peason's r", 'FontSize',17, 'FontName','Times New Roman')
+text(11, 6, "Pearson's r", 'FontSize',17, 'FontName','Times New Roman')
 
 
 

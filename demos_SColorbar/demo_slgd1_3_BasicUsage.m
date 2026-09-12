@@ -20,6 +20,7 @@ SHMr.setFrame()
 
 % Custom colormap: green → white → purple (自定义颜色映射：绿→白→紫)
 cmap = interp1([0,.5,1], [139,201,79; 255,255,255; 202,149,254]./255, linspace(0,1,32));
+% cmap = interp1([0,.5,1], [255,193,91; 255,255,255; 85,147,84]./255, linspace(0,1,32));
 colormap(SHMr.ax, cmap)
 SHMr.freezeColors()
 
@@ -28,7 +29,7 @@ scbar = SColorbar(gca, 'Location','southeast');
 scbar.draw()
 scbar.setXYTLim('YLim',[6.5, 12.5])
 scbar.freezeColors()
-text(11, 6, "Peason's r", 'FontSize',17, 'FontName','Times New Roman')
+text(11, 6, "Pearson's r", 'FontSize',17, 'FontName','Times New Roman')
 
 % Convert p-values to significance levels (将p值转换为显著性等级)
 % 1: p<0.05, 2: p<0.01, 3: p<0.001
