@@ -48,7 +48,7 @@ SCB2.draw(); SCB2.setBox('Color','w', 'LineWidth',.5);
 % Add legend1 (添加图例2)
 % Order legend items by cnames2 (使图例按照 cnames2 的顺序展示)
 cnames2 = {'spec-A','spec-B','spec-C'};
-[~, ticks2] = intersect(SCB2.ClassName, cnames2);
+[~, ~, ticks2] = intersect(cnames2, SCB2.ClassName, 'stable');
 
 slgd2 = SLegend(SCB2, 'RowSep',.25, 'IconSize',[.6,.6], 'BasePos',[17,4.5], 'TitleString','Species', ...
     'Tick',ticks2, 'Label',cnames2);

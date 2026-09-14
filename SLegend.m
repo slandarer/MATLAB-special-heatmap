@@ -459,7 +459,7 @@ classdef SLegend < handle
                         obj.Label{i} = num2str(obj.Tick(i));
                     end
                 else
-                    obj.Label = obj.Target.ClassName;
+                    obj.Label = obj.Target.ClassName(obj.Tick);
                 end
             end
             tind = 1:obj.LT; tind = mod(tind - 1, length(obj.Label)) + 1;
