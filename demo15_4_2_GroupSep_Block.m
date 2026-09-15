@@ -8,7 +8,7 @@ X2 = randn(20, 25) + [(linspace(-1,2.5,20)').*ones(1, 15), (linspace(.5,-.7,20)'
 Data = corr(X1, X2);
 
 % rowName and colName
-rowName = compose('exp-%d',1:20);
+rowName = compose('exp-%d',1:25);
 colName = compose('id-%d', 1:25);
 rowGroup = [ones(1, 10), 2.*ones(1, 15)];
 colGroup = [ones(1, 15), 2.*ones(1, 10)];
