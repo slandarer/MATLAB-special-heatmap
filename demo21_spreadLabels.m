@@ -1,5 +1,4 @@
 % Spread Labels
-addpath('..\')
 
 
 % Made up some data casually (随便捏造了点数据)

@@ -1,6 +1,5 @@
 % GroupLabel for triangular heatmap
 
-addpath('..\')
 % Made up some data casually (随便捏造了点数据)
 X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), ...
     (linspace(.5,-.7,20)').*ones(1, 3), ...

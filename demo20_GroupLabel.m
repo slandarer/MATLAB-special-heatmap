@@ -1,5 +1,4 @@
 % GroupLabel
-addpath('..\')
 Data = rand(12, 12);
 
 fig = figure('Units','normalized', 'Position',[.1,.1,.5,.8]);
