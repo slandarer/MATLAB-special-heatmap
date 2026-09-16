@@ -193,9 +193,20 @@ classdef SHeatmap < handle
         % 'varl'  : lower triangle with diagonal     : 下三角部分
         %           cells replaced by variable names : 对角线使用变量名标签替换
 
-        TickLength = .1;        % Length of tick marks (刻度线长度)
-        TickLabelOffset = .25;  % Offset distance from tick end to tick label (刻度末端到刻度标签的偏移距离)
-        GroupLabelOffset = 1.5; % Offset distance for group labels (分组标签的偏移距离)
+        % TickLength: Length of tick marks (刻度线长度)
+        %   - Scalar: same length for rows and columns (标量：行和列共用相同长度)
+        %   - 1×2 vector: [rowLength, colLength] (1×2 向量：[行长度, 列长度])
+        TickLength = .1;
+
+        % TickLabelOffset: Offset distance from tick end to tick label (刻度末端到刻度标签的偏移距离)
+        %   - Scalar: same offset for rows and columns (标量：行和列共用相同偏移)
+        %   - 1×2 vector: [rowOffset, colOffset] (1×2 向量：[行偏移, 列偏移])
+        TickLabelOffset = .25;
+
+        % GroupLabelOffset: Offset distance for group labels (分组标签的偏移距离)
+        %   - Scalar: same offset for rows and columns (标量：行和列共用相同偏移)
+        %   - 1×2 vector: [rowOffset, colOffset] (1×2 向量：[行偏移, 列偏移])
+        GroupLabelOffset = 1.5;
 
         RowLabelLocation = 'left';        % 'left', 'right', 'diag'
         ColLabelLocation = 'bottom';      % 'top', 'bottom', 'diag'
@@ -212,7 +223,12 @@ classdef SHeatmap < handle
         ColName;          % Names of variables in dataset Y (列变量名称)
         RowGroup = [];    % Row group assignments (行分组标签)
         ColGroup = [];    % Column group assignments (列分组标签)
-        GroupSep = .5;    % Separation gap between groups (组间分离间距)
+
+        % GroupSep: Separation gap between groups (组间分离间距)
+        %   - Scalar: same gap for rows and columns (标量：行和列共用相同间距)
+        %   - 1×2 vector: [rowGap, colGap] (1×2 向量：[行间距, 列间距])
+        GroupSep = .5;
+
         RowGroupName      % Names for row groups (行分组名称)
         ColGroupName      % Names for column groups (列分组名称)
 
@@ -382,10 +398,21 @@ classdef SHeatmap < handle
             obj.GroupSep(obj.GroupSep > 10) = 10;
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > .5) = .5;
+            if isscalar(obj.TickLength)
+                obj.TickLength = obj.TickLength([1, 1]);
+            end
+
             obj.TickLabelOffset(obj.TickLabelOffset <= 1e-4) = 1e-4;
             obj.TickLabelOffset(obj.TickLabelOffset > 1) = 1;
+            if isscalar(obj.TickLabelOffset)
+                obj.TickLabelOffset = obj.TickLabelOffset([1, 1]);
+            end
+
             obj.GroupLabelOffset(obj.GroupLabelOffset <= 1e-4) = 1e-4;
             obj.GroupLabelOffset(obj.GroupLabelOffset > 10) = 10;
+            if isscalar(obj.GroupLabelOffset)
+                obj.GroupLabelOffset = obj.GroupLabelOffset([1, 1]);
+            end
 
 
             if isempty(obj.RowGroup) || length(obj.RowGroup) < size(obj.Data, 1)
@@ -757,14 +784,14 @@ classdef SHeatmap < handle
             rows = 1:sz(1); tind = mod(rows - 1, length(obj.VarName)) + 1;
             obj.RTLDir = zeros(sz(1), 4); 
             obj.RTLDir(:, 1) = .5; obj.RTLDir(:, 2) = obj.RP(rows); 
-            obj.RTLDir(:, 3) = .5 - obj.TickLabelOffset; obj.RTLDir(:, 4) = obj.RP(rows);
+            obj.RTLDir(:, 3) = .5 - obj.TickLabelOffset(1); obj.RTLDir(:, 4) = obj.RP(rows);
             obj.rowLabelHdl = text(obj.ax, obj.RTLDir(:, 3), obj.RTLDir(:, 4), obj.VarName(tind), ...
                 'HorizontalAlignment','right', 'FontName','Times New Roman', 'FontSize',12, 'Visible','off');
             % Add column labels ('Visible', 'off') (添加列标签，默认隐藏)
             cols = 1:sz(2); tind = mod(cols - 1, length(obj.VarName)) + 1;
             obj.CTLDir = zeros(sz(2), 4);
             obj.CTLDir(:, 1) = obj.CP(cols); obj.CTLDir(:, 2) = obj.RP(end) + .5;
-            obj.CTLDir(:, 3) = obj.CP(cols); obj.CTLDir(:, 4) = obj.RP(end) + .5 + obj.TickLabelOffset;
+            obj.CTLDir(:, 3) = obj.CP(cols); obj.CTLDir(:, 4) = obj.RP(end) + .5 + obj.TickLabelOffset(2);
             obj.colLabelHdl = text(obj.ax, obj.CTLDir(:, 3), obj.CTLDir(:, 4), obj.VarName(tind), ...
                 'HorizontalAlignment','right', 'FontName','Times New Roman', 'FontSize',12, 'Rotation',30, 'Visible','off');
 
@@ -776,20 +803,20 @@ classdef SHeatmap < handle
             obj.rowGroupLabelHdl = gobjects(1, max(obj.RowGroup));
             for row = 1:max(obj.RowGroup)
                 tind = mod(row - 1, length(obj.RowGroupName)) + 1;
-                obj.rowGroupLabelHdl(row) = text(obj.ax, 0.5 - obj.GroupLabelOffset, obj.RGP(row), ...
+                obj.rowGroupLabelHdl(row) = text(obj.ax, 0.5 - obj.GroupLabelOffset(1), obj.RGP(row), ...
                     obj.RowGroupName{tind}, 'HorizontalAlignment','center', 'Rotation',90, ...
                     'FontName','Times New Roman', 'FontSize',15, 'Visible','off');
-                obj.RGLDir(row, :) = [.5, obj.RGP(row), .5 - obj.GroupLabelOffset, obj.RGP(row)];
+                obj.RGLDir(row, :) = [.5, obj.RGP(row), .5 - obj.GroupLabelOffset(1), obj.RGP(row)];
             end
             % Add col group labels ('Visible', 'off') (添加列分组标签，默认隐藏)
             obj.CGLDir = zeros(max(obj.ColGroup), 4); 
             obj.colGroupLabelHdl = gobjects(1, max(obj.ColGroup));
             for col = 1:max(obj.ColGroup)
                 tind = mod(col - 1, length(obj.ColGroupName)) + 1;
-                obj.colGroupLabelHdl(col) = text(obj.ax, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset, ...
+                obj.colGroupLabelHdl(col) = text(obj.ax, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset(2), ...
                     obj.ColGroupName{tind}, 'HorizontalAlignment','center', 'Rotation',0, ...
                     'FontName','Times New Roman', 'FontSize',15, 'Visible','off');
-                obj.CGLDir(col, :) = [obj.CGP(col), obj.RP(end) + .5, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset];
+                obj.CGLDir(col, :) = [obj.CGP(col), obj.RP(end) + .5, obj.CGP(col), obj.RP(end) + .5 + obj.GroupLabelOffset(2)];
             end
 
             % Apply 'Type' if not full
@@ -1439,6 +1466,9 @@ classdef SHeatmap < handle
             if ~obj.XYTReset
                 obj.TickLength(obj.TickLength < 0) = 0;
                 obj.TickLength(obj.TickLength > .5) = .5;
+                if isscalar(obj.TickLength)
+                    obj.TickLength = obj.TickLength([1, 1]);
+                end
         
                 if isempty(obj.RowName)
                     obj.RowName = compose('%d', 1:size(obj.Data, 1));
@@ -1494,46 +1524,46 @@ classdef SHeatmap < handle
                         case {'triu', 'varu'}
                             X = nan(3*M, 1); Y = nan(3*M, 1);
                         case {'tril', 'varl'}
-                            X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
+                            X = [.5; .5 - obj.TickLength(1); nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'triu0', 'linku'}
                             X = nan(3*M, 1); Y = nan(3*M, 1);
                         case {'tril0', 'linkl'}
-                            X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
+                            X = [.5; .5 - obj.TickLength(1); nan]*ones(1, M);
                             Y = [1; 1; nan]*[nan, obj.RP(2:M)];
                         case {'full','row','col'}
-                            X = [.5; .5 - obj.TickLength; nan]*ones(1, M);
+                            X = [.5; .5 - obj.TickLength(1); nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                     end
                 case 'right'
                     switch lower(obj.Type)
                         case {'triu', 'varu'}
-                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
+                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength(1); nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'tril', 'varl'}
                             X = nan(3*M, 1); Y = nan(3*M, 1);
                         case {'triu0', 'linku'}
-                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
+                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength(1); nan]*ones(1, M);
                             Y = [1; 1; nan]*[obj.RP(1:(M - 1)), nan];
                         case {'tril0', 'linkl'}
                             X = nan(3, 1); Y = nan(3, 1);
                         case {'full','row','col'}
-                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength; nan]*ones(1, M);
+                            X = [obj.CP(end) + .5; obj.CP(end) + .5 + obj.TickLength(1); nan]*ones(1, M);
                             Y = [1; 1; nan]*obj.RP(1:M);
                     end
                 case 'diag'
                     switch lower(obj.Type)
                         case 'triu'
-                            X = [obj.CP(1:M) - .5; obj.CP(1:M) - .5 - obj.TickLength; nan(1, M)];
+                            X = [obj.CP(1:M) - .5; obj.CP(1:M) - .5 - obj.TickLength(1); nan(1, M)];
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case 'tril'
-                            X = [obj.CP(1:M) + .5; obj.CP(1:M) + .5 + obj.TickLength; nan(1, M)];
+                            X = [obj.CP(1:M) + .5; obj.CP(1:M) + .5 + obj.TickLength(1); nan(1, M)];
                             Y = [1; 1; nan]*obj.RP(1:M);
                         case {'triu0', 'linku'}
-                            X = [[obj.CP(2:M), nan] - .5; [obj.CP(2:M), nan] - .5 - obj.TickLength; nan(1, M)];
+                            X = [[obj.CP(2:M), nan] - .5; [obj.CP(2:M), nan] - .5 - obj.TickLength(1); nan(1, M)];
                             Y = [1; 1; nan]*[obj.RP(1:(M - 1)), nan];
                         case {'tril0', 'linkl'}
-                            X = [[nan, obj.CP(1:(M - 1))] + .5; [nan, obj.CP(1:(M - 1))] + .5 + obj.TickLength; nan(1, M)];
+                            X = [[nan, obj.CP(1:(M - 1))] + .5; [nan, obj.CP(1:(M - 1))] + .5 + obj.TickLength(1); nan(1, M)];
                             Y = [1; 1; nan]*[nan, obj.RP(2:M)];
                         case {'varu', 'varl'}
                             X = nan(3*M, 1); Y = nan(3*M, 1);
@@ -1551,17 +1581,17 @@ classdef SHeatmap < handle
                 case 'top'
                     switch lower(obj.Type)
                         case {'triu', 'varu'}
-                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
+                            Y = [.5; .5 - obj.TickLength(2); nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'tril', 'varl'}
                             X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'triu0', 'linku'}
-                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
+                            Y = [.5; .5 - obj.TickLength(2); nan]*ones(1, N);
                             X = [1; 1; nan]*[nan, obj.CP(2:N)];
                         case {'tril0', 'linkl'}
                             X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'full','row','col'}
-                            Y = [.5; .5 - obj.TickLength; nan]*ones(1, N);
+                            Y = [.5; .5 - obj.TickLength(2); nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                     end
                 case 'bottom'
@@ -1569,30 +1599,30 @@ classdef SHeatmap < handle
                         case {'triu', 'varu'}
                             X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'tril', 'varl'}
-                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
+                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength(2); nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'triu0', 'linku'}
                             X = nan(3*N, 1); Y = nan(3*N, 1);
                         case {'tril0', 'linkl'}
-                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
+                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength(2); nan]*ones(1, N);
                             X = [1; 1; nan]*[obj.CP(1:(N - 1)), nan];
                         case {'full','row','col'}
-                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength; nan]*ones(1, N);
+                            Y = [obj.RP(end) + .5; obj.RP(end) + .5 + obj.TickLength(2); nan]*ones(1, N);
                             X = [1; 1; nan]*obj.CP(1:N);
                     end
                 case 'diag'
                     switch lower(obj.Type)
                         case 'triu'
-                            Y = [obj.RP(1:N) + .5; obj.RP(1:N) + .5 + obj.TickLength; nan(1, N)];
+                            Y = [obj.RP(1:N) + .5; obj.RP(1:N) + .5 + obj.TickLength(2); nan(1, N)];
                             X = [1; 1; nan]*obj.CP(1:N);
                         case 'tril'
-                            Y = [obj.RP(1:N) - .5; obj.RP(1:N) - .5 - obj.TickLength; nan(1, N)];
+                            Y = [obj.RP(1:N) - .5; obj.RP(1:N) - .5 - obj.TickLength(2); nan(1, N)];
                             X = [1; 1; nan]*obj.CP(1:N);
                         case {'triu0', 'linku'}
-                            Y = [[nan, obj.RP(1:(N - 1))] + .5; [nan, obj.RP(1:(N - 1))] + .5 + obj.TickLength; nan(1, N)];
+                            Y = [[nan, obj.RP(1:(N - 1))] + .5; [nan, obj.RP(1:(N - 1))] + .5 + obj.TickLength(2); nan(1, N)];
                             X = [1; 1; nan]*[nan, obj.CP(2:N)];
                         case {'tril0', 'linkl'}
-                            Y = [[obj.RP(2:N), nan] - .5; [obj.RP(2:N), nan] - .5 - obj.TickLength; nan(1, N)];
+                            Y = [[obj.RP(2:N), nan] - .5; [obj.RP(2:N), nan] - .5 - obj.TickLength(2); nan(1, N)];
                             X = [1; 1; nan]*[obj.CP(1:(N - 1)), nan];
                         case {'varu', 'varl'}
                             X = nan(3*N, 1); Y = nan(3*N, 1);
@@ -2004,8 +2034,14 @@ classdef SHeatmap < handle
             end
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > .5) = .5;
+            if isscalar(obj.TickLength)
+                obj.TickLength = obj.TickLength([1, 1]);
+            end
             obj.TickLabelOffset(obj.TickLabelOffset <= 1e-4) = 1e-4;
             obj.TickLabelOffset(obj.TickLabelOffset > .5) = .5;
+            if isscalar(obj.TickLabelOffset)
+                obj.TickLabelOffset = obj.TickLabelOffset([1, 1]);
+            end
 
             % 'left'/'right'/'diag'
             inds = 1:size(obj.Data, 1);
@@ -2014,20 +2050,20 @@ classdef SHeatmap < handle
                     set(obj.rowLabelHdl, 'HorizontalAlignment','right')
                     obj.RTLDir(:, 1) = .5; 
                     obj.RTLDir(:, 2) = obj.RP(inds);
-                    obj.RTLDir(:, 3) = .5 - obj.TickLabelOffset;
+                    obj.RTLDir(:, 3) = .5 - obj.TickLabelOffset(1);
                     obj.RTLDir(:, 4) = obj.RP(inds);
                     if strcmpi(obj.rowTickHdl.Visible, 'on')
-                        obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength;
+                        obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength(1);
                     end
                     obj.ax.YAxisLocation = 'left';
                 case 'right'
                     set(obj.rowLabelHdl, 'HorizontalAlignment','left')
                     obj.RTLDir(:, 1) = obj.CP(end) + .5; 
                     obj.RTLDir(:, 2) = obj.RP(inds);
-                    obj.RTLDir(:, 3) = obj.CP(end) + .5 + obj.TickLabelOffset;
+                    obj.RTLDir(:, 3) = obj.CP(end) + .5 + obj.TickLabelOffset(1);
                     obj.RTLDir(:, 4) = obj.RP(inds);
                     if strcmpi(obj.rowTickHdl.Visible, 'on')
-                        obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength;
+                        obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength(1);
                     end
                     obj.ax.YAxisLocation = 'right';
                 case 'diag'
@@ -2036,40 +2072,40 @@ classdef SHeatmap < handle
                             set(obj.rowLabelHdl, 'HorizontalAlignment','left')
                             obj.RTLDir(:, 1) = .5 + obj.CP(inds); 
                             obj.RTLDir(:, 2) = obj.RP(inds);
-                            obj.RTLDir(:, 3) = .5 + obj.CP(inds) + obj.TickLabelOffset;
+                            obj.RTLDir(:, 3) = .5 + obj.CP(inds) + obj.TickLabelOffset(1);
                             obj.RTLDir(:, 4) = obj.RP(inds);
                             if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength;
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength(1);
                             end
                             obj.ax.YAxisLocation = 'right';
                         case {'tril0','linkl'}
                             set(obj.rowLabelHdl, 'HorizontalAlignment','left')
                             obj.RTLDir(:, 1) = .5 + obj.CP(max(1, inds - 1)); 
                             obj.RTLDir(:, 2) = obj.RP(inds);
-                            obj.RTLDir(:, 3) = .5 + obj.CP(max(1, inds - 1)) + obj.TickLabelOffset;
+                            obj.RTLDir(:, 3) = .5 + obj.CP(max(1, inds - 1)) + obj.TickLabelOffset(1);
                             obj.RTLDir(:, 4) = obj.RP(inds);
                             if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength;
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) + obj.TickLength(1);
                             end
                             obj.ax.YAxisLocation = 'right';
                         case 'triu'
                             set(obj.rowLabelHdl, 'HorizontalAlignment','right')
                             obj.RTLDir(:, 1) = -.5 + obj.CP(inds); 
                             obj.RTLDir(:, 2) = obj.RP(inds);
-                            obj.RTLDir(:, 3) = -.5 - obj.TickLabelOffset + obj.CP(inds);
+                            obj.RTLDir(:, 3) = -.5 - obj.TickLabelOffset(1) + obj.CP(inds);
                             obj.RTLDir(:, 4) = obj.RP(inds);
                             if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength;
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength(1);
                             end
                             obj.ax.YAxisLocation = 'left';
                         case {'triu0','linku'}
                             set(obj.rowLabelHdl, 'HorizontalAlignment','right')
                             obj.RTLDir(:, 1) = -.5 + obj.CP(min(inds + 1, length(obj.CP))); 
                             obj.RTLDir(:, 2) = obj.RP(inds);
-                            obj.RTLDir(:, 3) = -.5 - obj.TickLabelOffset + obj.CP(min(inds + 1, length(obj.CP)));
+                            obj.RTLDir(:, 3) = -.5 - obj.TickLabelOffset(1) + obj.CP(min(inds + 1, length(obj.CP)));
                             obj.RTLDir(:, 4) = obj.RP(inds);
                             if strcmpi(obj.rowTickHdl.Visible, 'on')
-                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength;
+                                obj.RTLDir(:, 3) = obj.RTLDir(:, 3) - obj.TickLength(1);
                             end
                             obj.ax.YAxisLocation = 'left';
                         case {'varu', 'varl'}
@@ -2086,15 +2122,15 @@ classdef SHeatmap < handle
                 obj.setRowTickXY()
                 switch lower(loc)
                     case 'left'
-                        obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength);
+                        obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength(1));
                     case 'right'
-                        obj.ax.XLim(2) = max(obj.ax.XLim(2), obj.CP(end) + .5 + obj.TickLength);
+                        obj.ax.XLim(2) = max(obj.ax.XLim(2), obj.CP(end) + .5 + obj.TickLength(1));
                     case 'diag'
                         switch lower(obj.Type)
                             case 'tril'
-                                obj.ax.XLim(2) = max(obj.ax.XLim(2), obj.CP(end) + .5 + obj.TickLength);
+                                obj.ax.XLim(2) = max(obj.ax.XLim(2), obj.CP(end) + .5 + obj.TickLength(1));
                             case 'triu'
-                                obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength);
+                                obj.ax.XLim(1) = min(obj.ax.XLim(1), .5 - obj.TickLength(1));
                         end
                 end
             end
@@ -2121,8 +2157,14 @@ classdef SHeatmap < handle
             end
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > .5) = .5;
+            if isscalar(obj.TickLength)
+                obj.TickLength = obj.TickLength([1, 1]);
+            end
             obj.TickLabelOffset(obj.TickLabelOffset <= 1e-4) = 1e-4;
             obj.TickLabelOffset(obj.TickLabelOffset > .5) = .5;
+            if isscalar(obj.TickLabelOffset)
+                obj.TickLabelOffset = obj.TickLabelOffset([1, 1]);
+            end
 
             % 'top'/'bottom'/'diag
             inds = 1:size(obj.Data, 2);
@@ -2132,9 +2174,9 @@ classdef SHeatmap < handle
                     obj.CTLDir(:, 1) = obj.CP(inds);
                     obj.CTLDir(:, 2) = .5;
                     obj.CTLDir(:, 3) = obj.CP(inds);
-                    obj.CTLDir(:, 4) = .5 - obj.TickLabelOffset;
+                    obj.CTLDir(:, 4) = .5 - obj.TickLabelOffset(2);
                     if strcmpi(obj.colTickHdl.Visible, 'on')
-                        obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength;
+                        obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength(2);
                     end
                     obj.ax.XAxisLocation = 'top';
                 case 'bottom'
@@ -2142,9 +2184,9 @@ classdef SHeatmap < handle
                     obj.CTLDir(:, 1) = obj.CP(inds);
                     obj.CTLDir(:, 2) = obj.RP(end) + .5;
                     obj.CTLDir(:, 3) = obj.CP(inds);
-                    obj.CTLDir(:, 4) = obj.RP(end) + .5 + obj.TickLabelOffset;
+                    obj.CTLDir(:, 4) = obj.RP(end) + .5 + obj.TickLabelOffset(2);
                     if strcmpi(obj.colTickHdl.Visible, 'on')
-                        obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength;
+                        obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength(2);
                     end
                     obj.ax.XAxisLocation = 'bottom';
                 case 'diag'
@@ -2154,9 +2196,9 @@ classdef SHeatmap < handle
                             obj.CTLDir(:, 1) = obj.CP(inds);
                             obj.CTLDir(:, 2) = -.5 + obj.RP(inds);
                             obj.CTLDir(:, 3) = obj.CP(inds);
-                            obj.CTLDir(:, 4) = -.5 + obj.RP(inds) - obj.TickLabelOffset;
+                            obj.CTLDir(:, 4) = -.5 + obj.RP(inds) - obj.TickLabelOffset(2);
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength;
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength(2);
                             end
                             obj.ax.XAxisLocation = 'top';
                         case {'tril0','linkl'}
@@ -2164,9 +2206,9 @@ classdef SHeatmap < handle
                             obj.CTLDir(:, 1) = obj.CP(inds);
                             obj.CTLDir(:, 2) = -.5 + obj.RP(min(inds + 1, length(obj.RP)));
                             obj.CTLDir(:, 3) = obj.CP(inds);
-                            obj.CTLDir(:, 4) = -.5 + obj.RP(min(inds + 1, length(obj.RP))) - obj.TickLabelOffset;
+                            obj.CTLDir(:, 4) = -.5 + obj.RP(min(inds + 1, length(obj.RP))) - obj.TickLabelOffset(2);
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength;
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) - obj.TickLength(2);
                             end
                             obj.ax.XAxisLocation = 'top';
                         case 'triu'
@@ -2174,9 +2216,9 @@ classdef SHeatmap < handle
                             obj.CTLDir(:, 1) = obj.CP(inds);
                             obj.CTLDir(:, 2) = obj.RP(inds) + .5;
                             obj.CTLDir(:, 3) = obj.CP(inds);
-                            obj.CTLDir(:, 4) = obj.RP(inds) + .5 + obj.TickLabelOffset;
+                            obj.CTLDir(:, 4) = obj.RP(inds) + .5 + obj.TickLabelOffset(2);
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength;
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength(2);
                             end
                             obj.ax.XAxisLocation = 'bottom';
                         case {'triu0','linku'}
@@ -2184,9 +2226,9 @@ classdef SHeatmap < handle
                             obj.CTLDir(:, 1) = obj.CP(inds);
                             obj.CTLDir(:, 2) = obj.RP(max(1, inds - 1)) + .5;
                             obj.CTLDir(:, 3) = obj.CP(inds);
-                            obj.CTLDir(:, 4) = obj.RP(max(1, inds - 1)) + .5 + obj.TickLabelOffset;
+                            obj.CTLDir(:, 4) = obj.RP(max(1, inds - 1)) + .5 + obj.TickLabelOffset(2);
                             if strcmpi(obj.colTickHdl.Visible, 'on')
-                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength;
+                                obj.CTLDir(:, 4) = obj.CTLDir(:, 4) + obj.TickLength(2);
                             end
                             obj.ax.XAxisLocation = 'bottom';
                         case {'varu', 'varl'}
@@ -2203,15 +2245,15 @@ classdef SHeatmap < handle
                 obj.setColTickXY()
                 switch lower(loc)
                     case 'top'
-                        obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength);
+                        obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength(2));
                     case 'bottom'
-                        obj.ax.YLim(2) = max(obj.ax.YLim(2), obj.RP(end) + .5 + obj.TickLength);
+                        obj.ax.YLim(2) = max(obj.ax.YLim(2), obj.RP(end) + .5 + obj.TickLength(2));
                     case 'diag'
                         switch lower(obj.Type)
                             case 'tril'
-                                obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength);
+                                obj.ax.YLim(1) = min(obj.ax.YLim(1), .5 - obj.TickLength(2));
                             case 'triu'
-                                obj.ax.YLim(2) = max(obj.ax.YLim(2), obj.RP(end) + .5 + obj.TickLength);
+                                obj.ax.YLim(2) = max(obj.ax.YLim(2), obj.RP(end) + .5 + obj.TickLength(2));
                         end
                 end
             end
@@ -2285,47 +2327,50 @@ classdef SHeatmap < handle
             end
             obj.GroupLabelOffset(obj.GroupLabelOffset <= 1e-4) = 1e-4;
             obj.GroupLabelOffset(obj.GroupLabelOffset > 10) = 10;
+            if isscalar(obj.GroupLabelOffset)
+                obj.GroupLabelOffset = obj.GroupLabelOffset([1, 1]);
+            end
 
             for n = 1:max(obj.RowGroup)
                 switch lower(loc)
                     case 'none'
                         set(obj.rowGroupLabelHdl(n), 'Visible','off')
                     case 'left'
-                        set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',[.5 - obj.GroupLabelOffset, obj.RGP(n), 0], 'Rotation',90)
-                        obj.RGLDir(n, :) = [.5, obj.RGP(n), .5 - obj.GroupLabelOffset, obj.RGP(n)];
+                        set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',[.5 - obj.GroupLabelOffset(1), obj.RGP(n), 0], 'Rotation',90)
+                        obj.RGLDir(n, :) = [.5, obj.RGP(n), .5 - obj.GroupLabelOffset(1), obj.RGP(n)];
                     case 'right'
-                        set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CP(end) + .5 + obj.GroupLabelOffset, obj.RGP(n), 0], 'Rotation',-90)
-                        obj.RGLDir(n, :) = [obj.CP(end) + .5, obj.RGP(n), obj.CP(end) + .5 + obj.GroupLabelOffset, obj.RGP(n)];
+                        set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CP(end) + .5 + obj.GroupLabelOffset(1), obj.RGP(n), 0], 'Rotation',-90)
+                        obj.RGLDir(n, :) = [obj.CP(end) + .5, obj.RGP(n), obj.CP(end) + .5 + obj.GroupLabelOffset(1), obj.RGP(n)];
                     case 'diag'
                         switch lower(obj.Type)
                             case 'tril'
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) + .5 + obj.GroupLabelOffset(1)/sqrt(2), ...
+                                     obj.CGP(n) - .5 - obj.GroupLabelOffset(1)/sqrt(2), 0], 'Rotation',-45)
                                 obj.RGLDir(n, :) = [obj.RGP(n) + .5, obj.CGP(n) - .5, ...
-                                     obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2)];
+                                     obj.RGP(n) + .5 + obj.GroupLabelOffset(1)/sqrt(2), ...
+                                     obj.CGP(n) - .5 - obj.GroupLabelOffset(1)/sqrt(2)];
                             case {'tril0','linkl'}
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) + obj.GroupLabelOffset(1)/sqrt(2), ...
+                                     obj.CGP(n) - obj.GroupLabelOffset(1)/sqrt(2), 0], 'Rotation',-45)
                                 obj.RGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
-                                    obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) - obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) + obj.GroupLabelOffset(1)/sqrt(2), ...
+                                    obj.CGP(n) - obj.GroupLabelOffset(1)/sqrt(2)];
                             case 'triu'
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) - .5 - obj.GroupLabelOffset(1)/sqrt(2), ...
+                                     obj.CGP(n) + .5 + obj.GroupLabelOffset(1)/sqrt(2), 0], 'Rotation',-45)
                                 obj.RGLDir(n, :) = [obj.RGP(n) - .5, obj.CGP(n) + .5, ...
-                                    obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) - .5 - obj.GroupLabelOffset(1)/sqrt(2), ...
+                                    obj.CGP(n) + .5 + obj.GroupLabelOffset(1)/sqrt(2)];
                             case {'triu0','linku'}
                                 set(obj.rowGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) - obj.GroupLabelOffset(1)/sqrt(2), ...
+                                     obj.CGP(n) + obj.GroupLabelOffset(1)/sqrt(2), 0], 'Rotation',-45)
                                 obj.RGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
-                                    obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) + obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) - obj.GroupLabelOffset(1)/sqrt(2), ...
+                                    obj.CGP(n) + obj.GroupLabelOffset(1)/sqrt(2)];
                         end
                 end
             end
@@ -2368,47 +2413,50 @@ classdef SHeatmap < handle
             end
             obj.GroupLabelOffset(obj.GroupLabelOffset <= 1e-4) = 1e-4;
             obj.GroupLabelOffset(obj.GroupLabelOffset > 10) = 10;
+            if isscalar(obj.GroupLabelOffset)
+                obj.GroupLabelOffset = obj.GroupLabelOffset([1, 1]);
+            end
 
             for n = 1:max(obj.ColGroup)
                 switch lower(loc)
                     case 'none'
                         set(obj.colGroupLabelHdl(n), 'Visible','off')
                     case 'top'
-                        set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CGP(n), .5 - obj.GroupLabelOffset, 0], 'Rotation',0)
-                        obj.CGLDir(n, :) = [obj.CGP(n), .5, obj.CGP(n), .5 - obj.GroupLabelOffset];
+                        set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CGP(n), .5 - obj.GroupLabelOffset(2), 0], 'Rotation',0)
+                        obj.CGLDir(n, :) = [obj.CGP(n), .5, obj.CGP(n), .5 - obj.GroupLabelOffset(2)];
                     case 'bottom'
-                        set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset, 0], 'Rotation',0)
-                        obj.CGLDir(n, :) = [obj.CGP(n), .5 + obj.RP(end), obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset];
+                        set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',[obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset(2), 0], 'Rotation',0)
+                        obj.CGLDir(n, :) = [obj.CGP(n), .5 + obj.RP(end), obj.CGP(n), .5 + obj.RP(end) + obj.GroupLabelOffset(2)];
                     case 'diag'
                         switch lower(obj.Type)
                             case 'tril'
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) + .5 + obj.GroupLabelOffset(2)/sqrt(2), ...
+                                     obj.CGP(n) - .5 - obj.GroupLabelOffset(2)/sqrt(2), 0], 'Rotation',-45)
                                 obj.CGLDir(n, :) = [obj.RGP(n) + .5, obj.CGP(n) - .5, ...
-                                    obj.RGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) - .5 - obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) + .5 + obj.GroupLabelOffset(2)/sqrt(2), ...
+                                    obj.CGP(n) - .5 - obj.GroupLabelOffset(2)/sqrt(2)];
                             case {'tril0','linkl'}
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) - obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) + obj.GroupLabelOffset(2)/sqrt(2), ...
+                                     obj.CGP(n) - obj.GroupLabelOffset(2)/sqrt(2), 0], 'Rotation',-45)
                                 obj.CGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
-                                    obj.RGP(n) + obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) - obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) + obj.GroupLabelOffset(2)/sqrt(2), ...
+                                    obj.CGP(n) - obj.GroupLabelOffset(2)/sqrt(2)];
                             case 'triu'
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) - .5 - obj.GroupLabelOffset(2)/sqrt(2), ...
+                                     obj.CGP(n) + .5 + obj.GroupLabelOffset(2)/sqrt(2), 0], 'Rotation',-45)
                                 obj.CGLDir(n, :) = [obj.RGP(n) - .5, obj.CGP(n) + .5, ...
-                                    obj.RGP(n) - .5 - obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) + .5 + obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) - .5 - obj.GroupLabelOffset(2)/sqrt(2), ...
+                                    obj.CGP(n) + .5 + obj.GroupLabelOffset(2)/sqrt(2)];
                             case {'triu0','linku'}
                                 set(obj.colGroupLabelHdl(n), 'Visible','on', 'Position',...
-                                    [obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
-                                     obj.CGP(n) + obj.GroupLabelOffset/sqrt(2), 0], 'Rotation',-45)
+                                    [obj.RGP(n) - obj.GroupLabelOffset(2)/sqrt(2), ...
+                                     obj.CGP(n) + obj.GroupLabelOffset(2)/sqrt(2), 0], 'Rotation',-45)
                                 obj.CGLDir(n, :) = [obj.RGP(n), obj.CGP(n), ...
-                                    obj.RGP(n) - obj.GroupLabelOffset/sqrt(2), ...
-                                    obj.CGP(n) + obj.GroupLabelOffset/sqrt(2)];
+                                    obj.RGP(n) - obj.GroupLabelOffset(2)/sqrt(2), ...
+                                    obj.CGP(n) + obj.GroupLabelOffset(2)/sqrt(2)];
                         end
                 end
             end
@@ -2723,20 +2771,20 @@ classdef SHeatmap < handle
                 % Set X, Y, Theta Lim for rowTickHdl
                 [nX, nY] = getNewXY(obj.RTX, obj.RTY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 nX = reshape(nX, 3, []); nY = reshape(nY, 3, []);
-                if obj.TickLength > 0
+                if obj.TickLength(1) > 0
                     nV = [nX(2, :) - nX(1, :); nY(2, :) - nY(1, :)];
                     nL = sqrt(nV(1, :).^2 + nV(2, :).^2); nV = nV./[nL; nL];
-                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength.*tLen;
-                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength.*tLen;
+                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength(1).*tLen;
+                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength(1).*tLen;
                 end; obj.newRTX = nX(:); obj.newRTY = nY(:); obj.setRowTickIndices();
                 % Set X, Y, Theta Lim for colTickHdl
                 [nX, nY] = getNewXY(obj.CTX, obj.CTY, OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 nX = reshape(nX, 3, []); nY = reshape(nY, 3, []);
-                if obj.TickLength > 0
+                if obj.TickLength(2) > 0
                     nV = [nX(2, :) - nX(1, :); nY(2, :) - nY(1, :)];
                     nL = sqrt(nV(1, :).^2 + nV(2, :).^2); nV = nV./[nL; nL];
-                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength.*tLen;
-                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength.*tLen;
+                    nX(2, :) = nX(1, :) + nV(1, :).*obj.TickLength(2).*tLen;
+                    nY(2, :) = nY(1, :) + nV(2, :).*obj.TickLength(2).*tLen;
                 end; obj.newCTX = nX(:); obj.newCTY = nY(:);  obj.setColTickIndices()
 
                 % Set X, Y, Theta Lim for patchHdl
@@ -2794,12 +2842,16 @@ classdef SHeatmap < handle
                 nV = nV./[nL, nL]; nV(isnan(nV)) = 0;
                 nT = atan2(nV(:, 2), nV(:, 1)); nT = nT./pi.*180;
                 nT = nT + 180.*((nT >= 90) | (nT < -90)).*sign(nT);
-                nX = nX(:, 1) + nV(:, 1).*(obj.TickLength + obj.TickLabelOffset).*tLen;
-                nY = nY(:, 1) + nV(:, 2).*(obj.TickLength + obj.TickLabelOffset).*tLen;
+                nX = nX(:, 1) + nV(:, 1).*(obj.TickLength(1) + obj.TickLabelOffset(1)).*tLen;
+                nY = nY(:, 1) + nV(:, 2).*(obj.TickLength(1) + obj.TickLabelOffset(1)).*tLen;
                 nXYC = num2cell([nX, nY, nX.*0], 2);
                 HA = {'left'; 'right'};
                 nR = num2cell(-nT, 2);
-                set(obj.rowLabelHdl, {'Position', 'HorizontalAlignment', 'Rotation'}, [nXYC, HA((abs(nT) >= 270) + 1), nR])
+                if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
+                    set(obj.rowLabelHdl, {'Position', 'HorizontalAlignment', 'Rotation'}, [nXYC, HA((abs(nT) >= 270) + 1), nR])
+                else
+                    set(obj.rowLabelHdl, {'Position', 'HorizontalAlignment'}, [nXYC, HA((abs(nT) >= 270) + 1)])
+                end
                 % Set X, Y, Theta Lim for colLabelHdl
                 [nX, nY] = getNewXY(obj.CTLDir(:, [1,3]), obj.CTLDir(:, [2,4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 nV = [nX(:, 2) - nX(:, 1), nY(:, 2) - nY(:, 1)];
@@ -2807,12 +2859,16 @@ classdef SHeatmap < handle
                 nV = nV./[nL, nL]; nV(isnan(nV)) = 0;
                 nT = atan2(nV(:, 2), nV(:, 1)); nT = nT./pi.*180;
                 nT = nT + 180.*((nT >= 90) | (nT < -90)).*sign(nT);
-                nX = nX(:, 1) + nV(:, 1).*(obj.TickLength + obj.TickLabelOffset).*tLen;
-                nY = nY(:, 1) + nV(:, 2).*(obj.TickLength + obj.TickLabelOffset).*tLen;
+                nX = nX(:, 1) + nV(:, 1).*(obj.TickLength(2) + obj.TickLabelOffset(2)).*tLen;
+                nY = nY(:, 1) + nV(:, 2).*(obj.TickLength(2) + obj.TickLabelOffset(2)).*tLen;
                 nXYC = num2cell([nX, nY, nX.*0], 2);
                 HA = {'left'; 'right'};
                 nR = num2cell(-nT, 2);
-                set(obj.colLabelHdl, {'Position', 'HorizontalAlignment', 'Rotation'}, [nXYC, HA((abs(nT) >= 270) + 1), nR])
+                if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
+                    set(obj.colLabelHdl, {'Position', 'HorizontalAlignment', 'Rotation'}, [nXYC, HA((abs(nT) >= 270) + 1), nR])
+                else
+                    set(obj.colLabelHdl, {'Position', 'HorizontalAlignment'}, [nXYC, HA((abs(nT) >= 270) + 1)])
+                end
 
                 if strcmpi(obj.Type, 'varl') || strcmpi(obj.Type, 'varu')
                     set(obj.rowLabelHdl, 'HorizontalAlignment','center', 'Rotation',0)
@@ -2827,9 +2883,12 @@ classdef SHeatmap < handle
                     nT = atan2(nV(2), nV(1)); nT = nT./pi.*180;
                     nT = nT - 180*((nT > 0) - .5);
                     set(obj.rowGroupLabelHdl(n), 'Position', ...
-                        [nX(n, 1) + nV(1).*obj.GroupLabelOffset.*tLen, ...
-                         nY(n, 1) + nV(2).*obj.GroupLabelOffset.*tLen, 0], ...
-                         'HorizontalAlignment','center', 'Rotation',-nT);
+                        [nX(n, 1) + nV(1).*obj.GroupLabelOffset(1).*tLen, ...
+                         nY(n, 1) + nV(2).*obj.GroupLabelOffset(1).*tLen, 0], ...
+                         'HorizontalAlignment','center');
+                    if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
+                        set(obj.rowGroupLabelHdl(n), 'Rotation',-nT);
+                    end
                 end
                 [nX, nY] = getNewXY(obj.CGLDir(:, [1, 3]), obj.CGLDir(:, [2, 4]), OXLim, OYLim, obj.XLim, obj.YLim, obj.TLim);
                 for n = 1:size(nX, 1)
@@ -2838,9 +2897,12 @@ classdef SHeatmap < handle
                     nT = atan2(nV(2), nV(1)); nT = nT./pi.*180;
                     nT = nT - 180*((nT > 0) - .5);
                     set(obj.colGroupLabelHdl(n), 'Position', ...
-                        [nX(n, 1) + nV(1).*obj.GroupLabelOffset.*tLen, ...
-                         nY(n, 1) + nV(2).*obj.GroupLabelOffset.*tLen, 0], ...
+                        [nX(n, 1) + nV(1).*obj.GroupLabelOffset(2).*tLen, ...
+                         nY(n, 1) + nV(2).*obj.GroupLabelOffset(2).*tLen, 0], ...
                         'HorizontalAlignment','center', 'Rotation',-nT);
+                    if obj.TLim(1) ~= 0 || obj.TLim(2) ~= 0
+                        set(obj.colGroupLabelHdl(n), 'Rotation',-nT);
+                    end
                 end
                 try axis(obj.ax, 'tight'), catch, end
             end

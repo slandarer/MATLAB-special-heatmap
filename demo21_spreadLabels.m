@@ -29,21 +29,18 @@ SCBT = SClusterBlock(colGroup, 'Orientation','top' , 'Parent',ax, 'Group',colGro
 SCBT.draw(); SCBT.setXYTLim('XLim',[.5, 60.5])
 
 SHM = SHeatmap(Data, 'Format','sqfull', 'RowGroup',rowGroup, 'ColGroup',colGroup, ...
-    'GroupSep',[2.5, .5], 'GroupLabelOffset',1, 'TickLabelOffset',0, 'TickLength',0);
+    'GroupSep',[2.5, .5], 'GroupLabelOffset',1, 'TickLength',[0,.1], 'TickLabelOffset',[0,.25]);
 SHM.draw()
-SHM.setType('row')
 SHM.setFrame()
 SHM.setRowName(rowName)
 SHM.setColName(colName)
 SHM.setRowLabelLocation('right')
 SHM.setRowGroupName(rgnames)
 SHM.setColGroupName(cgnames)
-SHM.setRowGroupLabelLocation('left')
 SHM.setColGroupLabelLocation('top')
 SHM.setXYTLim('XLim', [.5, 60.5], 'YLim',[.5, 100.5]);
-SHM.setRowGroupLabel('Rotation',90)
 colormap(slanCM(97, 32)); clim([-1, 1])
 
-%% Spread Labels
+% %% Spread Labels
 SHM.setRowTickIndices([1,2,3, 15,16,17,19, 25:30, 80:85,98,100])
-spreadLabels(SHM.rowLabelHdl, [70, -10; 70, 110], 'LeaderStyle','segment3', 'UniformWeight',.7)
+spreadLabels(SHM.rowLabelHdl, [70, -20; 70, 100], 'LeaderStyle','segment3', 'UniformWeight',.7)
