@@ -52,13 +52,18 @@ classdef SColorbar < handle
         arginList = {'TickDir', 'TickLength', 'Location', 'CDir', ...
             'Tick', 'TickLabel', 'TickLabelOffset', 'BasePos', 'Width', ...
             'Color', 'LineWidth', 'TitleLocation', 'TitleLabelOffset', ...
-            'TickVisible', 'Target'}
+            'TickVisible', 'Target','ArrowType','ArrowRatio'}
 
         CLim                      % Color limits (颜色范围)
         Colormap                  % Colormap (颜色映射表)
 
         Tick                      % Tick positions (刻度位置)
-        TickDir = 'out'           % Tick direction (刻度方向): 'in','out','both'
+        TickDir = 'out'           % Tick direction (刻度方向): 'in','out','both','bothin'
+                                  %   'in'        - one side, inward (单侧向内)
+                                  %   'out'       - one side, outward (单侧向外)
+                                  %   'both'      - one side, both inward and outward (单侧双向)
+                                  %   'bothin'    - both sides, both inward (两侧均有刻度，且均向内)
+
         TickLength = .1;          % Tick length (刻度长度)
         TickLabel                 % Tick labels (刻度标签)
         TickLabelFormat = @(x) num2str(x)  % Tick label formatting function (刻度标签格式化函数)
@@ -71,6 +76,9 @@ classdef SColorbar < handle
         BasePos                   % Base position for colorbar placement (颜色条放置的基准位置)
         Width = .5;               % Width of the colorbar (颜色条宽度)
         CDir = 'normal'           % Color direction (颜色方向): 'normal'/'reverse' (正常/反转)
+        ArrowType = 'none'        % 'none'/'low'/'high'/'both'
+        ArrowRatio = .05;
+
 
         XLim = []                 % X-axis limits (X轴范围)
         YLim = []                 % Y-axis limits (Y轴范围)
@@ -89,6 +97,8 @@ classdef SColorbar < handle
     properties (Hidden)
         OXLim                     % Original X limits before transformation (变换前原始X轴范围)
         OYLim                     % Original Y limits before transformation (变换前原始Y轴范围)
+        OTXLim                    
+        OTYLim
         Orientation = 'vertical'  % Colorbar orientation (颜色条方向): 'horizontal'/'vertical' (横向/竖向)
         isFrozen = false;         % Flag to freeze colors (冻结颜色标志)
         TX                        % Tick X positions (刻度 X 位置)
@@ -247,34 +257,88 @@ classdef SColorbar < handle
             obj.CLim = obj.ax.CLim;
             obj.Colormap = obj.ax.Colormap;
 
-            switch obj.Orientation
+            obj.ArrowRatio = abs(obj.ArrowRatio);
+            obj.ArrowRatio(obj.ArrowRatio > 1/5) = 1/5;
+            switch lower(obj.Orientation)
                 case 'vertical'
-                    [XMesh, YMesh] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+                    obj.OTXLim = obj.OXLim;
+                    dy = diff(obj.OYLim);
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                            obj.OTYLim = obj.OYLim;
+                        case 'low'
+                            obj.OTYLim = obj.OYLim(1) + [0, (1 - obj.ArrowRatio).*dy];
+                        case 'high'
+                            obj.OTYLim = obj.OYLim(1) + [obj.ArrowRatio.*dy, dy];
+                        case 'both'
+                            obj.OTYLim = obj.OYLim(1) + [obj.ArrowRatio.*dy, (1 - obj.ArrowRatio).*dy];
+                    end
+                case 'horizontal'
+                    obj.OTYLim = obj.OYLim;
+                    dx = diff(obj.OXLim);
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                            obj.OTXLim = obj.OXLim;
+                        case 'low'
+                            obj.OTXLim = obj.OXLim(1) + [obj.ArrowRatio.*dx, dx];
+                        case 'high'
+                            obj.OTXLim = obj.OXLim(1) + [0, (1 - obj.ArrowRatio).*dx];
+                        case 'both'
+                            obj.OTXLim = obj.OXLim(1) + [obj.ArrowRatio.*dx, (1 - obj.ArrowRatio).*dx];
+                    end
+            end
+
+            switch lower(obj.Orientation)
+                case 'vertical'
+                    [XMesh, YMesh] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
                     CDList = linspace(obj.CLim(1), obj.CLim(2), size(obj.Colormap, 1) + 1);
                     CDList = CDList(1:(end-1))./2 + CDList(2:end)./2;
                     CDList = CDList(:);
                     CMesh = zeros(size(XMesh));
-                    CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1]);
+                    CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1, 1]);
                     if strcmpi(obj.CDir, 'reverse')
-                        CMesh(1:end-1, :) = CDList(:, [1, 1]);
+                        CMesh(1:end-1, :) = CDList(:, [1, 1, 1]);
                     end
-                    obj.patchHdl = surf(obj.ax, obj.OXLim(1) + XMesh.*diff(obj.OXLim), obj.OYLim(1) + YMesh.*diff(obj.OYLim), YMesh.*0, ...
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                        case 'low'
+                            YMesh(end, 2) = 1 + 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'high'
+                            YMesh(1, 2) = - 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'both'
+                            YMesh(end, 2) = 1 + 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                            YMesh(1, 2) = - 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                    end
+                    obj.patchHdl = surf(obj.ax, obj.OTXLim(1) + XMesh.*diff(obj.OTXLim), obj.OTYLim(1) + YMesh.*diff(obj.OTYLim), YMesh.*0, ...
                         'CData',CMesh, 'EdgeColor','none', 'FaceColor','flat');
                 case 'horizontal'
-                    [YMesh, XMesh] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+                    [YMesh, XMesh] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
                     CDList = linspace(obj.CLim(1), obj.CLim(2), size(obj.Colormap, 1) + 1);
                     CDList = CDList(1:(end-1))./2 + CDList(2:end)./2;
                     CDList = CDList(:);
                     CMesh = zeros(size(XMesh));
-                    CMesh(1:end-1, :) = CDList(:, [1, 1]);
+                    CMesh(1:end-1, :) = CDList(:, [1, 1, 1]);
                     if strcmpi(obj.CDir, 'reverse')
-                        CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1]);
+                        CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1, 1]);
                     end
-                    obj.patchHdl = surf(obj.ax, obj.OXLim(1) + XMesh.*diff(obj.OXLim), obj.OYLim(1) + YMesh.*diff(obj.OYLim), YMesh.*0, ...
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                        case 'low'
+                            XMesh(1, 2) = - 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'high'
+                            XMesh(end, 2) = 1 + 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'both'
+                            XMesh(end, 2) = 1 + 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                            XMesh(1, 2) = - 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                    end
+                    obj.patchHdl = surf(obj.ax, obj.OTXLim(1) + XMesh.*diff(obj.OTXLim), obj.OTYLim(1) + YMesh.*diff(obj.OTYLim), YMesh.*0, ...
                         'CData',CMesh, 'EdgeColor','none', 'FaceColor','flat');
             end
 
-            obj.frameHdl = plot(obj.ax, obj.OXLim([1,2,2,1,1]), obj.OYLim([1,1,2,2,1]), ...
+            tox = [obj.OXLim(1), obj.OTXLim(1), mean(obj.OXLim), obj.OTXLim(2), obj.OXLim(2)];
+            toy = [obj.OYLim(1), obj.OTYLim(1), mean(obj.OYLim), obj.OTYLim(2), obj.OYLim(2)];
+            obj.frameHdl = plot(obj.ax, tox([1,2,3,4,5,4,3,2,1,2]), ...
+                                        toy([3,2,1,2,3,4,5,4,3,2]), ...
                 'Color',obj.Color, 'LineWidth',obj.LineWidth, 'LineJoin','chamfer');
 
             obj.refreshLabelPos()
@@ -299,26 +363,26 @@ classdef SColorbar < handle
             % based on its value, decoupling them from both the colormap axis limits (CLim) and the colormap itself.
             % (根据当前数值将颜色映射固定到每个填充图形，使其不再随颜色轴范围或颜色映射表的变化而改变)
 
-            [XMesh, ~] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+            [XMesh, ~] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
             CMesh = zeros([size(XMesh), 3]);
             switch obj.Orientation
                 case 'vertical'
-                    CMesh(1:end-1, :, 1) = obj.Colormap(end:-1:1, [1, 1]);
-                    CMesh(1:end-1, :, 2) = obj.Colormap(end:-1:1, [2, 2]);
-                    CMesh(1:end-1, :, 3) = obj.Colormap(end:-1:1, [3, 3]);
+                    CMesh(1:end-1, :, 1) = obj.Colormap(end:-1:1, [1, 1, 1]);
+                    CMesh(1:end-1, :, 2) = obj.Colormap(end:-1:1, [2, 2, 2]);
+                    CMesh(1:end-1, :, 3) = obj.Colormap(end:-1:1, [3, 3, 3]);
                     if strcmpi(obj.CDir, 'reverse')
-                        CMesh(1:end-1, :, 1) = obj.Colormap(:, [1, 1]);
-                        CMesh(1:end-1, :, 2) = obj.Colormap(:, [2, 2]);
-                        CMesh(1:end-1, :, 3) = obj.Colormap(:, [3, 3]);
+                        CMesh(1:end-1, :, 1) = obj.Colormap(:, [1, 1, 1]);
+                        CMesh(1:end-1, :, 2) = obj.Colormap(:, [2, 2, 2]);
+                        CMesh(1:end-1, :, 3) = obj.Colormap(:, [3, 3, 3]);
                     end
                 case 'horizontal'
-                    CMesh(1:end-1, :, 1) = obj.Colormap(:, [1, 1]);
-                    CMesh(1:end-1, :, 2) = obj.Colormap(:, [2, 2]);
-                    CMesh(1:end-1, :, 3) = obj.Colormap(:, [3, 3]);
+                    CMesh(1:end-1, :, 1) = obj.Colormap(:, [1, 1, 1]);
+                    CMesh(1:end-1, :, 2) = obj.Colormap(:, [2, 2, 2]);
+                    CMesh(1:end-1, :, 3) = obj.Colormap(:, [3, 3, 3]);
                     if strcmpi(obj.CDir, 'reverse')
-                        CMesh(1:end-1, :, 1) = obj.Colormap(end:-1:1, [1, 1]);
-                        CMesh(1:end-1, :, 2) = obj.Colormap(end:-1:1, [2, 2]);
-                        CMesh(1:end-1, :, 3) = obj.Colormap(end:-1:1, [3, 3]);
+                        CMesh(1:end-1, :, 1) = obj.Colormap(end:-1:1, [1, 1, 1]);
+                        CMesh(1:end-1, :, 2) = obj.Colormap(end:-1:1, [2, 2, 2]);
+                        CMesh(1:end-1, :, 3) = obj.Colormap(end:-1:1, [3, 3, 3]);
                     end
             end
 
@@ -355,15 +419,67 @@ classdef SColorbar < handle
                 obj.TLim = [0, 0];
             end
             obj.TLim = obj.TLim([1, 1]);
+            obj.ArrowRatio = abs(obj.ArrowRatio);
+            obj.ArrowRatio(obj.ArrowRatio > 1/5) = 1/5;
+            switch lower(obj.Orientation)
+                case 'vertical'
+                    obj.OTXLim = obj.OXLim;
+                    dy = diff(obj.OYLim);
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                            obj.OTYLim = obj.OYLim;
+                        case 'low'
+                            obj.OTYLim = obj.OYLim(1) + [0, (1 - obj.ArrowRatio).*dy];
+                        case 'high'
+                            obj.OTYLim = obj.OYLim(1) + [obj.ArrowRatio.*dy, dy];
+                        case 'both'
+                            obj.OTYLim = obj.OYLim(1) + [obj.ArrowRatio.*dy, (1 - obj.ArrowRatio).*dy];
+                    end
+                case 'horizontal'
+                    obj.OTYLim = obj.OYLim;
+                    dx = diff(obj.OXLim);
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                            obj.OTXLim = obj.OXLim;
+                        case 'low'
+                            obj.OTXLim = obj.OXLim(1) + [obj.ArrowRatio.*dx, dx];
+                        case 'high'
+                            obj.OTXLim = obj.OXLim(1) + [0, (1 - obj.ArrowRatio).*dx];
+                        case 'both'
+                            obj.OTXLim = obj.OXLim(1) + [obj.ArrowRatio.*dx, (1 - obj.ArrowRatio).*dx];
+                    end
+            end
 
-            set(obj.frameHdl, 'XData',obj.OXLim([1,2,2,1,1]), 'YData',obj.OYLim([1,1,2,2,1]))
+            tox = [obj.OXLim(1), obj.OTXLim(1), mean(obj.OXLim), obj.OTXLim(2), obj.OXLim(2)];
+            toy = [obj.OYLim(1), obj.OTYLim(1), mean(obj.OYLim), obj.OTYLim(2), obj.OYLim(2)];
+            set(obj.frameHdl, 'XData',tox([1,2,3,4,5,4,3,2,1,2]), 'YData',toy([3,2,1,2,3,4,5,4,3,2]))
             switch obj.Orientation
                 case 'vertical'
-                    [XMesh, YMesh] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
-                    set(obj.patchHdl, 'XData',obj.OXLim(1) + XMesh.*diff(obj.OXLim), 'YData',obj.OYLim(1) + YMesh.*diff(obj.OYLim));
+                    [XMesh, YMesh] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                        case 'low'
+                            YMesh(end, 2) = 1 + 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'high'
+                            YMesh(1, 2) = - 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'both'
+                            YMesh(end, 2) = 1 + 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                            YMesh(1, 2) = - 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                    end
+                    set(obj.patchHdl, 'XData',obj.OTXLim(1) + XMesh.*diff(obj.OTXLim), 'YData',obj.OTYLim(1) + YMesh.*diff(obj.OTYLim));
                 case 'horizontal'
-                    [YMesh, XMesh] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
-                    set(obj.patchHdl, 'XData',obj.OXLim(1) + XMesh.*diff(obj.OXLim), 'YData',obj.OYLim(1) + YMesh.*diff(obj.OYLim));
+                    [YMesh, XMesh] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+                    switch lower(obj.ArrowType)
+                        case 'none'
+                        case 'low'
+                            XMesh(1, 2) = - 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'high'
+                            XMesh(end, 2) = 1 + 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                        case 'both'
+                            XMesh(end, 2) = 1 + 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                            XMesh(1, 2) = - 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                    end
+                    set(obj.patchHdl, 'XData',obj.OTXLim(1) + XMesh.*diff(obj.OTXLim), 'YData',obj.OTYLim(1) + YMesh.*diff(obj.OTYLim));
             end
             obj.refreshLabelPos()
 
@@ -499,28 +615,48 @@ classdef SColorbar < handle
                 obj.Colormap = obj.ax.Colormap;
                 switch obj.Orientation
                     case 'vertical'
-                        [XMesh, YMesh] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+                        [XMesh, YMesh] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
                         CDList = linspace(obj.CLim(1), obj.CLim(2), size(obj.Colormap, 1) + 1);
                         CDList = CDList(1:(end-1))./2 + CDList(2:end)./2;
                         CDList = CDList(:);
                         CMesh = zeros(size(XMesh));
-                        CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1]);
+                        CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1, 1]);
                         if strcmpi(obj.CDir, 'reverse')
-                            CMesh(1:end-1, :) = CDList(:, [1, 1]);
+                            CMesh(1:end-1, :) = CDList(:, [1, 1, 1]);
+                        end
+                        switch lower(obj.ArrowType)
+                            case 'none'
+                            case 'low'
+                                YMesh(end, 2) = 1 + 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                            case 'high'
+                                YMesh(1, 2) = - 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                            case 'both'
+                                YMesh(end, 2) = 1 + 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                                YMesh(1, 2) = - 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
                         end
                     case 'horizontal'
-                        [YMesh, XMesh] = meshgrid([0, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
+                        [YMesh, XMesh] = meshgrid([0, .5, 1], linspace(0, 1, size(obj.Colormap, 1) + 1));
                         CDList = linspace(obj.CLim(1), obj.CLim(2), size(obj.Colormap, 1) + 1);
                         CDList = CDList(1:(end-1))./2 + CDList(2:end)./2;
                         CDList = CDList(:);
                         CMesh = zeros(size(XMesh));
-                        CMesh(1:end-1, :) = CDList(:, [1, 1]);
+                        CMesh(1:end-1, :) = CDList(:, [1, 1, 1]);
                         if strcmpi(obj.CDir, 'reverse')
-                            CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1]);
+                            CMesh(1:end-1, :) = CDList(end:-1:1, [1, 1, 1]);
+                        end
+                        switch lower(obj.ArrowType)
+                            case 'none'
+                            case 'low'
+                                XMesh(1, 2) = - 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                            case 'high'
+                                XMesh(end, 2) = 1 + 1./(1 - obj.ArrowRatio).*obj.ArrowRatio;
+                            case 'both'
+                                XMesh(end, 2) = 1 + 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
+                                XMesh(1, 2) = - 1./(1 - 2.*obj.ArrowRatio).*obj.ArrowRatio;
                         end
                 end
-                set(obj.patchHdl, 'XData', obj.OXLim(1) + XMesh.*diff(obj.OXLim), ...
-                    'YData', obj.OYLim(1) + YMesh.*diff(obj.OYLim), ...
+                set(obj.patchHdl, 'XData', obj.OTXLim(1) + XMesh.*diff(obj.OTXLim), ...
+                    'YData', obj.OTYLim(1) + YMesh.*diff(obj.OTYLim), ...
                     'ZData', YMesh.*0, 'CData',CMesh)
 
                 obj.Tick = [];
@@ -551,22 +687,27 @@ classdef SColorbar < handle
             if ~isempty(obj.Tick)
             switch lower(obj.Location)
                 case 'north'
-                    obj.TX = obj.OXLim(1) + (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OXLim);
+                    obj.TX = obj.OTXLim(1) + (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OTXLim);
                     if strcmpi(obj.CDir, 'reverse')
-                        obj.TX = obj.OXLim(2) - (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OXLim);
+                        obj.TX = obj.OTXLim(2) - (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OTXLim);
                     end
                     obj.LX = obj.TX;
                     obj.TX = [obj.TX; obj.TX; obj.TX.*nan];
                     switch obj.TickDir
                         case 'in'
-                            obj.TY = [obj.OYLim(1); obj.OYLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LY = (obj.OYLim(1) - obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                            obj.TY = [obj.OTYLim(1); obj.OTYLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LY = (obj.OTYLim(1) - obj.TickLabelOffset)*ones(1, length(obj.Tick));
                         case 'out'
-                            obj.TY = [obj.OYLim(1) - obj.TickLength; obj.OYLim(1); nan]*ones(1, length(obj.Tick));
-                            obj.LY = (obj.OYLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
+                            obj.TY = [obj.OTYLim(1) - obj.TickLength; obj.OTYLim(1); nan]*ones(1, length(obj.Tick));
+                            obj.LY = (obj.OTYLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
                         case 'both'
-                            obj.TY = [obj.OYLim(1) - obj.TickLength; obj.OYLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LY = (obj.OYLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
+                            obj.TY = [obj.OTYLim(1) - obj.TickLength; obj.OTYLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LY = (obj.OTYLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
+                        case 'bothin'
+                            obj.TY = [[obj.OTYLim(1); obj.OTYLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick)), ...
+                                      [obj.OTYLim(2); obj.OTYLim(2) - obj.TickLength; nan]*ones(1, length(obj.Tick))];
+                            obj.TX = [obj.TX, obj.TX];
+                            obj.LY = (obj.OTYLim(1) - obj.TickLabelOffset)*ones(1, length(obj.Tick));
                     end
                 case 'south'
                     obj.TX = obj.OXLim(1) + (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OXLim);
@@ -577,32 +718,42 @@ classdef SColorbar < handle
                     obj.TX = [obj.TX; obj.TX; obj.TX.*nan];
                     switch obj.TickDir
                         case 'in'
-                            obj.TY = [obj.OYLim(2) - obj.TickLength; obj.OYLim(2); nan]*ones(1, length(obj.Tick));
-                            obj.LY = (obj.OYLim(2) + obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                            obj.TY = [obj.OTYLim(2) - obj.TickLength; obj.OTYLim(2); nan]*ones(1, length(obj.Tick));
+                            obj.LY = (obj.OTYLim(2) + obj.TickLabelOffset)*ones(1, length(obj.Tick));
                         case 'out'
-                            obj.TY = [obj.OYLim(2); obj.OYLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LY = (obj.OYLim(2) + obj.TickLabelOffset + obj.TickLength)*ones(1, length(obj.Tick));
+                            obj.TY = [obj.OTYLim(2); obj.OTYLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LY = (obj.OTYLim(2) + obj.TickLabelOffset + obj.TickLength)*ones(1, length(obj.Tick));
                         case 'both'
-                            obj.TY = [obj.OYLim(2) - obj.TickLength; obj.OYLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LY = (obj.OYLim(2) + obj.TickLabelOffset + obj.TickLength)*ones(1, length(obj.Tick));
+                            obj.TY = [obj.OTYLim(2) - obj.TickLength; obj.OTYLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LY = (obj.OTYLim(2) + obj.TickLabelOffset + obj.TickLength)*ones(1, length(obj.Tick));
+                        case 'bothin'
+                            obj.TY = [[obj.OTYLim(2) - obj.TickLength; obj.OTYLim(2); nan]*ones(1, length(obj.Tick)), ...
+                                      [obj.OTYLim(1) + obj.TickLength; obj.OTYLim(1); nan]*ones(1, length(obj.Tick))];
+                            obj.TX = [obj.TX, obj.TX];
+                            obj.LY = (obj.OTYLim(2) + obj.TickLabelOffset)*ones(1, length(obj.Tick));
                     end
                 case {'east', 'northeast', 'southeast'}
-                    obj.TY = obj.OYLim(2) - (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OYLim);
+                    obj.TY = obj.OTYLim(2) - (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OTYLim);
                     if strcmpi(obj.CDir, 'reverse')
-                        obj.TY = obj.OYLim(1) + (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OYLim);
+                        obj.TY = obj.OTYLim(1) + (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OTYLim);
                     end
                     obj.LY = obj.TY;
                     obj.TY = [obj.TY; obj.TY; obj.TY.*nan];
                     switch obj.TickDir
                         case 'in'
-                            obj.TX = [obj.OXLim(2) - obj.TickLength; obj.OXLim(2); nan]*ones(1, length(obj.Tick));
-                            obj.LX = (obj.OXLim(2) + obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                            obj.TX = [obj.OTXLim(2) - obj.TickLength; obj.OTXLim(2); nan]*ones(1, length(obj.Tick));
+                            obj.LX = (obj.OTXLim(2) + obj.TickLabelOffset)*ones(1, length(obj.Tick));
                         case 'out'
-                            obj.TX = [obj.OXLim(2); obj.OXLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LX = (obj.OXLim(2) + obj.TickLength + obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                            obj.TX = [obj.OTXLim(2); obj.OTXLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LX = (obj.OTXLim(2) + obj.TickLength + obj.TickLabelOffset)*ones(1, length(obj.Tick));
                         case 'both'
-                            obj.TX = [obj.OXLim(2) - obj.TickLength; obj.OXLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LX = (obj.OXLim(2) + obj.TickLength + obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                            obj.TX = [obj.OTXLim(2) - obj.TickLength; obj.OTXLim(2) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LX = (obj.OTXLim(2) + obj.TickLength + obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                        case 'bothin'
+                            obj.TX = [[obj.OTXLim(2) - obj.TickLength; obj.OTXLim(2); nan]*ones(1, length(obj.Tick)), ...
+                                      [obj.OTXLim(1) + obj.TickLength; obj.OTXLim(1); nan]*ones(1, length(obj.Tick))];
+                            obj.TY = [obj.TY, obj.TY];
+                            obj.LX = (obj.OTXLim(2) + obj.TickLabelOffset)*ones(1, length(obj.Tick));
                     end
                 case {'west', 'northwest', 'southwest'}
                     obj.TY = obj.OYLim(2) - (obj.Tick - obj.CLim(1))./diff(obj.CLim).*diff(obj.OYLim);
@@ -613,14 +764,19 @@ classdef SColorbar < handle
                     obj.TY = [obj.TY; obj.TY; obj.TY.*nan];
                     switch obj.TickDir
                         case 'in'
-                            obj.TX = [obj.OXLim(1); obj.OXLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LX = (obj.OXLim(1) - obj.TickLabelOffset)*ones(1, length(obj.Tick));
+                            obj.TX = [obj.OTXLim(1); obj.OTXLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LX = (obj.OTXLim(1) - obj.TickLabelOffset)*ones(1, length(obj.Tick));
                         case 'out'
-                            obj.TX = [obj.OXLim(1) - obj.TickLength; obj.OXLim(1); nan]*ones(1, length(obj.Tick));
-                            obj.LX = (obj.OXLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
+                            obj.TX = [obj.OTXLim(1) - obj.TickLength; obj.OTXLim(1); nan]*ones(1, length(obj.Tick));
+                            obj.LX = (obj.OTXLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
                         case 'both'
-                            obj.TX = [obj.OXLim(1) - obj.TickLength; obj.OXLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
-                            obj.LX = (obj.OXLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
+                            obj.TX = [obj.OTXLim(1) - obj.TickLength; obj.OTXLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick));
+                            obj.LX = (obj.OTXLim(1) - obj.TickLabelOffset - obj.TickLength)*ones(1, length(obj.Tick));
+                        case 'bothin'
+                            obj.TX = [[obj.OTXLim(1); obj.OTXLim(1) + obj.TickLength; nan]*ones(1, length(obj.Tick)), ...
+                                      [obj.OTXLim(2); obj.OTXLim(2) - obj.TickLength; nan]*ones(1, length(obj.Tick))];
+                            obj.TY = [obj.TY, obj.TY];
+                            obj.LX = (obj.OTXLim(1) - obj.TickLabelOffset)*ones(1, length(obj.Tick));
                     end
             end
             

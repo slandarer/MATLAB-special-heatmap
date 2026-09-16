@@ -48,8 +48,10 @@ for i = 1:length(SHM.rowGroupLabelHdl)
     set(SHM.rowGroupLabelHdl(i), 'Color',colors(i,:))
 end
 
+colormap(slanCM(97, 10))
 % Draw colorbar
-RCB = SColorbar(ax, 'Location','north', 'CDir','reverse');
+RCB = SColorbar(ax, 'Location','north', 'CDir','reverse', 'ArrowType','both', 'TickLength',1, 'TickDir','in');
 RCB.draw()
 xl = sqrt(2)*diff(SHM.XLim);
 RCB.setXYTLim('XLim', sqrt(2)/2 + xl.*.15 + .7.*[0, xl], 'YLim',[-.5, 0] - 4.5, 'TLim', [-pi/4, -pi/4]);
+

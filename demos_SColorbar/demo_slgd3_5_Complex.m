@@ -35,7 +35,7 @@ SHM.setFrame()
 
 % Add colorbar (添加颜色条)
 clim([0, 1]); colormap(slanCM(4, 32))
-scbar = SColorbar(ax, 'Location','east', 'TickDir','out', 'Tick',[0,.5,1], 'TickLength',.5);
+scbar = SColorbar(ax, 'Location','east', 'TickDir','out', 'Tick',0:.5:1, 'TickLength',.2);
 scbar.draw()
 scbar.setXYTLim('YLim',[28.75, 41], 'XLim',[42,43])
 
