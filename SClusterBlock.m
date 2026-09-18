@@ -52,7 +52,7 @@ classdef SClusterBlock < handle
         ax
         Parent
         arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', ...
-            'BlockProp', 'Height', 'Group', 'GroupSep','Format'};
+            'BlockProp', 'Height', 'Group', 'GroupSep','Format','BlockInset'};
 
         Orientation = 'top';              % 'top'/'left' (方块位置/方向)               
         BasePos     = 0;                  % Base position for block placement (方块放置的基准位置)
@@ -68,6 +68,8 @@ classdef SClusterBlock < handle
         ClassName
         Group = [];                       % Group assignments (分组)
         GroupSep = .5;                    % Group separation gap (组间分离间距)
+        BlockInset = 0;                   % Inset distance applied to both ends of each cluster block/bracket.
+                                          % (对每个聚类方块/括号两端应用的向内缩进距离)
         X; Y
 
         XLim
@@ -131,6 +133,9 @@ classdef SClusterBlock < handle
             obj.ax.XTick       = [];
             obj.ax.YTick       = [];
             obj.ax.NextPlot    = 'add';
+
+            obj.BlockInset = abs(obj.BlockInset);
+            obj.BlockInset(obj.BlockInset > .4) = .4;
 
             switch lower(obj.Format)
                 case {'block', 'sq', 'square'}
@@ -222,7 +227,7 @@ classdef SClusterBlock < handle
 
                 switch obj.Orientation
                     case 'top'
-                        tX0 = [CL(1) - .5, CL(2) + .5];
+                        tX0 = [CL(1) - .5 + obj.BlockInset, CL(2) + .5 - obj.BlockInset];
                         tY0 = [obj.BasePos, obj.BasePos - obj.Height];
                         obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV1;
                         obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV2;
@@ -235,7 +240,7 @@ classdef SClusterBlock < handle
                         obj.BoxX = [obj.BoxX, tX1(:).', tX2(:).'];
                         obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                     case 'bottom'
-                        tX0 = [CL(1) - .5, CL(2) + .5];
+                        tX0 = [CL(1) - .5 + obj.BlockInset, CL(2) + .5 - obj.BlockInset];
                         tY0 = [obj.BasePos, obj.BasePos + obj.Height];
                         obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV1;
                         obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV2;
@@ -249,7 +254,7 @@ classdef SClusterBlock < handle
                         obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                     case 'left'
                         tX0 = [obj.BasePos, obj.BasePos - obj.Height];
-                        tY0 = [CL(1) - .5, CL(2) + .5];
+                        tY0 = [CL(1) - .5 + obj.BlockInset, CL(2) + .5 - obj.BlockInset];
                         obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV2;
                         obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV1;
                         obj.blockHdl(i) = fill(obj.ax, obj.BlkX{i}, obj.BlkY{i}, obj.ColorList(CInd, :), obj.BlockProp{:});
@@ -263,7 +268,7 @@ classdef SClusterBlock < handle
                         obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
                     case 'right'
                         tX0 = [obj.BasePos, obj.BasePos + obj.Height];
-                        tY0 = [CL(1) - .5, CL(2) + .5];
+                        tY0 = [CL(1) - .5 + obj.BlockInset, CL(2) + .5 - obj.BlockInset];
                         obj.BlkX{i} = tX0(1) + diff(tX0).*obj.baseV2;
                         obj.BlkY{i} = tY0(1) + diff(tY0).*obj.baseV1;
                         obj.blockHdl(i) = fill(obj.ax, obj.BlkX{i}, obj.BlkY{i}, obj.ColorList(CInd, :), obj.BlockProp{:});

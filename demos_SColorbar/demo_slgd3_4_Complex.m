@@ -34,9 +34,9 @@ names = erase(T.colName, regexpPattern('_rep\d+'));
 clist1 = [218,187,200; 150,173,194; 196,220,219; 137,182,179; 196,184,203; 203,211,222; 181,216,224; 141,184,203; 113,155,169]./255;
 % Draw group blocks 1
 SCB1 = SClusterBlock(group1, 'Orientation','top', 'Parent',ax, ...
-    'Group',group1, 'ColorList',clist1, 'Height',.2, ...
+    'BlockInset',.1, 'ColorList',clist1, 'Height',.2, ...
     'BlockProp',{'EdgeColor','none'}, 'GroupSep',.1, 'BasePos',.25);
-SCB1.draw(); SCB1.setXYTLim('XLim', SHM.XLim)
+SCB1.draw();
 
 cnames1 = regexprep(cnames1, '.*_', '');
 text(ax, SCB1.X, SCB1.Y - .75, cnames1, 'FontName','Arial', 'FontSize',15, 'HorizontalAlignment','center')
@@ -48,7 +48,7 @@ clist2 = [100,100,100; 100,100,100; 100,100,100; 100,100,100]./255;
 [cnames2, ~, group2] = unique(cnames2, 'stable');
 % Draw group blocks 2
 SCB2 = SClusterBlock(group2, 'Orientation','top', 'Parent',ax, ...
-    'Group',group2, 'ColorList',clist2, 'Height',.2, ...
+    'BlockInset',.1, 'ColorList',clist2, 'Height',.2, ...
     'BlockProp',{'EdgeColor','none'}, 'GroupSep',.1, 'BasePos',-1.25);
-SCB2.draw(); SCB2.setXYTLim('XLim', SHM.XLim)
+SCB2.draw();
 text(ax, SCB2.X, SCB2.Y - .75, cnames2, 'FontName','Arial', 'FontSize',15, 'HorizontalAlignment','center')
