@@ -37,15 +37,16 @@ classdef SClusterBlock < handle
 %   'ColorList'     - Custom color matrix for groups
 %                     每组配色
 %   'Format'        - Bracket/block shape style for each group (分组区块形状样式)
-%      ├── 'block'  - (default) Filled square block (实心方块)
-%      ├── 'sq'     - Square block (alias for 'block') (方块，同 'block')
-%      ├── 'square' - Square block (alias for 'block') (方块，同 'block')
-%      ├── 'paren'  - Left/right parentheses (圆括号) ()
-%      ├── 'brack'  - Left/right square brackets (方括号) []
-%      ├── 'brace'  - Left/right curly braces (花括号) {}
-%      ├── 'chev'   - Left/right angle brackets (尖括号) <>
-%      ├── 'span'   - span markers (跨度标记) I
-%      └── 'bounds' - Vertical bound markers (边界标记) =
+%      ├── 'block'    - (default) Filled square block (实心方块)
+%      ├── 'sq'       - Square block (alias for 'block') (方块，同 'block')
+%      ├── 'square'   - Square block (alias for 'block') (方块，同 'block')
+%      ├── 'paren'    - Left/right parentheses (圆括号) ()
+%      ├── 'brack'    - Left/right square brackets (方括号) []
+%      ├── 'brace'    - Left/right curly braces (花括号) {}
+%      ├── 'chev'     - Left/right angle brackets (尖括号) <>
+%      ├── 'tailbrack'- square bracket with a straight tail -[]-
+%      ├── 'span'     - span markers (跨度标记) I
+%      └── 'bounds'   - Vertical bound markers (边界标记) =
 
 
     properties
@@ -148,6 +149,9 @@ classdef SClusterBlock < handle
                 case 'brack'
                     obj.baseV1 = [0, 0, 1, 1, nan];
                     obj.baseV2 = [0, 1, 1, 0, nan];
+                case 'tailbrack'
+                    obj.baseV1 = [0, 0, 1, 1, nan, .5, .5, nan];
+                    obj.baseV2 = [0, .5, .5, 0, nan, .5, 1, nan];
                 case 'brace'
                     baseT1 = linspace(pi, pi/2, 25);
                     baseT2 = linspace(-pi/2, 0, 25);
@@ -344,6 +348,9 @@ classdef SClusterBlock < handle
                         case 'brack'
                             tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), linspace(tX(3), tX(4), 50), nan];
                             tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), linspace(tY(3), tY(4), 50), nan];
+                        case 'tailbrack'
+                            tXX = [linspace(tX(1), tX(2), 50), linspace(tX(2), tX(3), 50), linspace(tX(3), tX(4), 50), nan, linspace(tX(6), tX(7), 50), nan];
+                            tYY = [linspace(tY(1), tY(2), 50), linspace(tY(2), tY(3), 50), linspace(tY(3), tY(4), 50), nan, linspace(tX(6), tX(7), 50), nan];
                         case 'brace'
                             tXX = tX;
                             tYY = tY;

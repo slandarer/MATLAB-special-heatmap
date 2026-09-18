@@ -153,7 +153,7 @@ classdef SColorbar < handle
             end
 
             obj.TickLength(obj.TickLength < 0) = 0;
-            obj.TickLength(obj.TickLength > .5) = .5;
+            % obj.TickLength(obj.TickLength > .5) = .5;
             obj.TickLabelOffset(obj.TickLabelOffset <= 1e-4) = 1e-4;
             obj.TickLabelOffset(obj.TickLabelOffset > .5) = .5;
 

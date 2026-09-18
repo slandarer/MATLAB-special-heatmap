@@ -121,7 +121,7 @@ classdef SLegend < handle
             obj.TickLength(obj.TickLength < 0) = 0;
             obj.TickLength(obj.TickLength > obj.ColSep/2) = obj.ColSep/2;
             obj.LabelOffset(obj.LabelOffset <= 1e-4) = 1e-4;
-            obj.LabelOffset(obj.LabelOffset > .5) = .5;
+            % obj.LabelOffset(obj.LabelOffset > .5) = .5;
 
             if isempty(obj.Tick)
                 if strcmpi(obj.targetClass, 'sheatmap')
@@ -460,6 +460,9 @@ classdef SLegend < handle
                     end
                 else
                     obj.Label = obj.Target.ClassName(obj.Tick);
+                    if isnumeric(obj.Label)
+                        obj.Label = num2cell(obj.Label);
+                    end
                 end
             end
             tind = 1:obj.LT; tind = mod(tind - 1, length(obj.Label)) + 1;
