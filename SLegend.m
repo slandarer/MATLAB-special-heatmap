@@ -119,7 +119,7 @@ classdef SLegend < handle
             obj.ColSep = abs(obj.ColSep);
 
             obj.TickLength(obj.TickLength < 0) = 0;
-            obj.TickLength(obj.TickLength > obj.ColSep/2) = obj.ColSep/2;
+            obj.TickLength(obj.TickLength > obj.ColSep(1)/2) = obj.ColSep(1)/2;
             obj.LabelOffset(obj.LabelOffset <= 1e-4) = 1e-4;
             % obj.LabelOffset(obj.LabelOffset > .5) = .5;
 
@@ -162,9 +162,14 @@ classdef SLegend < handle
             [obj.RP, obj.CP] = find(~isnan(obj.iconMat));
             
             obj.RP = (obj.RP - 1).*(obj.RowSep + obj.IconSize(2)) + obj.IconSize(2)./2;
-            obj.CP = (obj.CP - 1).*(obj.ColSep + obj.IconSize(1)) + obj.IconSize(1)./2;
+            if length(obj.ColSep) > 1
+                tCS = cumsum([0, obj.ColSep(:).' + obj.IconSize(1)]); tCS = tCS(:);
+                obj.CP = tCS(min(obj.CP, length(tCS))) + obj.IconSize(1)./2;
+            else
+                obj.CP = (obj.CP - 1).*(obj.ColSep + obj.IconSize(1)) + obj.IconSize(1)./2;
+            end
             obj.RP = obj.RP(:).'; obj.CP = obj.CP(:).';
-            tXLim = [min(obj.CP) - obj.IconSize(1)./2, max(obj.CP) + obj.IconSize(1)./2 + obj.ColSep];
+            tXLim = [min(obj.CP) - obj.IconSize(1)./2, max(obj.CP) + obj.IconSize(1)./2 + obj.ColSep(end)];
             tYLim = [min(obj.RP) - obj.IconSize(2)./2, max(obj.RP) + obj.IconSize(2)./2];
 
             thdl = findobj(gca, 'Type', 'text');

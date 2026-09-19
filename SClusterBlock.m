@@ -53,7 +53,8 @@ classdef SClusterBlock < handle
         ax
         Parent
         arginList = {'Orientation', 'BasePos', 'Parent', 'ColorList', ...
-            'BlockProp', 'Height', 'Group', 'GroupSep','Format','BlockInset'};
+            'BlockProp', 'Height', 'Group', 'GroupSep','Format','BlockInset', ...
+            'EdgeColorMatchFace'};
 
         Orientation = 'top';              % 'top'/'left' (方块位置/方向)               
         BasePos     = 0;                  % Base position for block placement (方块放置的基准位置)
@@ -64,6 +65,7 @@ classdef SClusterBlock < handle
             0.98, 0.50, 0.45; 0.50, 0.69, 0.83; 0.99, 0.71, 0.38;
             0.70, 0.87, 0.41; 0.99, 0.80, 0.90; 0.85, 0.85, 0.85;
             0.74, 0.50, 0.74; 0.80, 0.92, 0.77; 1.00, 0.93, 0.44];
+        EdgeColorMatchFace = 'off'
         Class
         ClassId
         ClassName
@@ -284,6 +286,9 @@ classdef SClusterBlock < handle
                         tX2 = [obj.BasePos; obj.BasePos; nan; obj.BasePos + obj.Height; obj.BasePos + obj.Height; nan]*ones(1, length(CFL));
                         obj.BoxX = [obj.BoxX, tX1(:).', tX2(:).'];
                         obj.BoxY = [obj.BoxY, tY1(:).', tY2(:).'];
+                end
+                if strcmpi(obj.EdgeColorMatchFace, 'on')
+                    obj.blockHdl(i).EdgeColor = obj.blockHdl(i).FaceColor;
                 end
             end
 

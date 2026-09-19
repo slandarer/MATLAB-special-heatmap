@@ -87,8 +87,8 @@ function varargout = spreadLabels(txtHdls, endPoints, varargin)
             XX = [SPos(:, 1).'; TPos(:, 1).'; nan(1, N)];
             YY = [SPos(:, 2).'; TPos(:, 2).'; nan(1, N)];
         case 'segment2'
-            XX = [SPos(:, 1).'; SPos(:, 1).' + LDir(:,1).'./2; TPos(:, 1).'; nan(1, N)];
-            YY = [SPos(:, 2).'; SPos(:, 2).' + LDir(:,2).'./2; TPos(:, 2).'; nan(1, N)];
+            XX = [SPos(:, 1).'; SPos(:, 1).' + LDir(:,1).'./3; TPos(:, 1).'; nan(1, N)];
+            YY = [SPos(:, 2).'; SPos(:, 2).' + LDir(:,2).'./3; TPos(:, 2).'; nan(1, N)];
         case 'segment3'
             XX = [SPos(:, 1).'; SPos(:, 1).' + LDir(:,1).'./3; TPos(:, 1).' - LDir(:,1).'./3; TPos(:, 1).'; nan(1, N)];
             YY = [SPos(:, 2).'; SPos(:, 2).' + LDir(:,2).'./3; TPos(:, 2).' - LDir(:,2).'./3; TPos(:, 2).'; nan(1, N)];

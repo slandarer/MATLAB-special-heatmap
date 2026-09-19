@@ -22,14 +22,12 @@ SDL.setXYTLim('YLim',[0,60])
 set(SDL.treeHdl, 'LineWidth',1.5)
 
 % Draw group blocks 1
-SCB1 = SClusterBlock(T.colGroup1, 'Orientation','top', 'Parent',ax, ...
+SCB1 = SClusterBlock(T.colGroup0, 'Orientation','top', 'Parent',ax, ...
     'BlockInset',.4, 'Height',3, 'BasePos',-4.5, 'Format','tailbrack', ...
-    'BlockProp',{'LineWidth',1.5});
+    'BlockProp',{'LineWidth',1.5}, 'EdgeColorMatchFace','on', ...
+    'Group',T.colGroup1, 'GroupSep',0, 'ColorList',CList);
 [X, Y] = SCB1.draw();
 text(ax, X, Y - 2.5, T.colGroupNames1, 'FontName','Arial', 'FontSize',12, 'Rotation',45)
-[~, ind, ~] = unique(T.colGroup1, 'stable');
-set(SCB1.blockHdl, {'EdgeColor'}, num2cell(CList(T.colGroup0(ind), :), 2))
-% Draw group blocks 0
 SCB0 = SClusterBlock(T.colGroup0, 'Orientation','top', 'Parent',ax, ...
     'Height',1.5, 'BasePos',-1.5, 'BlockProp',{'EdgeColor','none'}, 'ColorList',CList, 'BlockInset',.1);
 SCB0.draw();
@@ -56,8 +54,8 @@ text(ax, -5, 69, 'log_{10}(TPMs)', 'FontName','Arial', 'FontWeight','bold', 'Fon
 
 
 % Add legend (添加图例)
-slgd = SLegend(SCB0, 'BasePos',[45, 75], 'RowSep',2, 'TitleString','Brite hierarchies', ...
-    'ColNum',3, 'ColSep',65, 'IconSize',[4,4], 'RowSep',4, 'LabelOffset',2, 'Label',T.colGroupNames0);
+slgd = SLegend(SCB0, 'BasePos',[45, 75], 'TitleString','Brite hierarchies', ...
+    'ColNum',3, 'ColSep',[45, 65], 'IconSize',[4,4], 'RowSep',4, 'LabelOffset',2, 'Label',T.colGroupNames0);
 slgd.draw()
 slgd.setBox('LineWidth',1.5)
 slgd.setLabel('FontName','Arial')
