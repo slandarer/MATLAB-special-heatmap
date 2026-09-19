@@ -55,7 +55,7 @@ text(ax, -5, 69, 'log_{10}(TPMs)', 'FontName','Arial', 'FontWeight','bold', 'Fon
 
 % Add legend (添加图例)
 slgd = SLegend(SCB0, 'BasePos',[45, 75], 'TitleString','Brite hierarchies', ...
-    'ColNum',3, 'ColSep',[45, 65], 'IconSize',[4,4], 'RowSep',4, 'LabelOffset',2, 'Label',T.colGroupNames0);
+    'ColNum',3, 'ColSep',[45, 75], 'IconSize',[4,4], 'RowSep',4, 'LabelOffset',2, 'Label',T.colGroupNames0);
 slgd.draw()
 slgd.setBox('LineWidth',1.5)
 slgd.setLabel('FontName','Arial')
