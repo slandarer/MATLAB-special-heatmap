@@ -3,8 +3,8 @@ addpath('..\')
 rng(2)
 % Made up some data casually (随便捏造了点数据)
 X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), ...
-                     (linspace(.5,-.7,20)').*ones(1, 3), ...
-                     (linspace(.9,-.2,20)').*ones(1, 6)];
+    (linspace(.5,-.7,20)').*ones(1, 3), ...
+    (linspace(.9,-.2,20)').*ones(1, 6)];
 % Get the correlation matrix (求相关系数矩阵)
 [Data, pval] = corr(X);
 names = {'A1','A2','A3','A4','A5','A6', 'B1','B2','B3', 'C1','C2','C3','C4','C5','C6'};
@@ -18,7 +18,7 @@ ax = axes('Parent',fig, 'Position',[.1,.1,.8,.8]);
 
 % Draw triangular heatmap (绘制三角热图)
 SHM = SHeatmap(ax, Data, 'Format','sq', 'GroupLabelOffset',2, ...
-    'RowGroup',group, 'ColGroup',group, 'VarName',names);
+    'RowGroup',group, 'ColGroup',group, 'VarName',names, 'GroupSep',0);
 SHM.draw()
 SHM.setType('tril')
 SHM.setColLabelLocation('bottom')
@@ -36,9 +36,9 @@ SHM.setRowGroupLabelLocation('diag')
 %         ├── 'span'   - span markers (跨度标记) I
 %         ├── 'tailbrack'- square bracket with a straight tail -[]-
 %         └── 'bounds' - Vertical bound markers (边界标记) =
-SCB_T = SClusterBlock(ax, group, 'Orientation','top', 'Group',group, ...
-    'BlockProp', {'EdgeColor','k', 'LineWidth',1.2}, 'Height',.5, 'BasePos',-1.5, 'Format','brace');
+SCB_T = SClusterBlock(ax, group, 'Orientation','top', 'Group',group, 'GroupSep',0, 'BlockInset',.2, ...
+    'BlockProp', {'EdgeColor','k', 'LineWidth',1.2}, 'Height',.5, 'BasePos',-1.5, 'Format','tailbrack');
 SCB_T.draw();
-SCB_T.setXYTLim('XLim', sqrt(2)/2 + sqrt(2)*[0, size(Data, 2) + .5*(max(group) - 1)], 'TLim', [-pi/4, -pi/4]);
+SCB_T.setXYTLim('XLim', sqrt(2)/2 + sqrt(2)*[0, size(Data, 2)], 'TLim', [-pi/4, -pi/4]);
 
 axis(ax, 'tight')
