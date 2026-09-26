@@ -7,7 +7,6 @@ X = randn(20, 15) + [(linspace(-1,2.5,20)').*ones(1, 6), ...
 % Get the correlation matrix (求相关系数矩阵)
 Data = corr(X);
 
-
 figure()
 SHM = SHeatmap(Data, 'Format','sq', 'GroupLabelOffset',[1, .5]);
 SHM.RowGroup = [1,1,1,1,1,1, 2,2,2, 3,3,3,3,3,3];
