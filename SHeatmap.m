@@ -63,7 +63,7 @@ classdef SHeatmap < handle
 %                        (linspace(.5, -.7, 20)').*ones(1, 5), ...
 %                        (linspace(.9, -.2, 20)').*ones(1, 4)];
 %   Data = corr(X);
-%   SHM = SHeatmap(Data, 'Type','sq').draw();
+%   SHM = SHeatmap(Data, 'Format','sq').draw();
 %   SHM.setType('triu');
 %
 %     'triu'   : upper triangle                   : 上三角部分
